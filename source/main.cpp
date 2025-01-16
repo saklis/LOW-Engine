@@ -2,24 +2,57 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
-int main() {
-    // spdlog setup
+#include "memory/Memory.h"
+#include "ecs/Entity.h"
+
+void StartLog() {
     auto logger = spdlog::basic_logger_mt("basic_logger", "lifesim.log", true);
     spdlog::set_default_logger(logger);
     spdlog::set_level(spdlog::level::debug);
     spdlog::set_pattern("[%Y-%m-%d %H:%M:%S] [%l] %v");
+}
 
-    spdlog::info("Starting LifeSim!");
+void StopLog() {
+    spdlog::shutdown();
+}
 
-    sf::Window window(sf::VideoMode({800,600}), "Hello SFML");
+int main() {
+    StartLog();
+    spdlog::info("Lords of War starting...");
 
+    Memory memory;
+    memory.Log();
+
+    Entity entity;
+    spdlog::info("Entity Id: {}", entity.Id);
+
+    sf::Window window(sf::VideoMode({800, 600}), "Lords of War");
+    window.setFramerateLimit(60);
+    window.setKeyRepeatEnabled(false);
+
+    sf::Clock clock;
     while (window.isOpen()) {
+        const sf::Time elapsed = clock.restart();
+
         while (const std::optional event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
                 window.close();
             }
+
+            // INPUT HANDLING
+            if (const auto* mouseMoved = event->getIf<sf::Event::MouseMoved>()) {
+                // mouse moved
+            }
+            if (const auto* mouseButtonPressed = event->getIf<sf::Event::MouseButtonPressed>()) {
+                // mouse button pressed
+            }
+            if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
+                // key pressed
+            }
         }
     }
 
+    spdlog::info("Lords of War exits");
+    StopLog();
     return 0;
 }

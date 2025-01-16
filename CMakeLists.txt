@@ -1,17 +1,6 @@
 cmake_minimum_required(VERSION 3.30)
 project(LifeSim)
 
-# CONFIGURATION SECTION
-
-set(HEADER_FILES
-)
-
-set(SOURCE_FILES
-        "${PROJECT_SOURCE_DIR}/source/main.cpp"
-)
-
-# CONFIGURATION SECTION END
-
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS ON)
@@ -22,10 +11,15 @@ add_subdirectory(${SFML_DIR} EXCLUDE_FROM_ALL)
 set(SPDLOG_DIR "${CMAKE_SOURCE_DIR}/3rd_party/spdlog")
 add_subdirectory(${SPDLOG_DIR} EXCLUDE_FROM_ALL)
 
+# project source files
+file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/source/*.cpp")
+file(GLOB_RECURSE HEADER_FILES "${PROJECT_SOURCE_DIR}/source/*.h")
+
+# executable
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-        "${PROJECT_SOURCE_DIR}/include"
+        "${PROJECT_SOURCE_DIR}/source"
         "${SFML_DIR}/include"
         "${SPDLOG_DIR}/include"
 )
