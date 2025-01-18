@@ -1,2 +1,2 @@
-# LifeSim
-A LifeSim game? Survival strategy game? Something else? Did not decided yet
+# Lords of War
+Lords of War is a turn-based strategy inspired by Warlords 3 powered by microStudio.
