@@ -35,5 +35,5 @@
 .idea/
 
 # output dirs
-cmake-build-debug/
-cmake-build-debug-winlibs-ucrt-32bit/
+cmake-build-debug-32bit/
+cmake-build-release-32bit/
