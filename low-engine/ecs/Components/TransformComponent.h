@@ -10,6 +10,7 @@ public:
   sf::Vector2f Scale = sf::Vector2f(1.0f, 1.0f);
 
   TransformComponent() = default;
+  virtual ~TransformComponent() = default;
 
   void ActivateAsDefault() override;
 

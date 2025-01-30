@@ -9,6 +9,8 @@ public:
     uint32_t Id = 0;
     std::string Name;
 
+    uint32_t TransformID = 0;
+
     Entity();
 
     void ActivateAsDefault();
