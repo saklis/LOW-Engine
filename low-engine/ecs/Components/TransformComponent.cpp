@@ -1,6 +1,6 @@
 #include "TransformComponent.h"
 
-void TransformComponent::ActivateAsDefault() {
+void LowEngine::ECS::TransformComponent::ActivateAsDefault() {
     this->Position = sf::Vector2f(0.0f, 0.0f);
     this->Rotation = sf::degrees(0.0f);
     this->Scale = sf::Vector2f(1.0f, 1.0f);
@@ -9,7 +9,7 @@ void TransformComponent::ActivateAsDefault() {
     this->Active = true;
 }
 
-void TransformComponent::Activate(const uint32_t ownerId) {
+void LowEngine::ECS::TransformComponent::Activate(const uint32_t ownerId) {
     this->Position = sf::Vector2f(0.0f, 0.0f);
     this->Rotation = sf::degrees(0.0f);
     this->Scale = sf::Vector2f(1.0f, 1.0f);
@@ -18,6 +18,6 @@ void TransformComponent::Activate(const uint32_t ownerId) {
     this->Active = true;
 }
 
-void TransformComponent::Update() {
+void LowEngine::ECS::TransformComponent::Update() {
     // do nothing
 }

@@ -1,18 +1,17 @@
 
 #include "LowEngine.h"
 
-void LowEngine::StartLog() {
-    auto logger = spdlog::basic_logger_mt("basic_logger", "low-engine.log", true);
-    spdlog::set_default_logger(logger);
-    spdlog::set_level(spdlog::level::debug);
-    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S] [%l] %v");
+void LowEngine::LowEngine::StartLog() {
+    _log = spdlog::basic_logger_mt(LOGGER_NAME, "engine.log", true);
+    _log->set_level(spdlog::level::debug);
+    _log->set_pattern("[%Y-%m-%d %H:%M:%S] [%l] %v");
 }
 
-void LowEngine::EndLog() {
-    spdlog::shutdown();
+void LowEngine::LowEngine::StopLog() {
+    spdlog::drop(LOGGER_NAME);
 }
 
-bool LowEngine::OpenWindow(const sf::String& title, uint32_t width, uint32_t height) {
+bool LowEngine::LowEngine::OpenWindow(const sf::String& title, uint32_t width, uint32_t height) {
     _window.create(sf::VideoMode({width, height}), title);
     _window.setFramerateLimit(60);
     _window.setKeyRepeatEnabled(false);
@@ -20,8 +19,8 @@ bool LowEngine::OpenWindow(const sf::String& title, uint32_t width, uint32_t hei
     return _window.isOpen();
 }
 
-bool LowEngine::WindowIsOpen() {
-    const sf::Time deltaTime = _clock.restart(); // time elapsed since last loop iteration
+bool LowEngine::LowEngine::IsWindowOpen() {
+    _deltaTime = _clock.restart(); // time elapsed since last loop iteration
 
     while (const std::optional event = _window.pollEvent()) {
         if (event->is<sf::Event::Closed>()) {
@@ -40,4 +39,16 @@ bool LowEngine::WindowIsOpen() {
         }
     }
     return _window.isOpen();
+}
+
+void LowEngine::LowEngine::Update() {
+    _scenes.GetCurrent().Update();
+}
+
+void LowEngine::LowEngine::AddScene(const std::string& name) {
+    _scenes.AddScene(name);
+}
+
+LowEngine::Scene::Scene& LowEngine::LowEngine::GetScene() {
+    return _scenes.GetCurrent();
 }

@@ -1,6 +1,6 @@
 #include "Memory.h"
 
-Memory::Memory() {
+LowEngine::Memory::Memory::Memory() {
     // initialize default entity
     _entities[0].ActivateAsDefault();
 
@@ -9,7 +9,7 @@ Memory::Memory() {
     _transformComponents[0].Active = true;
 }
 
-uint32_t Memory::CreateEntity(const std::string& name) {
+uint32_t LowEngine::Memory::Memory::CreateEntity(const std::string& name) {
     for (uint32_t i=0; i<_entities.size(); i++) {
         if (!_entities[i].Active) {
             _entities[i].Activate(name);
@@ -20,10 +20,10 @@ uint32_t Memory::CreateEntity(const std::string& name) {
 }
 
 template<typename T, typename ... Args>
-uint32_t Memory::CreateComponent(uint32_t entityId, Args&&... args) {
-    static_assert(std::is_base_of_v<Component, T>, "T must be derived from Component");
+uint32_t LowEngine::Memory::Memory::CreateComponent(uint32_t entityId, Args&&... args) {
+    static_assert(std::is_base_of_v<ECS::Component, T>, "T must be derived from Component");
 
-    if constexpr (std::is_same_v<T, TransformComponent>) {
+    if constexpr (std::is_same_v<T, ECS::TransformComponent>) {
         for (uint32_t i=0; i<_transformComponents.size(); i++) {
             if (!_transformComponents[i].Active) {
                 _entities[entityId].TransformID = i;
@@ -41,4 +41,4 @@ uint32_t Memory::CreateComponent(uint32_t entityId, Args&&... args) {
     return 0;
 }
 
-template uint32_t Memory::CreateComponent<TransformComponent>(uint32_t entityId);
+template uint32_t LowEngine::Memory::Memory::CreateComponent<LowEngine::ECS::TransformComponent>(uint32_t entityId);

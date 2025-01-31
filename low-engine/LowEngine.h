@@ -4,18 +4,41 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <SFML/Window.hpp>
 
-#include <SFML/Window.hpp>
+#include "scene/SceneManager.h"
 
-class LowEngine {
-public:
-    static void StartLog();
-    static void EndLog();
+namespace LowEngine {
+    inline constexpr const char* LOGGER_NAME = "low_engine_spdlog_logger_name";
 
-    bool OpenWindow(const sf::String& title, uint32_t width, uint32_t height);
-    bool WindowIsOpen();
+    class LowEngine {
+    public:
+        const sf::Time& DeltaTime; // public, read-only reference to _deltaTime
 
-protected:
-    sf::Window _window;
-    sf::Clock _clock;
-};
+        LowEngine() : DeltaTime(_deltaTime), _deltaTime(sf::Time::Zero) {
+            StartLog();
+        }
+
+        ~LowEngine() {
+            StopLog();
+        };
+
+        bool OpenWindow(const sf::String& title, uint32_t width, uint32_t height);
+        bool IsWindowOpen();
+
+        void Update();
+
+        void AddScene(const std::string& name);
+        Scene::Scene& GetScene();
+
+    protected:
+        sf::Window _window;
+        sf::Clock _clock;
+        sf::Time _deltaTime;
+
+        Scene::SceneManager _scenes;
+
+        std::shared_ptr<spdlog::logger> _log;
+        void StartLog();
+        void StopLog();
+    };
+}
 

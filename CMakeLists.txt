@@ -1,9 +1,18 @@
 cmake_minimum_required(VERSION 3.30)
 project(Lords-of-War)
 
+set(ENGINE_NAME "LowEngine")
+set(GAME_NAME "Lords-of-War")
+
+option(BUILD_SHARED_ENGINE "Build LowEngine as a shared library" ON)
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS ON)
+
+###############################################################################
+# LOW ENGINE RUNTIME
+###############################################################################
 
 # include submodules
 set(SFML_DIR "${CMAKE_SOURCE_DIR}/3rd_party/SFML")
@@ -11,39 +20,43 @@ add_subdirectory(${SFML_DIR} EXCLUDE_FROM_ALL)
 set(SPDLOG_DIR "${CMAKE_SOURCE_DIR}/3rd_party/spdlog")
 add_subdirectory(${SPDLOG_DIR} EXCLUDE_FROM_ALL)
 
-###############################################################################
-# LOW ENGINE RUNTIME
-###############################################################################
-
+# engine source
 file(GLOB_RECURSE ENGINE_SOURCE_FILES "${PROJECT_SOURCE_DIR}/low-engine/*.cpp")
 file(GLOB_RECURSE ENGINE_HEADER_FILES "${PROJECT_SOURCE_DIR}/low-engine/*.h")
 
-# create the engine shared library (.dll/.so)
-add_library(LowEngine SHARED
-        ${ENGINE_SOURCE_FILES}
-        ${ENGINE_HEADER_FILES}
-)
-set_target_properties(LowEngine PROPERTIES OUTPUT_NAME "LowEngine")
+# create the engine library (.dll/.so)
+if(BUILD_SHARED_ENGINE)
+    add_library(${ENGINE_NAME} SHARED
+            ${ENGINE_SOURCE_FILES}
+            ${ENGINE_HEADER_FILES}
+    )
+else()
+    add_library(${ENGINE_NAME} STATIC
+            ${ENGINE_SOURCE_FILES}
+            ${ENGINE_HEADER_FILES}
+    )
+endif()
+set_target_properties(${ENGINE_NAME} PROPERTIES OUTPUT_NAME "LowEngine" PREFIX "")
 
 # link libraries to engine
-target_include_directories(LowEngine PRIVATE
+target_include_directories(${ENGINE_NAME} PUBLIC
         "${PROJECT_SOURCE_DIR}/low-engine"
         "${SFML_DIR}/include"
 )
 
-target_link_directories(LowEngine PRIVATE
+target_link_directories(${ENGINE_NAME} PUBLIC
         "${SFML_DIR}/lib"
 )
 
 # Link LowEngine to third-party libs
-target_link_libraries(LowEngine PRIVATE
+target_link_libraries(${ENGINE_NAME} PUBLIC
         sfml-system
         sfml-window
         sfml-graphics
         spdlog::spdlog
 )
 # High performance logging (optional)
-target_compile_definitions(LowEngine PRIVATE SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
+target_compile_definitions(${ENGINE_NAME} PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
 
 ###############################################################################
 # LORDS OF WAR GAME
@@ -53,14 +66,15 @@ file(GLOB_RECURSE LOWGAME_SOURCE_FILES "${PROJECT_SOURCE_DIR}/lords-of-war/*.cpp
 file(GLOB_RECURSE LOWGAME_HEADER_FILES "${PROJECT_SOURCE_DIR}/lords-of-war/*.h")
 
 # executable
-add_executable(Lords-of-War ${LOWGAME_SOURCE_FILES} ${LOWGAME_HEADER_FILES})
+add_executable(${GAME_NAME} ${LOWGAME_SOURCE_FILES} ${LOWGAME_HEADER_FILES})
+set_target_properties(${GAME_NAME} PROPERTIES OUTPUT_NAME "Lords of War")
 
 # Link the executable against our LowEngine library
-target_link_libraries(Lords-of-War PRIVATE
+target_link_libraries(${GAME_NAME} PRIVATE
         LowEngine
 )
 
-target_include_directories(Lords-of-War PRIVATE
+target_include_directories(${GAME_NAME} PRIVATE
         "${PROJECT_SOURCE_DIR}/lords-of-war"
 )
 
@@ -68,14 +82,12 @@ target_include_directories(Lords-of-War PRIVATE
 # OUTPUT
 ###############################################################################
 
-# Output directory for the executable
-set_target_properties(Lords-of-War PROPERTIES
+set_target_properties(${ENGINE_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_SOURCE_DIR}/bin/Debug"
         RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin/Release"
 )
 
-# Similarly for the DLL (so it lands in the same folder as the EXE, making it easier to run)
-set_target_properties(LowEngine PROPERTIES
+set_target_properties(${GAME_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_SOURCE_DIR}/bin/Debug"
         RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin/Release"
 )
