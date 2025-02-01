@@ -2,7 +2,9 @@
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
+
 #include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
 
 #include "scene/SceneManager.h"
 
@@ -25,12 +27,13 @@ namespace LowEngine {
         bool IsWindowOpen();
 
         void Update();
+        void Draw();
 
-        void AddScene(const std::string& name);
+        void CreateScene(const std::string& name);
         Scene::Scene& GetScene();
 
     protected:
-        sf::Window _window;
+        sf::RenderWindow _window;
         sf::Clock _clock;
         sf::Time _deltaTime;
 

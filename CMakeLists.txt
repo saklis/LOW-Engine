@@ -11,14 +11,57 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS ON)
 
 ###############################################################################
-# LOW ENGINE RUNTIME
+# OUTPUT
 ###############################################################################
 
-# include submodules
+set(BUILD_OUTPUT_DEBUG "${CMAKE_SOURCE_DIR}/bin/Debug")
+set(BUILD_OUTPUT_RELEASE "${CMAKE_SOURCE_DIR}/bin/Release")
+
+###############################################################################
+# 3-rd PARTY
+###############################################################################
+
+# MinGW-libs
+set(MINGW_LIBS_DIR "${CMAKE_SOURCE_DIR}/3rd_party/mingw-libs")
+set(MINGW_LIBS
+        libgcc_s_dw2-1.dll
+        libstdc++-6.dll
+        libwinpthread-1.dll
+)
+
+# SFML
 set(SFML_DIR "${CMAKE_SOURCE_DIR}/3rd_party/SFML")
+set(BUILD_SHARED_LIBS ON CACHE BOOL "Build SFML as static libraries" FORCE)
+set(SFML_BUILD_GRAPHICS ON CACHE BOOL "Build SFML Graphics module" FORCE)
+set(SFML_BUILD_WINDOW ON CACHE BOOL "Build SFML Window module" FORCE)
+set(SFML_BUILD_SYSTEM ON CACHE BOOL "Build SFML System module" FORCE)
+set(SFML_BUILD_AUDIO ON CACHE BOOL "Build SFML Audio module" FORCE)
+set(SFML_BUILD_NETWORK OFF CACHE BOOL "Build SFML Network module" FORCE)
+set(SFML_BUILD_EXAMPLES OFF CACHE BOOL "Build SFML examples" FORCE)
+set(SFML_BUILD_TESTS OFF CACHE BOOL "Build SFML tests/benchmarks" FORCE)
 add_subdirectory(${SFML_DIR} EXCLUDE_FROM_ALL)
+foreach(sfmlTarget IN ITEMS sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
+    if(TARGET ${sfmlTarget})
+        set_target_properties(${sfmlTarget} PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BUILD_OUTPUT_DEBUG}
+                RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
+        )
+    endif()
+endforeach()
+
+# SPDLOG
 set(SPDLOG_DIR "${CMAKE_SOURCE_DIR}/3rd_party/spdlog")
 add_subdirectory(${SPDLOG_DIR} EXCLUDE_FROM_ALL)
+if (TARGET spdlog)
+    set_target_properties(spdlog PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BUILD_OUTPUT_DEBUG}
+            RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
+    )
+endif()
+
+###############################################################################
+# LOW ENGINE RUNTIME
+###############################################################################
 
 # engine source
 file(GLOB_RECURSE ENGINE_SOURCE_FILES "${PROJECT_SOURCE_DIR}/low-engine/*.cpp")
@@ -44,19 +87,23 @@ target_include_directories(${ENGINE_NAME} PUBLIC
         "${SFML_DIR}/include"
 )
 
-target_link_directories(${ENGINE_NAME} PUBLIC
-        "${SFML_DIR}/lib"
-)
-
 # Link LowEngine to third-party libs
 target_link_libraries(${ENGINE_NAME} PUBLIC
         sfml-system
         sfml-window
         sfml-graphics
+        sfml-audio
         spdlog::spdlog
 )
+
 # High performance logging (optional)
 target_compile_definitions(${ENGINE_NAME} PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
+
+# output
+set_target_properties(${ENGINE_NAME} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BUILD_OUTPUT_DEBUG}
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
+)
 
 ###############################################################################
 # LORDS OF WAR GAME
@@ -78,16 +125,24 @@ target_include_directories(${GAME_NAME} PRIVATE
         "${PROJECT_SOURCE_DIR}/lords-of-war"
 )
 
-###############################################################################
-# OUTPUT
-###############################################################################
-
-set_target_properties(${ENGINE_NAME} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_SOURCE_DIR}/bin/Debug"
-        RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin/Release"
-)
+# output
 
 set_target_properties(${GAME_NAME} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_SOURCE_DIR}/bin/Debug"
-        RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin/Release"
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BUILD_OUTPUT_DEBUG}
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
 )
+
+###############################################################################
+# MinGW-libs
+###############################################################################
+
+foreach(libFile IN LISTS MINGW_LIBS)
+    add_custom_command(
+            TARGET ${GAME_NAME}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${MINGW_LIBS_DIR}/${libFile}"
+            "$<IF:$<CONFIG:Debug>,${BUILD_OUTPUT_DEBUG},${BUILD_OUTPUT_RELEASE}>/${libFile}"
+            COMMENT "Copying ${libFile} to output dir"
+    )
+endforeach()

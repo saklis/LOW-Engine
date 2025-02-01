@@ -6,7 +6,7 @@ int main() {
     engine.OpenWindow("Lords of war", 800, 600);
 
     // initialize scene
-    engine.AddScene("MyScene");
+    engine.CreateScene("MyScene");
 
     const uint32_t playerId = engine.GetScene().AddEntity("Player");
     engine.GetScene().AddComponent<LowEngine::ECS::TransformComponent>(playerId);
@@ -17,6 +17,7 @@ int main() {
     // game loop
     while (engine.IsWindowOpen()) {
         engine.Update();
+        engine.Draw();
     }
     return 0;
 }

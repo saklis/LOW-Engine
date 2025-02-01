@@ -35,5 +35,6 @@
 .idea/
 
 # output dirs
+bin/
 cmake-build-debug-32bit/
 cmake-build-release-32bit/

@@ -45,8 +45,18 @@ void LowEngine::LowEngine::Update() {
     _scenes.GetCurrent().Update();
 }
 
-void LowEngine::LowEngine::AddScene(const std::string& name) {
-    _scenes.AddScene(name);
+void LowEngine::LowEngine::Draw() {
+    // clear frame
+    _window.clear();
+
+    // draw commands here
+
+    // draw current frame
+    _window.display();
+}
+
+void LowEngine::LowEngine::CreateScene(const std::string& name) {
+    _scenes.CreateScene(name);
 }
 
 LowEngine::Scene::Scene& LowEngine::LowEngine::GetScene() {

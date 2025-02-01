@@ -8,7 +8,7 @@
 namespace LowEngine::Scene {
     class SceneManager {
     public:
-        void AddScene(const std::string& name);
+        void CreateScene(const std::string& name);
         Scene& GetCurrent();
 
         SceneManager() = default;
