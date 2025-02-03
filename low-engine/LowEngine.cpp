@@ -1,4 +1,3 @@
-
 #include "LowEngine.h"
 
 void LowEngine::LowEngine::StartLog() {
@@ -41,10 +40,6 @@ bool LowEngine::LowEngine::IsWindowOpen() {
     return _window.isOpen();
 }
 
-void LowEngine::LowEngine::Update() {
-    _scenes.GetCurrent().Update();
-}
-
 void LowEngine::LowEngine::Draw() {
     // clear frame
     _window.clear();
@@ -53,12 +48,4 @@ void LowEngine::LowEngine::Draw() {
 
     // draw current frame
     _window.display();
-}
-
-void LowEngine::LowEngine::CreateScene(const std::string& name) {
-    _scenes.CreateScene(name);
-}
-
-LowEngine::Scene::Scene& LowEngine::LowEngine::GetScene() {
-    return _scenes.GetCurrent();
 }

@@ -10,6 +10,8 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
+
 ###############################################################################
 # OUTPUT
 ###############################################################################
@@ -146,3 +148,17 @@ foreach(libFile IN LISTS MINGW_LIBS)
             COMMENT "Copying ${libFile} to output dir"
     )
 endforeach()
+
+###############################################################################
+# POST-build commands
+###############################################################################
+
+# copy assets to output
+set(OUTPUT_ASSETS_DIR "$<IF:$<CONFIG:Debug>,${BUILD_OUTPUT_DEBUG},${BUILD_OUTPUT_RELEASE}>/assets")
+
+add_custom_target(copy_assets ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${ASSETS_DIR}" "${OUTPUT_ASSETS_DIR}"
+        COMMENT "Copying assets directory to output"
+)
+
+add_dependencies(${PROJECT_NAME} copy_assets)

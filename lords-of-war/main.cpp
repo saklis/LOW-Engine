@@ -3,20 +3,17 @@
 int main() {
     LowEngine::LowEngine engine;
 
+    engine.Assets.LoadAllFromPath("assets");
     engine.OpenWindow("Lords of war", 800, 600);
 
-    // initialize scene
-    engine.CreateScene("MyScene");
-
-    const uint32_t playerId = engine.GetScene().AddEntity("Player");
-    engine.GetScene().AddComponent<LowEngine::ECS::TransformComponent>(playerId);
-
-    const uint32_t enemyId = engine.GetScene().AddEntity("Enemy");
-    engine.GetScene().AddComponent<LowEngine::ECS::TransformComponent>(enemyId);
+    // engine.Scenes.CreateScene("main scene");
+    //
+    // auto mainScene = new LowEngine::Scene::SceneManager();
+    // engine.Scenes = *mainScene;
 
     // game loop
     while (engine.IsWindowOpen()) {
-        engine.Update();
+        //engine.GetScenes().GetCurrent().Update();
         engine.Draw();
     }
     return 0;
