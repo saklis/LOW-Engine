@@ -1,6 +1,6 @@
 #include "TransformComponent.h"
 
-void LowEngine::ECS::TransformComponent::ActivateAsDefault() {
+void LowEngine::ECS::TransformComponent::InitAsDefault() {
     this->Position = sf::Vector2f(0.0f, 0.0f);
     this->Rotation = sf::degrees(0.0f);
     this->Scale = sf::Vector2f(1.0f, 1.0f);

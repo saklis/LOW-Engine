@@ -10,7 +10,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS ON)
 
-set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
+set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/lords-of-war/assets")
 
 ###############################################################################
 # OUTPUT

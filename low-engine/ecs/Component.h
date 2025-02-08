@@ -16,7 +16,7 @@ namespace LowEngine::ECS {
 
         Component() = default;
 
-        virtual void ActivateAsDefault() = 0;
+        virtual void InitAsDefault() = 0;
         virtual void Activate(uint32_t ownerId) = 0;
         virtual void Update() = 0;
     };

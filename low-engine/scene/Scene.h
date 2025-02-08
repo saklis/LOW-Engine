@@ -5,19 +5,23 @@
 
 #include "memory/Memory.h"
 
-namespace LowEngine::Scene {
+namespace LowEngine {
     class Scene {
     public:
+        bool Active = false;
         std::string Name;
 
-        explicit Scene(std::string name);
+        Scene() = default;
+        explicit Scene(const std::string& name);
+        void InitAsDefault();
 
         void Update();
 
-        uint32_t AddEntity(const std::string& name = "Entity");
+        //uint32_t AddEntity(const std::string& name = "Entity");
+        ECS::Entity& AddEntity(const std::string& name = "Entity");
 
         template <typename T, typename... Args>
-        uint32_t AddComponent(uint32_t entityId, Args&&... args);
+        T& AddComponent(uint32_t entityId, Args&&... args);
 
     protected:
         Memory::Memory _memory;

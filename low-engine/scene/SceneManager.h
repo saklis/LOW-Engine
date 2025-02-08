@@ -1,20 +1,23 @@
 #pragma once
 
 #include <string>
-#include <stack>
+#include <array>
 
 #include "Scene.h"
 
-namespace LowEngine::Scene {
+namespace LowEngine {
     class SceneManager {
     public:
-        void CreateScene(const std::string& name);
-        Scene& GetCurrent();
-
-        SceneManager() = default;
+        SceneManager();
         ~SceneManager() = default;
 
+        uint32_t CreateScene(const std::string& name);
+        void SetAsCurrent(uint32_t sceneId);
+        Scene& GetCurrent();
+
+        Scene& operator[](uint32_t sceneId);
     protected:
-        std::stack<Scene> _scenes;
+        std::array<Scene, 10> _scenes;
+        uint32_t _currentSceneId = 0;
     };
 }

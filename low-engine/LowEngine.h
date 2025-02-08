@@ -14,32 +14,32 @@ namespace LowEngine {
 
     class LowEngine {
     public:
-        const sf::Time& DeltaTime;
+        sf::Time DeltaTime;
 
-        LowEngine() :DeltaTime(_deltaTime), _deltaTime(sf::Time::Zero) {
+        SceneManager Scenes;
+        Assets::AssetManager Assets;
+
+        LowEngine() : DeltaTime(sf::Time::Zero) {
             StartLog();
         }
 
         ~LowEngine() {
             StopLog();
-        };
+        }
 
         bool OpenWindow(const sf::String& title, uint32_t width, uint32_t height);
 
         bool IsWindowOpen();
 
+        void Update();
+
         void Draw();
 
-        // Getters
-        Scene::SceneManager& GetScenes() { return _scenes; }
-        Assets::AssetManager& GetAssets() { return _assets; }
+        Scene& GetCurrentScene();
+
     protected:
         sf::RenderWindow _window;
         sf::Clock _clock;
-        sf::Time _deltaTime;
-
-        Scene::SceneManager _scenes;
-        Assets::AssetManager _assets;
 
         std::shared_ptr<spdlog::logger> _log;
 

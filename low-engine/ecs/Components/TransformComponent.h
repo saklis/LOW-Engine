@@ -13,7 +13,7 @@ namespace LowEngine::ECS {
     TransformComponent() = default;
     virtual ~TransformComponent() = default;
 
-    void ActivateAsDefault() override;
+    void InitAsDefault() override;
 
     void Activate(uint32_t ownerId) override;
 

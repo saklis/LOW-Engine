@@ -1,5 +1,7 @@
 #pragma once
 
-class SpriteComponent {
+namespace LowEngine::ECS {
+    class SpriteComponent {
 
-};
+    };
+}

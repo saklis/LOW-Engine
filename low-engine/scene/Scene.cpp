@@ -1,19 +1,28 @@
 
 #include "Scene.h"
 
-LowEngine::Scene::Scene::Scene(std::string name): Name(std::move(name)) {
+LowEngine::Scene::Scene(const std::string& name): Name(name) {
 }
 
-void LowEngine::Scene::Scene::Update() {
+void LowEngine::Scene::InitAsDefault() {
+    Active = true;
+    Name = "Default scene";
 }
 
-uint32_t LowEngine::Scene::Scene::AddEntity(const std::string& name) {
-    return _memory.CreateEntity(name);
+void LowEngine::Scene::Update() {
 }
+
+LowEngine::ECS::Entity& LowEngine::Scene::AddEntity(const std::string& name) {
+    return _memory.CreateEntity(name).Scene = this;
+}
+
+// uint32_t LowEngine::Scene::AddEntity(const std::string& name) {
+//     return _memory.CreateEntity(name);
+// }
 
 template<typename T, typename ... Args>
-uint32_t LowEngine::Scene::Scene::AddComponent(uint32_t entityId, Args&&... args) {
+T& LowEngine::Scene::AddComponent(uint32_t entityId, Args&&... args) {
     return _memory.CreateComponent<T>(entityId, std::forward<Args>(args)...);
 }
 
-template uint32_t LowEngine::Scene::Scene::AddComponent<LowEngine::ECS::TransformComponent>(uint32_t entityId);
+template LowEngine::ECS::TransformComponent& LowEngine::Scene::AddComponent<LowEngine::ECS::TransformComponent>(uint32_t entityId);

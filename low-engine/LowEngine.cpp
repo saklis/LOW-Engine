@@ -19,7 +19,7 @@ bool LowEngine::LowEngine::OpenWindow(const sf::String& title, uint32_t width, u
 }
 
 bool LowEngine::LowEngine::IsWindowOpen() {
-    _deltaTime = _clock.restart(); // time elapsed since last loop iteration
+    DeltaTime = _clock.restart(); // time elapsed since last loop iteration
 
     while (const std::optional event = _window.pollEvent()) {
         if (event->is<sf::Event::Closed>()) {
@@ -40,6 +40,10 @@ bool LowEngine::LowEngine::IsWindowOpen() {
     return _window.isOpen();
 }
 
+void LowEngine::LowEngine::Update() {
+    Scenes.GetCurrent().Update();
+}
+
 void LowEngine::LowEngine::Draw() {
     // clear frame
     _window.clear();
@@ -48,4 +52,8 @@ void LowEngine::LowEngine::Draw() {
 
     // draw current frame
     _window.display();
+}
+
+LowEngine::Scene& LowEngine::LowEngine::GetCurrentScene() {
+    return Scenes.GetCurrent();
 }
