@@ -2,8 +2,9 @@
 
 #include <string>
 #include <array>
+#include <cstdint>
 
-#include "Scene.h"
+#include "scene/Scene.h"
 
 namespace LowEngine {
     class SceneManager {
@@ -11,13 +12,8 @@ namespace LowEngine {
         SceneManager();
         ~SceneManager() = default;
 
-        uint32_t CreateScene(const std::string& name);
-        void SetAsCurrent(uint32_t sceneId);
-        Scene& GetCurrent();
-
-        Scene& operator[](uint32_t sceneId);
+        LowEngine::Scene& CreateScene(const std::string& name);
     protected:
-        std::array<Scene, 10> _scenes;
-        uint32_t _currentSceneId = 0;
+        std::array<LowEngine::Scene, 10> _scenes;
     };
 }

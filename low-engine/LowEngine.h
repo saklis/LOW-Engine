@@ -35,8 +35,6 @@ namespace LowEngine {
 
         void Draw();
 
-        Scene& GetCurrentScene();
-
     protected:
         sf::RenderWindow _window;
         sf::Clock _clock;

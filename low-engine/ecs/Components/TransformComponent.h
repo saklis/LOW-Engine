@@ -11,11 +11,12 @@ namespace LowEngine::ECS {
     sf::Vector2f Scale = sf::Vector2f(1.0f, 1.0f);
 
     TransformComponent() = default;
+    explicit TransformComponent(uint32_t ownerEntityId);
     virtual ~TransformComponent() = default;
 
     void InitAsDefault() override;
 
-    void Activate(uint32_t ownerId) override;
+    void Activate(uint32_t ownerEntityId) override;
 
     void Update() override;
   };

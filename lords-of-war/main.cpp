@@ -1,5 +1,28 @@
 #include "../low-engine/LowEngine.h"
 
+class PlayerCustomComponent : public LowEngine::ECS::Component {
+    PlayerCustomComponent() {
+
+    }
+    explicit PlayerCustomComponent(uint32_t ownerEntityId) {
+        this->EntityId = ownerEntityId;
+    }
+    virtual ~PlayerCustomComponent() = default;
+
+    void InitAsDefault() override {
+        this->Active = true;
+    }
+
+    void Activate(uint32_t ownerEntityId) override {
+        this->EntityId = ownerEntityId;
+        this->Active = true;
+    }
+
+    void Update() override {
+        // do nothing
+    }
+};
+
 int main() {
     LowEngine::LowEngine engine;
 
@@ -8,12 +31,11 @@ int main() {
 
     engine.Assets.LoadAllFromPath("/assets");
 
-    uint32_t sceneId = engine.Scenes.CreateScene("main scene");
+    LowEngine::Scene& mainScene = engine.Scenes.CreateScene("main scene");
 
-    LowEngine::ECS::Entity& player = engine.Scenes[sceneId].AddEntity("player");
-    auto& playerTransform = player.AddComponent<LowEngine::ECS::TransformComponent>();
-
-    engine.Scenes.SetAsCurrent(sceneId);
+    uint32_t playerId = mainScene.AddEntity("player");
+    mainScene.AddComponent<LowEngine::ECS::TransformComponent>(playerId);
+    mainScene.AddComponent<PlayerCustomComponent>(playerId);
 
     while (engine.IsWindowOpen()) {
         engine.Update();
@@ -21,18 +43,4 @@ int main() {
     }
 
     return 0;
-
-    // le::OpenWindow("Lords of war", 800, 600);
-    // le::Assets::LoadAllFromPath("/assets");
-    //
-    // le::Scene::CreateNew("main scene");
-    // int entityId = le::CurrentScene::AddEntity("player");
-    // le::CurrentScene::AddComponent<le::TransformComponent>(entityId);
-    //
-    // // game loop
-    // while (le::IsWindowOpen()) {
-    //     le::Update();
-    //     le::Draw();
-    // }
-    // return 0;
 }

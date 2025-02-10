@@ -2,10 +2,8 @@
 
 #include <cstdint>
 #include <string>
-
-#include "Components/SpriteComponent.h"
-#include "Components/TransformComponent.h"
-#include "scene/Scene.h"
+#include <array>
+#include <vector>
 
 namespace LowEngine::ECS {
     class Entity {
@@ -14,17 +12,14 @@ namespace LowEngine::ECS {
         uint32_t Id = 0;
         std::string Name;
 
-        Scene& Scene;
-        TransformComponent* Transform = nullptr;
-        SpriteComponent* Sprite = nullptr;
+        uint32_t TransformId = 0;
+        uint32_t SpriteId = 0;
+        std::vector<uint32_t> CustomComponents;
 
-        Entity(LowEngine::Scene& scene);
+        Entity();
 
         void InitAsDefault();
         void Activate(const std::string& name);
-
-        template <typename T, typename... Args>
-        T& AddComponent(Args&&... args);
 
     protected:
         static uint32_t _nextId;

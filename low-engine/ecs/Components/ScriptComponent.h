@@ -1,12 +1,13 @@
 #pragma once
+
 #include "ecs/Component.h"
 
 namespace LowEngine::ECS {
-    class SpriteComponent : public Component {
+    class ScriptComponent : public Component {
     public:
-        SpriteComponent() = default;
-        explicit SpriteComponent(uint32_t ownerEntityId);
-        virtual ~SpriteComponent() = default;
+        ScriptComponent() = default;
+        explicit ScriptComponent(uint32_t ownerEntityId);
+        virtual ~ScriptComponent() = default;
 
         void InitAsDefault() override;
         void Activate(uint32_t ownerEntityId) override;

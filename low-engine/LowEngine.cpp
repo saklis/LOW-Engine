@@ -41,7 +41,6 @@ bool LowEngine::LowEngine::IsWindowOpen() {
 }
 
 void LowEngine::LowEngine::Update() {
-    Scenes.GetCurrent().Update();
 }
 
 void LowEngine::LowEngine::Draw() {
@@ -52,8 +51,4 @@ void LowEngine::LowEngine::Draw() {
 
     // draw current frame
     _window.display();
-}
-
-LowEngine::Scene& LowEngine::LowEngine::GetCurrentScene() {
-    return Scenes.GetCurrent();
 }
