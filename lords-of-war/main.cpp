@@ -1,6 +1,9 @@
 #include "../low-engine/LowEngine.h"
 
 class PlayerCustomComponent : public LowEngine::ECS::Component {
+public:
+    int32_t Health = 100;
+
     PlayerCustomComponent() {
 
     }
@@ -34,8 +37,11 @@ int main() {
     LowEngine::Scene& mainScene = engine.Scenes.CreateScene("main scene");
 
     uint32_t playerId = mainScene.AddEntity("player");
-    mainScene.AddComponent<LowEngine::ECS::TransformComponent>(playerId);
+    //mainScene.AddComponent<LowEngine::ECS::TransformComponent>(playerId);
     mainScene.AddComponent<PlayerCustomComponent>(playerId);
+
+    // auto& playerComponent = mainScene.GetComponent<PlayerCustomComponent>(playerId);
+    // playerComponent.Health = 200;
 
     while (engine.IsWindowOpen()) {
         engine.Update();

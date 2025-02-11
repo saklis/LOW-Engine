@@ -18,3 +18,10 @@ void LowEngine::ECS::Entity::Activate(const std::string& name) {
     this->Name = name + "_" + std::to_string(this->Id);
     this->Active = true;
 }
+
+void LowEngine::ECS::Entity::AddComponent(std::string componentName, uint32_t componentId) {
+    if (this->_components.find(componentName) == this->_components.end()) {
+        this->_components[componentName] = std::vector<uint32_t>();
+    }
+    this->_components[componentName].push_back(componentId);
+}

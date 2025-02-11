@@ -2,10 +2,6 @@
 
 LowEngine::Memory::Memory::Memory() {
     _entities[0].InitAsDefault();
-
-    // initialize default components
-    _transformComponents[0].InitAsDefault();
-    _spriteComponents[0].InitAsDefault();
 }
 
 uint32_t LowEngine::Memory::Memory::CreateEntity(const std::string& name) {

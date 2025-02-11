@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <array>
+#include <unordered_map>
 #include <vector>
 
 namespace LowEngine::ECS {
@@ -19,9 +20,14 @@ namespace LowEngine::ECS {
         Entity();
 
         void InitAsDefault();
+
         void Activate(const std::string& name);
+
+        void AddComponent(std::string componentName, uint32_t componentId);
 
     protected:
         static uint32_t _nextId;
+
+        std::unordered_map<std::string, std::vector<uint32_t>> _components;
     };
 }
