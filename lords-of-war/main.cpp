@@ -1,28 +1,21 @@
 #include "../low-engine/LowEngine.h"
 
-class PlayerCustomComponent : public LowEngine::ECS::Component {
+class PlayerCustomComponent : public LowEngine::ECS::IComponent {
 public:
-    int32_t Health = 100;
+    int Health = 100;
 
-    PlayerCustomComponent() {
+    PlayerCustomComponent() = default;
+
+    ~PlayerCustomComponent() override {
 
     }
-    explicit PlayerCustomComponent(uint32_t ownerEntityId) {
-        this->EntityId = ownerEntityId;
-    }
-    virtual ~PlayerCustomComponent() = default;
 
-    void InitAsDefault() override {
-        this->Active = true;
+    void Initialize() override {
+
     }
 
-    void Activate(uint32_t ownerEntityId) override {
-        this->EntityId = ownerEntityId;
-        this->Active = true;
-    }
+    void Update(float deltaTime) override {
 
-    void Update() override {
-        // do nothing
     }
 };
 
@@ -37,11 +30,15 @@ int main() {
     LowEngine::Scene& mainScene = engine.Scenes.CreateScene("main scene");
 
     uint32_t playerId = mainScene.AddEntity("player");
-    //mainScene.AddComponent<LowEngine::ECS::TransformComponent>(playerId);
+    mainScene.AddComponent<LowEngine::ECS::TransformComponent>(playerId);
     mainScene.AddComponent<PlayerCustomComponent>(playerId);
 
-    // auto& playerComponent = mainScene.GetComponent<PlayerCustomComponent>(playerId);
-    // playerComponent.Health = 200;
+    auto& playerComponent = mainScene.GetComponent<PlayerCustomComponent>(playerId);
+    playerComponent.Health = 200;
+
+    mainScene.GetComponent<LowEngine::ECS::TransformComponent>(playerId).Position = sf::Vector2f(100.0f, 100.0f);
+
+    auto& playerComponent2 = mainScene.GetComponent<PlayerCustomComponent>(playerId);
 
     while (engine.IsWindowOpen()) {
         engine.Update();

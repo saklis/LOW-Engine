@@ -1,15 +1,17 @@
 #pragma once
-#include "ecs/Component.h"
+#include "ecs/IComponent.h"
 
 namespace LowEngine::ECS {
-    class SpriteComponent : public Component {
+    class SpriteComponent : public IComponent {
     public:
         SpriteComponent() = default;
-        explicit SpriteComponent(uint32_t ownerEntityId);
+
         virtual ~SpriteComponent() = default;
 
-        void InitAsDefault() override;
-        void Activate(uint32_t ownerEntityId) override;
-        void Update() override;
+        void Initialize() override {
+        }
+
+        void Update(float deltaTime) override {
+        }
     };
 }

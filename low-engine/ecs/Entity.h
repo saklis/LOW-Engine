@@ -23,7 +23,8 @@ namespace LowEngine::ECS {
 
         void Activate(const std::string& name);
 
-        void AddComponent(std::string componentName, uint32_t componentId);
+        void AddComponent(const std::string& typeName, uint32_t componentId);
+        uint32_t GetComponent(const std::string& typeName);
 
     protected:
         static uint32_t _nextId;

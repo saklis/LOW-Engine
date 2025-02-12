@@ -19,9 +19,10 @@ void LowEngine::ECS::Entity::Activate(const std::string& name) {
     this->Active = true;
 }
 
-void LowEngine::ECS::Entity::AddComponent(std::string componentName, uint32_t componentId) {
-    if (this->_components.find(componentName) == this->_components.end()) {
-        this->_components[componentName] = std::vector<uint32_t>();
-    }
-    this->_components[componentName].push_back(componentId);
+void LowEngine::ECS::Entity::AddComponent(const std::string& typeName, uint32_t componentId) {
+    this->_components[typeName].push_back(componentId);
+}
+
+uint32_t LowEngine::ECS::Entity::GetComponent(const std::string& typeName) {
+    return this->_components[typeName][0];
 }
