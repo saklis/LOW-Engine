@@ -18,8 +18,8 @@ namespace LowEngine::Memory {
 
         uint32_t CreateEntity(const std::string& name);
 
-        template<typename T>
-        uint32_t CreateComponent(uint32_t entityId) {
+        template<typename T, typename ... Args>
+        T& CreateComponent(uint32_t entityId, Args&&... args) {
             auto& byteVector =_components[typeid(T).name()];
             size_t currentSize = byteVector.size();
             byteVector.resize(currentSize + sizeof(T));
@@ -34,7 +34,8 @@ namespace LowEngine::Memory {
             component->Active = true;
             component->Initialize();
 
-            return componentId;
+            size_t offset = componentId * sizeof(T);
+            return *reinterpret_cast<T*>(byteVector.data() + offset);
         }
 
         template<typename T>

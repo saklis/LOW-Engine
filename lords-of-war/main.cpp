@@ -25,20 +25,16 @@ int main() {
     bool success = engine.OpenWindow("Lords of war", 800, 600);
     if (!success) return 1;
 
-    engine.Assets.LoadAllFromPath("/assets");
+    engine.Assets.LoadTexture("assets/textures/units/unit1.png", "unit1");
 
     LowEngine::Scene& mainScene = engine.Scenes.CreateScene("main scene");
 
     uint32_t playerId = mainScene.AddEntity("player");
+
     mainScene.AddComponent<LowEngine::ECS::TransformComponent>(playerId);
-    mainScene.AddComponent<PlayerCustomComponent>(playerId);
 
-    auto& playerComponent = mainScene.GetComponent<PlayerCustomComponent>(playerId);
-    playerComponent.Health = 200;
-
-    mainScene.GetComponent<LowEngine::ECS::TransformComponent>(playerId).Position = sf::Vector2f(100.0f, 100.0f);
-
-    auto& playerComponent2 = mainScene.GetComponent<PlayerCustomComponent>(playerId);
+    auto& sprite = mainScene.AddComponent<LowEngine::ECS::SpriteComponent>(playerId);
+    sprite.SetSprite(engine.Assets.GetTexture("unit1"));
 
     while (engine.IsWindowOpen()) {
         engine.Update();

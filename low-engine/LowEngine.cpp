@@ -1,13 +1,13 @@
 #include "LowEngine.h"
 
 void LowEngine::LowEngine::StartLog() {
-    _log = spdlog::basic_logger_mt(LOGGER_NAME, "engine.log", true);
+    _log = spdlog::basic_logger_mt(Config::LOGGER_NAME, "engine.log", true);
     _log->set_level(spdlog::level::debug);
     _log->set_pattern("[%Y-%m-%d %H:%M:%S] [%l] %v");
 }
 
 void LowEngine::LowEngine::StopLog() {
-    spdlog::drop(LOGGER_NAME);
+    spdlog::drop(Config::LOGGER_NAME);
 }
 
 bool LowEngine::LowEngine::OpenWindow(const sf::String& title, uint32_t width, uint32_t height) {

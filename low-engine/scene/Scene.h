@@ -19,7 +19,7 @@ namespace LowEngine {
         uint32_t AddEntity(const std::string& name = "Entity");
 
         template<typename T, typename ... Args>
-        uint32_t AddComponent(uint32_t entityId, Args&&... args) {
+        T& AddComponent(uint32_t entityId, Args&&... args) {
             return _memory.CreateComponent<T>(entityId, std::forward<Args>(args)...);
         }
 
