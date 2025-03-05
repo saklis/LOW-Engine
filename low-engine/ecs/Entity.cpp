@@ -24,5 +24,10 @@ void LowEngine::ECS::Entity::AddComponent(const std::string& typeName, uint32_t 
 }
 
 uint32_t LowEngine::ECS::Entity::GetComponent(const std::string& typeName) {
-    return this->_components[typeName][0];
+    auto it = this->_components.find(typeName);
+    if (it != this->_components.end() && !it->second.empty()) {
+        return it->second[0];
+    }
+
+    return -1;
 }

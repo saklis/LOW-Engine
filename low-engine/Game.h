@@ -1,22 +1,24 @@
 #pragma once
 
-#include "Config.h"
+#include "LowHeaders.h"
 #include "scene/SceneManager.h"
-#include "assets/AssetManager.h"
+#include "input/InputManager.h"
 
 namespace LowEngine {
-    class LowEngine {
+
+    class Game {
     public:
+        sf::RenderWindow Window;
         sf::Time DeltaTime;
 
         SceneManager Scenes;
-        Assets::AssetManager Assets;
+        Input::InputManager Input;
 
-        LowEngine() : DeltaTime(sf::Time::Zero) {
+        Game() : DeltaTime(sf::Time::Zero) {
             StartLog();
         }
 
-        ~LowEngine() {
+        ~Game() {
             StopLog();
         }
 
@@ -29,10 +31,7 @@ namespace LowEngine {
         void Draw();
 
     protected:
-        sf::RenderWindow _window;
         sf::Clock _clock;
-
-        std::shared_ptr<spdlog::logger> _log;
 
         void StartLog();
 

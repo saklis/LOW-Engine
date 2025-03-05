@@ -13,8 +13,8 @@ namespace LowEngine::ECS {
         uint32_t Id = 0;
         std::string Name;
 
-        uint32_t TransformId = 0;
-        uint32_t SpriteId = 0;
+        int32_t TransformId = -1;
+        int32_t SpriteId = -1;
         std::vector<uint32_t> CustomComponents;
 
         Entity();

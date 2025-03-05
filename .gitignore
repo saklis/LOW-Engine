@@ -31,10 +31,12 @@
 *.out
 *.app
 
-# JetBrains settings
+# editor settings
 .idea/
+.vscode/
 
 # output dirs
 bin/
+build/
 cmake-build-debug-32bit/
 cmake-build-release-32bit/

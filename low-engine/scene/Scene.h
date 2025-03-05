@@ -15,6 +15,7 @@ namespace LowEngine {
         void InitAsDefault();
 
         void Update();
+        void Draw(sf::RenderWindow& window);
 
         uint32_t AddEntity(const std::string& name = "Entity");
 
@@ -27,6 +28,8 @@ namespace LowEngine {
         T& GetComponent(uint32_t entityId) {
             return _memory.GetComponent<T>(entityId);
         }
+
+        void Destroy();
 
     protected:
         Memory::Memory _memory;

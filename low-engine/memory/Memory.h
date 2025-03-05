@@ -2,10 +2,10 @@
 
 #include <cstdint>
 #include <string>
-#include <array>
 #include <vector>
 #include <unordered_map>
 
+#include "ComponentView.h"
 #include "ecs/Entity.h"
 #include "ecs/IComponent.h"
 #include "ecs/Components/TransformComponent.h"
@@ -17,6 +17,11 @@ namespace LowEngine::Memory {
         Memory();
 
         uint32_t CreateEntity(const std::string& name);
+
+        ECS::Entity& GetEntity(uint32_t entityId);
+        const ECS::Entity& GetEntity(uint32_t entityId) const;
+
+        std::vector<ECS::Entity>& GetEntities();
 
         template<typename T, typename ... Args>
         T& CreateComponent(uint32_t entityId, Args&&... args) {
@@ -53,8 +58,28 @@ namespace LowEngine::Memory {
             return *reinterpret_cast<T*>(byteVector.data() + offset);
         }
 
+        template<typename T>
+        ComponentView<T> GetAllComponents() {
+            const std::string typeName = typeid(T).name();
+            auto it = _components.find(typeName);
+            if (it == _components.end()) {
+                return {nullptr, 0}; // Empty view
+            }
+
+            auto& byteVector = it->second;
+
+            // Ensure the memory can be correctly interpreted as T
+            if (byteVector.size() % sizeof(T) != 0) {
+                throw std::runtime_error("Memory block size is not a multiple of the component size for type: " + typeName);
+            }
+
+            return {byteVector.data(), byteVector.size() / sizeof(T)};
+        }
+
+        void Destroy();
+
     protected:
-        std::array<ECS::Entity, 1000> _entities;
+        std::vector<ECS::Entity> _entities;
         std::unordered_map<std::string, std::vector<std::byte> > _components;
     };
 }
