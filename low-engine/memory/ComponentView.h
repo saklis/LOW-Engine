@@ -1,12 +1,14 @@
+#pragma once
+
 #include <cstddef>
 
 namespace LowEngine::Memory {
-
     template<typename T>
     class ComponentView {
     public:
         ComponentView(void* data, size_t count)
-            : _data(reinterpret_cast<T*>(data)), _count(count) {}
+            : _data(reinterpret_cast<T*>(data)), _count(count) {
+        }
 
         T* begin() { return _data; }
         T* end() { return _data + _count; }

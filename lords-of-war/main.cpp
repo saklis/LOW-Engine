@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "../low-engine/Game.h"
 
 int main() {
@@ -22,15 +24,31 @@ int main() {
     transforms.Position = { 350, 200 };
     transforms.Scale = { 7, 7 };
 
-    // input
-    engine.Input.AddAction("MoveUp", sf::Keyboard::Key::W, true, false, false);
-    engine.Input.AddAction("MoveDown", sf::Keyboard::Key::S);
+    // declare input actions
+    engine.Input.AddAction("MoveUp", sf::Keyboard::Key::W);
+    engine.Input.AddAction("MoveDown", sf::Keyboard::Key::W, sf::Keyboard::Key::LShift);
     engine.Input.AddAction("MoveLeft", sf::Keyboard::Key::A);
     engine.Input.AddAction("MoveRight", sf::Keyboard::Key::D);
+
+    engine.Input.AddAction("PrimaryMouseClick", sf::Mouse::Button::Left);
+    engine.Input.AddAction("SecondaryMouseClick", sf::Mouse::Button::Left, sf::Keyboard::Key::RControl);
 
     while (engine.IsWindowOpen()) {
         if (engine.Input.GetAction("MoveUp").Active) {
             transforms.Position.y -= 3;
+        }
+        if (engine.Input.GetAction("MoveDown").Active) {
+            transforms.Position.y += 3;
+        }
+        if (engine.Input.GetAction("MoveLeft").Started) {
+            transforms.Position.x -= 3;
+        }
+        if (engine.Input.GetAction("MoveRight").Ended) {
+            transforms.Position.x += 3;
+        }
+
+        if (engine.Input.GetAction("SecondaryMouseClick").Started) {
+            sf::Vector2i mousePos = engine.Input.GetMousePosition();
         }
     }
 
