@@ -17,9 +17,11 @@ namespace LowEngine::ECS {
         SetSprite(LowEngine::Assets::GetTexture(textureId));
     }
 
-    void SpriteComponent::ApplyTransforms(const LowEngine::ECS::TransformComponent& transforms) {
-        Sprite.setPosition(transforms.Position);
-        Sprite.setRotation(transforms.Rotation);
-        Sprite.setScale(transforms.Scale);
+    void SpriteComponent::ApplyTransforms(const LowEngine::ECS::TransformComponent* transforms) {
+        if (transforms == nullptr) return;
+
+        Sprite.setPosition(transforms->Position);
+        Sprite.setRotation(transforms->Rotation);
+        Sprite.setScale(transforms->Scale);
     }
 }

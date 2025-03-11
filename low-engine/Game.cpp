@@ -38,14 +38,14 @@ namespace LowEngine {
         }
         Input.Update();
 
-        Update();
+        Update(DeltaTime.asSeconds());
         Draw();
 
         return Window.isOpen();
     }
 
-    void Game::Update() {
-        Scenes.GetCurrentScene().Update();
+    void Game::Update(float deltaTime) {
+        Scenes.GetCurrentScene().Update(deltaTime);
     }
 
     void Game::Draw() {

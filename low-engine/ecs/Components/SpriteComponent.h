@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LowHeaders.h"
+#include "assets/Assets.h"
 
 #include "ecs/IComponent.h"
 #include "ecs/Components/TransformComponent.h"
@@ -11,6 +11,7 @@
 namespace LowEngine::ECS {
     class SpriteComponent : public IComponent {
     public:
+        uint32_t TextureId = 0;
         sf::Sprite Sprite;
 
         SpriteComponent();
@@ -23,10 +24,12 @@ namespace LowEngine::ECS {
         void Update(float deltaTime) override {
         }
 
-        void SetSprite(const sf::Texture& texture);
-        void SetSprite(const std::string& textureAlias);
-        void SetSprite(int32_t textureId);
+        virtual void SetSprite(const std::string& textureAlias);
+        virtual void SetSprite(int32_t textureId);
 
-        void ApplyTransforms(const LowEngine::ECS::TransformComponent& transforms);
+        void ApplyTransforms(const LowEngine::ECS::TransformComponent* transforms);
+
+    protected:
+        virtual void SetSprite(const sf::Texture& texture);
     };
 }

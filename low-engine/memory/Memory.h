@@ -6,10 +6,8 @@
 #include <unordered_map>
 
 #include "ComponentView.h"
-#include "ecs/Entity.h"
-#include "ecs/IComponent.h"
-#include "ecs/Components/TransformComponent.h"
-#include "ecs/Components/SpriteComponent.h"
+#include "ECS/ECSHeaders.h"
+
 
 namespace LowEngine::Memory {
     class Memory {
@@ -19,18 +17,19 @@ namespace LowEngine::Memory {
         uint32_t CreateEntity(const std::string& name);
 
         ECS::Entity& GetEntity(uint32_t entityId);
+
         const ECS::Entity& GetEntity(uint32_t entityId) const;
 
         std::vector<ECS::Entity>& GetEntities();
 
-        template<typename T, typename ... Args>
-        T& CreateComponent(uint32_t entityId, Args&&... args) {
-            auto& byteVector =_components[typeid(T).name()];
+        template<typename T, typename... Args>
+        T* CreateComponent(uint32_t entityId, Args&&... args) {
+            auto& byteVector = _components[typeid(T).name()];
             size_t currentSize = byteVector.size();
             byteVector.resize(currentSize + sizeof(T));
 
             void* memory = byteVector.data() + currentSize;
-            T* component = new (memory) T(); // placement new to construct object in target memory
+            T* component = new(memory) T(); // placement new to construct object in target memory
 
             uint32_t componentId = currentSize / sizeof(T);
             _entities[entityId].AddComponent(typeid(T).name(), componentId);
@@ -40,22 +39,26 @@ namespace LowEngine::Memory {
             component->Initialize();
 
             size_t offset = componentId * sizeof(T);
-            return *reinterpret_cast<T*>(byteVector.data() + offset);
+            return reinterpret_cast<T*>(byteVector.data() + offset);
         }
 
         template<typename T>
-        T& GetComponent(uint32_t entityId) {
+        T* GetComponent(uint32_t entityId) {
             std::string typeName = typeid(T).name();
 
-            uint32_t componentId = _entities[entityId].GetComponent(typeName);
+            int32_t componentId = _entities[entityId].GetComponent(typeName);
 
-            auto& byteVector = _components[typeName];
-            size_t offset = componentId * sizeof(T);
-            if (offset + sizeof(T) > byteVector.size()) {
-                throw std::runtime_error("Component Id is out of range for type: " + typeName);
+            if (componentId >= 0) {
+                auto& byteVector = _components[typeName];
+                size_t offset = componentId * sizeof(T);
+                if (offset + sizeof(T) > byteVector.size()) {
+                    throw std::runtime_error("Component Id is out of range for type: " + typeName);
+                }
+
+                return reinterpret_cast<T*>(byteVector.data() + offset);
             }
 
-            return *reinterpret_cast<T*>(byteVector.data() + offset);
+            return nullptr;
         }
 
         template<typename T>
@@ -70,7 +73,8 @@ namespace LowEngine::Memory {
 
             // Ensure the memory can be correctly interpreted as T
             if (byteVector.size() % sizeof(T) != 0) {
-                throw std::runtime_error("Memory block size is not a multiple of the component size for type: " + typeName);
+                throw std::runtime_error(
+                    "Memory block size is not a multiple of the component size for type: " + typeName);
             }
 
             return {byteVector.data(), byteVector.size() / sizeof(T)};

@@ -24,7 +24,7 @@ namespace LowEngine::ECS {
         this->_components[typeName].push_back(componentId);
     }
 
-    uint32_t Entity::GetComponent(const std::string& typeName) {
+    int32_t Entity::GetComponent(const std::string& typeName) {
         auto it = this->_components.find(typeName);
         if (it != this->_components.end() && !it->second.empty()) {
             return it->second[0];

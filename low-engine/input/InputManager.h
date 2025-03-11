@@ -4,10 +4,10 @@
 #include <unordered_map>
 #include <vector>
 #include <algorithm>
-
-#include "LowHeaders.h"
+#include <optional>
 
 #include "Action.h"
+#include "SFML/Window/Event.hpp"
 
 namespace LowEngine::Input {
     struct ModifierKey {

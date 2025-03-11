@@ -4,7 +4,8 @@
 
 int main() {
     // assets
-    LowEngine::Assets::LoadTexture("assets/textures/units/unit1.png", "unit1");
+    LowEngine::Assets::LoadTextureWithAnimationSheet("assets/textures/units/player-spritemap.png", "player", 46, 50, 8, 4);
+    LowEngine::Assets::AddAnimationClip("player", "run", 24, 8, 0.20);
 
     // engine instance
     LowEngine::Game engine;
@@ -17,39 +18,19 @@ int main() {
 
     uint32_t playerId = mainScene.AddEntity("player");
 
-    mainScene.AddComponent<LowEngine::ECS::TransformComponent>(playerId);
-    mainScene.AddComponent<LowEngine::ECS::SpriteComponent>(playerId).SetSprite("unit1");
+    auto playerTransform = mainScene.AddComponent<LowEngine::ECS::TransformComponent>(playerId);
+    if (playerTransform) {
+        playerTransform->Scale = { 3, 3 };
+    }
 
-    auto& transforms = mainScene.GetComponent<LowEngine::ECS::TransformComponent>(playerId);
-    transforms.Position = { 350, 200 };
-    transforms.Scale = { 7, 7 };
-
-    // declare input actions
-    engine.Input.AddAction("MoveUp", sf::Keyboard::Key::W);
-    engine.Input.AddAction("MoveDown", sf::Keyboard::Key::W, sf::Keyboard::Key::LShift);
-    engine.Input.AddAction("MoveLeft", sf::Keyboard::Key::A);
-    engine.Input.AddAction("MoveRight", sf::Keyboard::Key::D);
-
-    engine.Input.AddAction("PrimaryMouseClick", sf::Mouse::Button::Left);
-    engine.Input.AddAction("SecondaryMouseClick", sf::Mouse::Button::Left, sf::Keyboard::Key::RControl);
+    auto playerAnimation = mainScene.AddComponent<LowEngine::ECS::AnimatedSpriteComponent>(playerId);
+    if (playerAnimation) {
+        playerAnimation->SetSprite("player");
+        playerAnimation->Play("run", true);
+    }
 
     while (engine.IsWindowOpen()) {
-        if (engine.Input.GetAction("MoveUp").Active) {
-            transforms.Position.y -= 3;
-        }
-        if (engine.Input.GetAction("MoveDown").Active) {
-            transforms.Position.y += 3;
-        }
-        if (engine.Input.GetAction("MoveLeft").Started) {
-            transforms.Position.x -= 3;
-        }
-        if (engine.Input.GetAction("MoveRight").Ended) {
-            transforms.Position.x += 3;
-        }
-
-        if (engine.Input.GetAction("SecondaryMouseClick").Started) {
-            sf::Vector2i mousePos = engine.Input.GetMousePosition();
-        }
+        // main game loop
     }
 
     return 0;

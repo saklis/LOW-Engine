@@ -1,6 +1,9 @@
 #pragma once
 
-#include "LowHeaders.h"
+#include "Config.h"
+#include "Log.h"
+#include "assets/Assets.h"
+
 #include "scene/SceneManager.h"
 #include "input/InputManager.h"
 
@@ -26,7 +29,7 @@ namespace LowEngine {
 
         bool IsWindowOpen();
 
-        void Update();
+        void Update(float deltaTime);
 
         void Draw();
 

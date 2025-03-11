@@ -3,7 +3,8 @@
 #include <vector>
 #include <algorithm>
 
-#include "LowHeaders.h"
+#include "SFML/Window/Keyboard.hpp"
+#include "SFML/Window/Mouse.hpp"
 
 namespace LowEngine::Input {
     enum class ActionType {
