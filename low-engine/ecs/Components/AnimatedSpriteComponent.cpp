@@ -24,12 +24,18 @@ namespace LowEngine::ECS {
         _loop = loop;
 
         sf::IntRect frame;
-        frame.position.x = _currentClip->StartFrame % _animationSheet->FrameCountX * _animationSheet->FrameWidth;
-        frame.position.y = _currentClip->StartFrame / _animationSheet->FrameCountX * _animationSheet->FrameHeight;
-        frame.size.x = _animationSheet->FrameWidth;
-        frame.size.y = _animationSheet->FrameHeight;
+        frame.position.x = static_cast<int>(_currentClip->StartFrame % _animationSheet->FrameCountX * _animationSheet->FrameWidth);
+        frame.position.y = static_cast<int>(_currentClip->StartFrame / _animationSheet->FrameCountX * _animationSheet->FrameHeight);
+        frame.size.x = static_cast<int>(_animationSheet->FrameWidth);
+        frame.size.y = static_cast<int>(_animationSheet->FrameHeight);
 
         Sprite.setTextureRect(frame);
+    }
+
+    void AnimatedSpriteComponent::Stop() {
+        _currentClip = nullptr;
+        _currentFrame = 0;
+        _frameTime = 0.0f;
     }
 
     void AnimatedSpriteComponent::SetLooping(bool looping) {
@@ -56,11 +62,10 @@ namespace LowEngine::ECS {
         }
 
         sf::IntRect frame;
-        frame.position.x = (_currentClip->StartFrame + _currentFrame) % _animationSheet->FrameCountX * _animationSheet->
-                           FrameWidth;
-        frame.position.y = _currentClip->StartFrame / _animationSheet->FrameCountX * _animationSheet->FrameHeight;
-        frame.size.x = _animationSheet->FrameWidth;
-        frame.size.y = _animationSheet->FrameHeight;
+        frame.position.x = static_cast<int>((_currentClip->StartFrame + _currentFrame) % _animationSheet->FrameCountX * _animationSheet->FrameWidth);
+        frame.position.y = static_cast<int>(_currentClip->StartFrame / _animationSheet->FrameCountX * _animationSheet->FrameHeight);
+        frame.size.x = static_cast<int>(_animationSheet->FrameWidth);
+        frame.size.y = static_cast<int>(_animationSheet->FrameHeight);
 
         Sprite.setTextureRect(frame);
     }

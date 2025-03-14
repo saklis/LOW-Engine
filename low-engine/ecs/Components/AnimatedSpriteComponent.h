@@ -11,6 +11,7 @@ namespace LowEngine::ECS {
         void SetSprite(int32_t textureId) override;
 
         void Play(const std::string& animationName, bool loop = true);
+        void Stop();
         void SetLooping(bool looping);
 
         void Update(float deltaTime) override;

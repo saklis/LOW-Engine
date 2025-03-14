@@ -42,24 +42,38 @@ set(SFML_BUILD_NETWORK OFF CACHE BOOL "Build SFML Network module" FORCE)
 set(SFML_BUILD_EXAMPLES OFF CACHE BOOL "Build SFML examples" FORCE)
 set(SFML_BUILD_TESTS OFF CACHE BOOL "Build SFML tests/benchmarks" FORCE)
 add_subdirectory(${SFML_DIR} EXCLUDE_FROM_ALL)
-foreach(sfmlTarget IN ITEMS sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
-    if(TARGET ${sfmlTarget})
+foreach (sfmlTarget IN ITEMS sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
+    if (TARGET ${sfmlTarget})
         set_target_properties(${sfmlTarget} PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BUILD_OUTPUT_DEBUG}
+                RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BUILD_OUTPUT_DEBUG}
                 RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
         )
-    endif()
-endforeach()
+    endif ()
+endforeach ()
+
+# ImGui-SFML + Dear ImGui
+set(IMGUI_SFML_FIND_SFML OFF)
+set(IMGUI_DIR "${CMAKE_SOURCE_DIR}/3rd_party/DearImGui")
+set(IMGUI_SFML_DIR "${CMAKE_SOURCE_DIR}/3rd_party/imgui-sfml")
+set(IMGUI_SFML_DEPS sfml-system sfml-window sfml-graphics)
+add_subdirectory(${IMGUI_SFML_DIR})
+target_link_libraries(ImGui-SFML PRIVATE ${IMGUI_SFML_DEPS})
+if (TARGET ImGui-SFML)
+    set_target_properties(ImGui-SFML PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BUILD_OUTPUT_DEBUG}
+            RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
+    )
+endif ()
 
 # SPDLOG
 set(SPDLOG_DIR "${CMAKE_SOURCE_DIR}/3rd_party/spdlog")
 add_subdirectory(${SPDLOG_DIR} EXCLUDE_FROM_ALL)
 if (TARGET spdlog)
     set_target_properties(spdlog PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BUILD_OUTPUT_DEBUG}
+            RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BUILD_OUTPUT_DEBUG}
             RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
     )
-endif()
+endif ()
 
 ###############################################################################
 # LOW ENGINE RUNTIME
@@ -70,17 +84,17 @@ file(GLOB_RECURSE ENGINE_SOURCE_FILES "${PROJECT_SOURCE_DIR}/low-engine/*.cpp")
 file(GLOB_RECURSE ENGINE_HEADER_FILES "${PROJECT_SOURCE_DIR}/low-engine/*.h")
 
 # create the engine library (.dll/.so)
-if(BUILD_SHARED_ENGINE)
+if (BUILD_SHARED_ENGINE)
     add_library(${ENGINE_NAME} SHARED
             ${ENGINE_SOURCE_FILES}
             ${ENGINE_HEADER_FILES}
     )
-else()
+else ()
     add_library(${ENGINE_NAME} STATIC
             ${ENGINE_SOURCE_FILES}
             ${ENGINE_HEADER_FILES}
     )
-endif()
+endif ()
 set_target_properties(${ENGINE_NAME} PROPERTIES OUTPUT_NAME "LowEngine" PREFIX "")
 
 # link libraries to engine
@@ -96,6 +110,8 @@ target_link_libraries(${ENGINE_NAME} PUBLIC
         sfml-graphics
         sfml-audio
         spdlog::spdlog
+#        ImGui
+        ImGui-SFML
 )
 
 # High performance logging (optional)
@@ -103,7 +119,7 @@ target_compile_definitions(${ENGINE_NAME} PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVE
 
 # output
 set_target_properties(${ENGINE_NAME} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BUILD_OUTPUT_DEBUG}
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BUILD_OUTPUT_DEBUG}
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
 )
 
@@ -130,7 +146,7 @@ target_include_directories(${GAME_NAME} PRIVATE
 # output
 
 set_target_properties(${GAME_NAME} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BUILD_OUTPUT_DEBUG}
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BUILD_OUTPUT_DEBUG}
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
 )
 
@@ -138,7 +154,7 @@ set_target_properties(${GAME_NAME} PROPERTIES
 # MinGW-libs
 ###############################################################################
 
-foreach(libFile IN LISTS MINGW_LIBS)
+foreach (libFile IN LISTS MINGW_LIBS)
     add_custom_command(
             TARGET ${GAME_NAME}
             POST_BUILD
@@ -147,7 +163,7 @@ foreach(libFile IN LISTS MINGW_LIBS)
             "$<IF:$<CONFIG:Debug>,${BUILD_OUTPUT_DEBUG},${BUILD_OUTPUT_RELEASE}>/${libFile}"
             COMMENT "Copying ${libFile} to output dir"
     )
-endforeach()
+endforeach ()
 
 ###############################################################################
 # POST-build commands
