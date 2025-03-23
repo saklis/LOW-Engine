@@ -6,14 +6,17 @@ namespace LowEngine::ECS {
 
     void SpriteComponent::SetSprite(const sf::Texture& texture) {
         Sprite.setTexture(texture);
-        Sprite.setTextureRect(sf::IntRect({0, 0}, static_cast<sf::Vector2<int>>(texture.getSize())));
+
+        auto size = static_cast<sf::Vector2<int>>(texture.getSize());
+        Sprite.setTextureRect(sf::IntRect({0, 0}, size));
+        Sprite.setOrigin({static_cast<float>(size.x) / 2, static_cast<float>(size.y) / 2});
     }
 
     void SpriteComponent::SetSprite(const std::string& textureAlias) {
         SetSprite(LowEngine::Assets::GetTexture(textureAlias));
     }
 
-    void SpriteComponent::SetSprite(int32_t textureId) {
+    void SpriteComponent::SetSprite(int textureId) {
         SetSprite(LowEngine::Assets::GetTexture(textureId));
     }
 

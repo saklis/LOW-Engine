@@ -1,7 +1,7 @@
 #include "AnimationSheet.h"
 
 namespace LowEngine::Animation {
-    void AnimationSheet::AddAnimationClip(const std::string& name, uint32_t frameIndex, uint32_t frameCount, float_t frameDuration) {
+    void AnimationSheet::AddAnimationClip(const std::string& name, unsigned int frameIndex, unsigned int frameCount, float frameDuration) {
         AnimationClip& anim = _animations[name];
         anim.StartFrame = frameIndex;
         anim.FrameCount = frameCount;

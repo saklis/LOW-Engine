@@ -13,11 +13,11 @@ namespace LowEngine {
         _textures.emplace_back(std::move(defaultTexture));
     }
 
-    int32_t Assets::LoadTexture(const std::string& path) {
+    int Assets::LoadTexture(const std::string& path) {
         try {
             sf::Texture texture(path);
             GetInstance()->_textures.emplace_back(std::move(texture));
-            auto index = static_cast<int32_t>(GetInstance()->_textures.size() - 1);
+            auto index = static_cast<int>(GetInstance()->_textures.size() - 1);
             return index;
         } catch (sf::Exception& ex) {
             _log->error("Failed to load texture: {}", path);
@@ -26,33 +26,36 @@ namespace LowEngine {
         }
     }
 
-    int32_t Assets::LoadTexture(const std::string& path, const std::string& alias) {
-        int32_t index = LoadTexture(path);
+    int Assets::LoadTexture(const std::string& path, const std::string& alias) {
+        int index = LoadTexture(path);
         if (index != -1) {
             GetInstance()->_textureAliases[alias] = index;
         }
         return index;
     }
 
-    void Assets::LoadTextureWithAnimationSheet(const std::string& path, uint32_t frameWidth, uint32_t frameHeight,
-        uint32_t frameCountX, uint32_t frameCountY) {
-        int32_t textureId = LoadTexture(path);
+    void Assets::LoadTextureWithAnimationSheet(const std::string& path, unsigned int frameWidth,
+                                               unsigned int frameHeight,
+                                               unsigned int frameCountX, unsigned int frameCountY) {
+        int textureId = LoadTexture(path);
         if (textureId != -1) {
             AddAnimationSheet(textureId, frameWidth, frameHeight, frameCountX, frameCountY);
         }
     }
 
-    void Assets::LoadTextureWithAnimationSheet(const std::string& path, const std::string& alias, uint32_t frameWidth,
-        uint32_t frameHeight, uint32_t frameCountX, uint32_t frameCountY) {
-        int32_t textureId = LoadTexture(path, alias);
+    void Assets::LoadTextureWithAnimationSheet(const std::string& path, const std::string& alias,
+                                               unsigned int frameWidth,
+                                               unsigned int frameHeight, unsigned int frameCountX,
+                                               unsigned int frameCountY) {
+        int textureId = LoadTexture(path, alias);
         if (textureId != -1) {
             AddAnimationSheet(textureId, frameWidth, frameHeight, frameCountX, frameCountY);
         }
     }
 
-    void Assets::AddAnimationSheet(int32_t textureId, uint32_t frameWidth, uint32_t frameHeight, uint32_t frameCountX,
-                                   uint32_t frameCountY) {
-
+    void Assets::AddAnimationSheet(int textureId, unsigned int frameWidth, unsigned int frameHeight,
+                                   unsigned int frameCountX,
+                                   unsigned int frameCountY) {
         auto it = GetInstance()->_animationSheets.find(textureId);
         if (it == GetInstance()->_animationSheets.end()) {
             Animation::AnimationSheet& sheet = GetInstance()->_animationSheets[textureId];
@@ -60,22 +63,24 @@ namespace LowEngine {
             sheet.FrameHeight = frameHeight;
             sheet.FrameCountX = frameCountX;
             sheet.FrameCountY = frameCountY;
-        }else {
+        } else {
             _log->error("Texture with id: {} already has an animation sheet.", textureId);
         }
     }
 
-    void Assets::AddAnimationSheet(const std::string& textureAlias, uint32_t frameWidth, uint32_t frameHeight,
-        uint32_t frameCountX, uint32_t frameCountY) {
+    void Assets::AddAnimationSheet(const std::string& textureAlias, unsigned int frameWidth, unsigned int frameHeight,
+                                   unsigned int frameCountX, unsigned int frameCountY) {
         if (GetInstance()->_textureAliases.find(textureAlias) == GetInstance()->_textureAliases.end()) {
             _log->error("Texture alias {} does not exist", textureAlias);
             throw std::runtime_error("Texture alias does not exist");
         }
 
-        AddAnimationSheet(GetInstance()->_textureAliases[textureAlias], frameWidth, frameHeight, frameCountX, frameCountY);
+        AddAnimationSheet(GetInstance()->_textureAliases[textureAlias], frameWidth, frameHeight, frameCountX,
+                          frameCountY);
     }
 
-    void Assets::AddAnimationClip(int32_t textureId, const std::string& name, uint32_t firstFrameIndex, uint32_t frameCount, float_t frameDuration) {
+    void Assets::AddAnimationClip(int textureId, const std::string& name, unsigned int firstFrameIndex,
+                                  unsigned int frameCount, float frameDuration) {
         auto it = GetInstance()->_animationSheets.find(textureId);
         if (it == GetInstance()->_animationSheets.end()) {
             _log->error("Texture with id {} does not have an animation sheet.", textureId);
@@ -84,17 +89,19 @@ namespace LowEngine {
         GetInstance()->_animationSheets[textureId].AddAnimationClip(name, firstFrameIndex, frameCount, frameDuration);
     }
 
-    void Assets::AddAnimationClip(const std::string& textureAlias, const std::string& name, uint32_t firstFrameIndex,
-        uint32_t frameCount, float_t frameDuration) {
+    void Assets::AddAnimationClip(const std::string& textureAlias, const std::string& name,
+                                  unsigned int firstFrameIndex,
+                                  unsigned int frameCount, float frameDuration) {
         if (GetInstance()->_textureAliases.find(textureAlias) == GetInstance()->_textureAliases.end()) {
             _log->error("Texture alias {} does not exist", textureAlias);
             throw std::runtime_error("Texture alias does not exist");
         }
 
-        AddAnimationClip(GetInstance()->_textureAliases[textureAlias], name, firstFrameIndex, frameCount, frameDuration);
+        AddAnimationClip(GetInstance()->_textureAliases[textureAlias], name, firstFrameIndex, frameCount,
+                         frameDuration);
     }
 
-    Animation::AnimationSheet* Assets::GetAnimationSheet(int32_t textureId) {
+    Animation::AnimationSheet* Assets::GetAnimationSheet(int textureId) {
         auto it = GetInstance()->_animationSheets.find(textureId);
         if (it == GetInstance()->_animationSheets.end()) {
             return nullptr;
@@ -114,7 +121,7 @@ namespace LowEngine {
         return GetInstance()->_textures[0];
     }
 
-    sf::Texture& Assets::GetTexture(int32_t textureId) {
+    sf::Texture& Assets::GetTexture(int textureId) {
         if (GetInstance()->_textures.size() <= textureId) {
             _log->error("Texture with id {} does not exist", textureId);
             throw std::runtime_error("Texture with id does not exist");

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <array>
+#include <typeindex>
 #include <unordered_map>
 #include <vector>
 
@@ -10,12 +11,8 @@ namespace LowEngine::ECS {
     class Entity {
     public:
         bool Active = false;
-        uint32_t Id = 0;
+        unsigned int Id = 0;
         std::string Name;
-
-        int32_t TransformId = -1;
-        int32_t SpriteId = -1;
-        std::vector<uint32_t> CustomComponents;
 
         Entity();
 
@@ -23,12 +20,13 @@ namespace LowEngine::ECS {
 
         void Activate(const std::string& name);
 
-        void AddComponent(const std::string& typeName, uint32_t componentId);
-        int32_t GetComponent(const std::string& typeName);
+        void AddComponent(const std::type_index& typeIndex, unsigned int componentId);
+        int GetComponent(const std::type_index& typeIndex);
+        std::vector<std::type_index> GetComponentTypes();
 
     protected:
-        static uint32_t _nextId;
+        static unsigned int _nextId;
 
-        std::unordered_map<std::string, std::vector<uint32_t>> _components;
+        std::unordered_map<std::type_index, std::vector<unsigned int>> _components;
     };
 }

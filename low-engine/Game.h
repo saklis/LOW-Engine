@@ -8,10 +8,13 @@
 #include "input/InputManager.h"
 
 namespace LowEngine {
-
     class Game {
     public:
+        bool AllowDevTools = true;
+        bool ShowDevTools = false;
+
         sf::RenderWindow Window;
+        sf::View MainView;
         sf::Time DeltaTime;
 
         SceneManager Scenes;
@@ -25,7 +28,7 @@ namespace LowEngine {
             StopLog();
         }
 
-        bool OpenWindow(const sf::String& title, uint32_t width, uint32_t height);
+        bool OpenWindow(const sf::String& title, unsigned int width, unsigned int height);
 
         bool IsWindowOpen();
 

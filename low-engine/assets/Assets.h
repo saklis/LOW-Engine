@@ -15,32 +15,49 @@
 #include "animation/AnimationSheet.h"
 
 namespace LowEngine {
-
     class Assets {
     public:
-        static int32_t LoadTexture(const std::string& path);
-        static int32_t LoadTexture(const std::string& path, const std::string& alias);
+        static int LoadTexture(const std::string& path);
 
-        static void LoadTextureWithAnimationSheet(const std::string& path, uint32_t frameWidth, uint32_t frameHeight, uint32_t frameCountX, uint32_t frameCountY);
-        static void LoadTextureWithAnimationSheet(const std::string& path, const std::string& alias, uint32_t frameWidth, uint32_t frameHeight, uint32_t frameCountX, uint32_t frameCountY);
+        static int LoadTexture(const std::string& path, const std::string& alias);
 
-        static void AddAnimationSheet(int32_t textureId, uint32_t frameWidth, uint32_t frameHeight, uint32_t frameCountX, uint32_t frameCountY);
-        static void AddAnimationSheet(const std::string& textureAlias, uint32_t frameWidth, uint32_t frameHeight, uint32_t frameCountX, uint32_t frameCountY);
-        static void AddAnimationClip(int32_t textureId, const std::string& name, uint32_t firstFrameIndex, uint32_t frameCount, float_t frameDuration);
-        static void AddAnimationClip(const std::string& textureAlias, const std::string& name, uint32_t firstFrameIndex, uint32_t frameCount, float_t frameDuration);
+        static void LoadTextureWithAnimationSheet(const std::string& path, unsigned int frameWidth,
+                                                  unsigned int frameHeight, unsigned int frameCountX,
+                                                  unsigned int frameCountY);
 
-        static Animation::AnimationSheet* GetAnimationSheet(int32_t textureId);
+        static void LoadTextureWithAnimationSheet(const std::string& path, const std::string& alias,
+                                                  unsigned int frameWidth, unsigned int frameHeight,
+                                                  unsigned int frameCountX, unsigned int frameCountY);
+
+        static void AddAnimationSheet(int32_t textureId, unsigned int frameWidth, unsigned int frameHeight,
+                                      unsigned int frameCountX, unsigned int frameCountY);
+
+        static void AddAnimationSheet(const std::string& textureAlias, unsigned int frameWidth,
+                                      unsigned int frameHeight, unsigned int frameCountX, unsigned int frameCountY);
+
+        static void AddAnimationClip(int32_t textureId, const std::string& name, unsigned int firstFrameIndex,
+                                     unsigned int frameCount, float frameDuration);
+
+        static void AddAnimationClip(const std::string& textureAlias, const std::string& name,
+                                     unsigned int firstFrameIndex, unsigned int frameCount, float frameDuration);
+
+        static Animation::AnimationSheet* GetAnimationSheet(int textureId);
+
         static Animation::AnimationSheet* GetAnimationSheet(const std::string& textureAlias);
 
         static sf::Texture& GetDefaultTexture();
-        static sf::Texture& GetTexture(int32_t textureId);
+
+        static sf::Texture& GetTexture(int textureId);
+
         static sf::Texture& GetTexture(const std::string& textureAlias);
 
         static void UnloadAll();
 
     protected:
         Assets();
+
         Assets(const Assets&) = delete;
+
         Assets& operator=(const Assets&) = delete;
 
         static Assets* GetInstance() {
@@ -49,8 +66,7 @@ namespace LowEngine {
         }
 
         std::vector<sf::Texture> _textures;
-        std::unordered_map<std::string, int32_t> _textureAliases;
-        std::unordered_map<uint32_t, Animation::AnimationSheet> _animationSheets;
+        std::unordered_map<std::string, int> _textureAliases;
+        std::unordered_map<unsigned int, Animation::AnimationSheet> _animationSheets;
     };
-
 }

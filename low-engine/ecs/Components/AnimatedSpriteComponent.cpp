@@ -3,74 +3,84 @@
 namespace LowEngine::ECS {
     void AnimatedSpriteComponent::SetSprite(const std::string& textureAlias) {
         SpriteComponent::SetSprite(textureAlias);
-        _animationSheet = Assets::GetAnimationSheet(textureAlias);
+        Sheet = Assets::GetAnimationSheet(textureAlias);
+
+        UpdateFrameSize();
     }
 
     void AnimatedSpriteComponent::SetSprite(int32_t textureId) {
         SpriteComponent::SetSprite(textureId);
-        _animationSheet = Assets::GetAnimationSheet(textureId);
+        Sheet = Assets::GetAnimationSheet(textureId);
+
+        UpdateFrameSize();
     }
 
     void AnimatedSpriteComponent::Play(const std::string& animationName, bool loop) {
-        if (_animationSheet == nullptr) {
+        if (Sheet == nullptr) {
             _log->error("Cannot play animation {}. No animation sheet or clip set.", animationName);
             return;
         }
 
-        _currentClip = _animationSheet->GetAnimationClip(animationName);
+        Clip = Sheet->GetAnimationClip(animationName);
 
-        _currentFrame = 0;
-        _frameTime = 0.0f;
-        _loop = loop;
+        CurrentFrame = 0;
+        FrameTime = 0.0f;
+        Loop = loop;
 
         sf::IntRect frame;
-        frame.position.x = static_cast<int>(_currentClip->StartFrame % _animationSheet->FrameCountX * _animationSheet->FrameWidth);
-        frame.position.y = static_cast<int>(_currentClip->StartFrame / _animationSheet->FrameCountX * _animationSheet->FrameHeight);
-        frame.size.x = static_cast<int>(_animationSheet->FrameWidth);
-        frame.size.y = static_cast<int>(_animationSheet->FrameHeight);
+        frame.position.x = static_cast<int>(Clip->StartFrame % Sheet->FrameCountX * Sheet->FrameWidth);
+        frame.position.y = static_cast<int>(Clip->StartFrame / Sheet->FrameCountX * Sheet->FrameHeight);
+        frame.size.x = static_cast<int>(Sheet->FrameWidth);
+        frame.size.y = static_cast<int>(Sheet->FrameHeight);
 
         Sprite.setTextureRect(frame);
     }
 
     void AnimatedSpriteComponent::Stop() {
-        _currentClip = nullptr;
-        _currentFrame = 0;
-        _frameTime = 0.0f;
+        Clip = nullptr;
+        CurrentFrame = 0;
+        FrameTime = 0.0f;
     }
 
     void AnimatedSpriteComponent::SetLooping(bool looping) {
-        _loop = looping;
+        Loop = looping;
     }
 
     void AnimatedSpriteComponent::Update(float deltaTime) {
         SpriteComponent::Update(deltaTime);
 
-        if (_animationSheet == nullptr || _currentClip == nullptr) return;
+        if (Sheet == nullptr || Clip == nullptr) return;
 
-        _frameTime += deltaTime;
-        if (_frameTime >= _currentClip->FrameDuration) {
-            _frameTime = 0.0f;
-            _currentFrame++;
-            if (_currentFrame >= _currentClip->FrameCount) {
-                if (_loop) {
-                    _currentFrame = 0;
+        FrameTime += deltaTime;
+        if (FrameTime >= Clip->FrameDuration) {
+            FrameTime = 0.0f;
+            CurrentFrame++;
+            if (CurrentFrame >= Clip->FrameCount) {
+                if (Loop) {
+                    CurrentFrame = 0;
                 } else {
-                    _currentClip = nullptr;
+                    Clip = nullptr;
                     return;
                 }
             }
         }
 
         sf::IntRect frame;
-        frame.position.x = static_cast<int>((_currentClip->StartFrame + _currentFrame) % _animationSheet->FrameCountX * _animationSheet->FrameWidth);
-        frame.position.y = static_cast<int>(_currentClip->StartFrame / _animationSheet->FrameCountX * _animationSheet->FrameHeight);
-        frame.size.x = static_cast<int>(_animationSheet->FrameWidth);
-        frame.size.y = static_cast<int>(_animationSheet->FrameHeight);
+        frame.position.x = static_cast<int>((Clip->StartFrame + CurrentFrame) % Sheet->FrameCountX * Sheet->FrameWidth);
+        frame.position.y = static_cast<int>(Clip->StartFrame / Sheet->FrameCountX * Sheet->FrameHeight);
+        frame.size.x = static_cast<int>(Sheet->FrameWidth);
+        frame.size.y = static_cast<int>(Sheet->FrameHeight);
 
         Sprite.setTextureRect(frame);
     }
 
     void AnimatedSpriteComponent::SetSprite(const sf::Texture& texture) {
         SpriteComponent::SetSprite(texture);
+    }
+
+    void AnimatedSpriteComponent::UpdateFrameSize() {
+        auto size = sf::Vector2<int>(Sheet->FrameWidth, Sheet->FrameHeight);
+        Sprite.setTextureRect(sf::IntRect({0, 0}, size));
+        Sprite.setOrigin({static_cast<float>(size.x) / 2, static_cast<float>(size.y) / 2});
     }
 }

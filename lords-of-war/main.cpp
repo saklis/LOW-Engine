@@ -20,6 +20,7 @@ int main() {
 
     auto playerTransform = mainScene.AddComponent<LowEngine::ECS::TransformComponent>(playerId);
     if (playerTransform) {
+        playerTransform->Position = { 400, 300 };
         playerTransform->Scale = { 3, 3 };
     }
 

@@ -5,7 +5,13 @@ namespace LowEngine::Memory {
         // do nothing
     }
 
-    uint32_t Memory::CreateEntity(const std::string& name) {
+    void Memory::Update(float deltaTime) {
+        for (auto component: _components) {
+
+        }
+    }
+
+    unsigned int Memory::CreateEntity(const std::string& name) {
         ECS::Entity entity;
         entity.Activate(name);
         _entities.push_back(std::move(entity));

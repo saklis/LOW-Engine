@@ -14,7 +14,7 @@ namespace LowEngine {
         return _scenes.back();
     }
 
-    bool SceneManager::SelectScene(uint32_t index) {
+    bool SceneManager::SelectScene(unsigned int index) {
         if (index < _scenes.size() && _scenes[index].Active) {
             _currentSceneIndex = index;
             return true;
@@ -23,7 +23,7 @@ namespace LowEngine {
     }
 
     bool SceneManager::SelectScene(const std::string& name) {
-        for (uint32_t i = 0; i < _scenes.size(); i++) {
+        for (unsigned int i = 0; i < _scenes.size(); i++) {
             if (_scenes[i].Active && _scenes[i].Name == name) {
                 _currentSceneIndex = i;
                 return true;
@@ -33,7 +33,7 @@ namespace LowEngine {
     }
 
     bool SceneManager::SelectScene(const Scene& scene) {
-        for (uint32_t i = 0; i < _scenes.size(); i++) {
+        for (unsigned int i = 0; i < _scenes.size(); i++) {
             if (&_scenes[i] == &scene) {
                 _currentSceneIndex = i;
                 return true;

@@ -1,11 +1,13 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
+#include <vector>
 
 namespace LowEngine::ECS {
     class IComponent {
     public:
-        uint32_t EntityId = 0;
+        unsigned int EntityId = 0;
         bool Active = false;
 
         IComponent() = default;

@@ -11,7 +11,7 @@
 namespace LowEngine::ECS {
     class SpriteComponent : public IComponent {
     public:
-        uint32_t TextureId = 0;
+        unsigned int TextureId = 0;
         sf::Sprite Sprite;
 
         SpriteComponent();
@@ -25,7 +25,7 @@ namespace LowEngine::ECS {
         }
 
         virtual void SetSprite(const std::string& textureAlias);
-        virtual void SetSprite(int32_t textureId);
+        virtual void SetSprite(int textureId);
 
         void ApplyTransforms(const LowEngine::ECS::TransformComponent* transforms);
 

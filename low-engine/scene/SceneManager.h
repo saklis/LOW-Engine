@@ -12,23 +12,27 @@ namespace LowEngine {
     class SceneManager {
     public:
         SceneManager();
+
         ~SceneManager() = default;
 
         LowEngine::Scene& CreateScene(const std::string& name);
-        
+
         // Select a scene as 'current'
-        bool SelectScene(uint32_t index);
+        bool SelectScene(unsigned int index);
+
         bool SelectScene(const std::string& name);
+
         bool SelectScene(const LowEngine::Scene& scene);
-        
+
         // Get the current active scene
         LowEngine::Scene& GetCurrentScene();
+
         const LowEngine::Scene& GetCurrentScene() const;
 
         void DestroyAll();
 
     protected:
         std::vector<LowEngine::Scene> _scenes;
-        uint32_t _currentSceneIndex;
+        unsigned int _currentSceneIndex;
     };
 }

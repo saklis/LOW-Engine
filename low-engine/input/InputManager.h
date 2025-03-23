@@ -121,7 +121,7 @@ namespace LowEngine::Input {
             newAction.Type = ActionType::Keyboard;
 
             newAction.Key = key;
-            ApplyKeyboardModifiers(newAction, { modifiers... });
+            ApplyKeyboardModifiers(newAction, {modifiers...});
 
             _actions[actionName] = std::move(newAction);
         };
@@ -135,10 +135,9 @@ namespace LowEngine::Input {
             newAction.Name = actionName;
             newAction.Type = ActionType::Mouse;
 
-            ApplyKeyboardModifiers(newAction, { modifiers... });
+            ApplyKeyboardModifiers(newAction, {modifiers...});
 
             _actions[actionName] = std::move(newAction);
-
         };
 
         sf::Vector2i GetMousePosition();

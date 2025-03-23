@@ -7,26 +7,26 @@
 
 namespace LowEngine::Animation {
     struct AnimationClip {
-        uint32_t StartFrame = 0;
-        uint32_t EndFrame = 0;
-        uint32_t FrameCount = 0;
+        unsigned int StartFrame = 0;
+        unsigned int EndFrame = 0;
+        unsigned int FrameCount = 0;
 
-        float_t FrameDuration = 0.0f;
+        float FrameDuration = 0.0f;
 
         [[nodiscard]] float GetFPS() const { return 1.0f / FrameDuration; }
     };
 
     class AnimationSheet {
     public:
-        uint32_t TextureId = 0;
+        unsigned int TextureId = 0;
 
-        uint32_t FrameWidth = 0;
-        uint32_t FrameHeight = 0;
+        unsigned int FrameWidth = 0;
+        unsigned int FrameHeight = 0;
 
-        uint32_t FrameCountX = 0;
-        uint32_t FrameCountY = 0;
+        unsigned int FrameCountX = 0;
+        unsigned int FrameCountY = 0;
 
-        void AddAnimationClip(const std::string& name, uint32_t frameIndex, uint32_t frameCount, float_t frameDuration);
+        void AddAnimationClip(const std::string& name, unsigned int frameIndex, unsigned int frameCount, float frameDuration);
 
         Animation::AnimationClip* GetAnimationClip(const std::string& name);
 

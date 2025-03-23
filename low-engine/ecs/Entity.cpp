@@ -4,32 +4,42 @@
 
 namespace LowEngine::ECS {
     // initialize default value to static field
-    uint32_t Entity::_nextId = 0;
+    unsigned int Entity::_nextId = 0;
 
     Entity::Entity() {
-        this->Id = _nextId++; // assign current value to this instance and then increment
+        Id = _nextId++; // assign current value to this instance and then increment
     }
 
     void Entity::InitAsDefault() {
-        this->Name = "Default";
-        this->Active = true;
+        Name = "Default";
+        Active = true;
     }
 
     void Entity::Activate(const std::string& name) {
-        this->Name = name + "_" + std::to_string(this->Id);
-        this->Active = true;
+        Name = name;// + "_" + std::to_string(this->Id);
+        Active = true;
     }
 
-    void Entity::AddComponent(const std::string& typeName, uint32_t componentId) {
-        this->_components[typeName].push_back(componentId);
+    void Entity::AddComponent(const std::type_index& typeIndex, unsigned int componentId) {
+        _components[typeIndex].push_back(componentId);
     }
 
-    int32_t Entity::GetComponent(const std::string& typeName) {
-        auto it = this->_components.find(typeName);
-        if (it != this->_components.end() && !it->second.empty()) {
+    int Entity::GetComponent(const std::type_index& typeIndex) {
+        auto it = _components.find(typeIndex);
+        if (it != _components.end() && !it->second.empty()) {
             return it->second[0];
         }
 
         return -1;
+    }
+
+    std::vector<std::type_index> Entity::GetComponentTypes() {
+        std::vector<std::type_index> types;
+
+        for (auto& component : _components) {
+            types.emplace_back(component.first);
+        }
+
+        return types;
     }
 }

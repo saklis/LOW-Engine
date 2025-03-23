@@ -10,6 +10,8 @@ namespace LowEngine {
     }
 
     void Scene::Update(float deltaTime) {
+        _memory.Update(deltaTime);
+
         for (auto& entity: _memory.GetEntities()) {
             if (entity.Active) {
                 auto transformComponent = _memory.GetComponent<ECS::TransformComponent>(entity.Id);
@@ -37,8 +39,16 @@ namespace LowEngine {
         }
     }
 
-    uint32_t Scene::AddEntity(const std::string& name) {
+    unsigned int Scene::AddEntity(const std::string& name) {
         return _memory.CreateEntity(name);
+    }
+
+    std::vector<ECS::Entity>& Scene::GetEntities() {
+        return _memory.GetEntities();
+    }
+
+    void* Scene::GetComponent(unsigned int entity_id, std::type_index typeIndex) {
+        return _memory.GetComponent(entity_id, typeIndex);
     }
 
     void Scene::Destroy() {
