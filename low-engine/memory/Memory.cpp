@@ -5,27 +5,25 @@ namespace LowEngine::Memory {
         // do nothing
     }
 
-    void Memory::Update(float deltaTime) {
-        for (auto component: _components) {
+    // ECS::Entity* Memory::GetEntity(unsigned int entityId) {
+    //     if (entityId >= _entities.size()) return nullptr;
+    //     return &_entities[entityId];
+    // }
 
+    // std::vector<ECS::Entity>& Memory::GetEntities() {
+    //     return _entities;
+    // }
+
+    void Memory::UpdateAllComponents(float deltaTime) {
+        for (auto& component: _components) {
+            component.second->Update(deltaTime);
         }
-    }
-
-    unsigned int Memory::CreateEntity(const std::string& name) {
-        ECS::Entity entity;
-        entity.Activate(name);
-        _entities.push_back(std::move(entity));
-        return _entities.size() - 1;
-    }
-
-    std::vector<ECS::Entity>& Memory::GetEntities() {
-        return _entities;
     }
 
     void Memory::Destroy() {
         _entities.clear();
         for (auto& component: _components) {
-            component.second.clear();
+            //component.second.clear();
         }
         _components.clear();
     }

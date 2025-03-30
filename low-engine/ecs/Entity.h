@@ -7,26 +7,44 @@
 #include <unordered_map>
 #include <vector>
 
-namespace LowEngine::ECS {
-    class Entity {
-    public:
-        bool Active = false;
-        unsigned int Id = 0;
-        std::string Name;
+#include "IEntity.h"
+#include "memory/Memory.h"
 
-        Entity();
+namespace LowEngine::Memory {
+    class Memory;
+}
+
+namespace LowEngine::ECS {
+    class Entity : public IEntity {
+    public:
+        explicit Entity(Memory::Memory* memory);
 
         void InitAsDefault();
 
         void Activate(const std::string& name);
 
-        void AddComponent(const std::type_index& typeIndex, unsigned int componentId);
-        int GetComponent(const std::type_index& typeIndex);
-        std::vector<std::type_index> GetComponentTypes();
+        //void AddComponent(const std::type_index& typeIndex, unsigned int componentId);
+
+        template<typename T, typename... Args>
+        T* AddComponent(Args&&... args) {
+            return _memory->CreateComponent<T>(Id, std::forward<Args>(args)...);
+        }
+
+        // int GetComponent(const std::type_index& typeIndex);
+
+        bool HasComponent(const std::type_index& typeIndex);
+
+        template<typename T>
+        T* GetComponent() {
+            return _memory->GetComponent<T>(Id);
+        }
+
+        // std::vector<std::type_index> GetComponentTypes();
 
     protected:
         static unsigned int _nextId;
 
-        std::unordered_map<std::type_index, std::vector<unsigned int>> _components;
+        Memory::Memory* _memory;
+        //std::vector<std::type_index> _components;
     };
 }

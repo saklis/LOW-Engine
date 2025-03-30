@@ -38,5 +38,6 @@
 # output dirs
 bin/
 build/
+cmake-build-debug/
 cmake-build-debug-32bit/
 cmake-build-release-32bit/

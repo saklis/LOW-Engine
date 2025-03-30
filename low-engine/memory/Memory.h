@@ -12,8 +12,13 @@
 #include <cxxabi.h>
 #endif
 
-#include "ComponentView.h"
-#include "ECS/ECSHeaders.h"
+#include <stack>
+
+#include "Log.h"
+#include "ecs/IEntity.h"
+#include "memory/ComponentPool.h"
+//#include "ComponentView.h"
+//#include "ecs/ECSHeaders.h"
 
 namespace LowEngine::Memory {
     class Memory {
@@ -27,25 +32,29 @@ namespace LowEngine::Memory {
 
         Memory();
 
-        void Update(float deltaTime);
+        template<typename T>
+        T* CreateEntity(const std::string& name) {
+            auto entity = std::make_unique<T>(this);
+            entity->Activate(name);
+            _entities.push_back(std::move(entity));
+            return static_cast<T*>(_entities.back().get());
+        }
 
-        unsigned int CreateEntity(const std::string& name);
+        template<typename T>
+        T* GetEntity(unsigned int entityId) {
+            return static_cast<T*>(_entities[entityId].get());
+        }
 
-        ECS::Entity& GetEntity(unsigned int entityId);
+        std::vector<std::unique_ptr<ECS::IEntity>>* GetAllEntities() {
+            return &_entities;
+        }
 
-        const ECS::Entity& GetEntity(unsigned int entityId) const;
+        //ECS::Entity* GetEntity(unsigned int entityId);
 
-        std::vector<ECS::Entity>& GetEntities();
+        //std::vector<ECS::Entity>& GetEntities();
 
         template<typename T, typename... Args>
         T* CreateComponent(unsigned int entityId, Args&&... args) {
-            auto& byteVector = _components[std::type_index(typeid(T))];
-            size_t currentSize = byteVector.size();
-            byteVector.resize(currentSize + sizeof(T));
-
-            void* memory = byteVector.data() + currentSize;
-            T* component = new(memory) T(); // placement new to construct object in target memory
-
             if (!_typeInfos.contains(std::type_index(typeid(T)))) {
                 TypeInfo& ti = _typeInfos[std::type_index(typeid(T))];
                 ti.Name = typeid(T).name();
@@ -54,95 +63,81 @@ namespace LowEngine::Memory {
                 ti.Size = sizeof(T);
             }
 
-            unsigned int componentId = currentSize / sizeof(T);
-            _entities[entityId].AddComponent(std::type_index(typeid(T)), componentId);
+            if (entityId >= _entities.size()) {
+                _log->error("Entity id is out of range");
+                return nullptr;
+            }
+
+            // checking dependencies
+            for (const auto& depType: T::Dependencies()) {
+                if (!_entities[entityId]->HasComponent(depType)) {
+                    _log->error("Component {} is required by {} but not found.", depType.name(), typeid(T).name());
+                    return nullptr;
+                }
+            }
+
+            // size_t index = pool.FindFreeSlot();
+            // if (index < 0) {
+            //     _log->error("Component pool for type {} is full.", typeid(T).name());
+            //     return nullptr;
+            // }
+
+            ComponentPool<T>& pool = getOrCreatePool<T>();
+            T* component = pool.CreateComponent(entityId, std::forward<Args>(args)...);
+
+            // unsigned int componentId = index;
+            //_entities[entityId].AddComponent(std::type_index(typeid(T)), componentId);
 
             component->EntityId = entityId;
             component->Active = true;
+            component->Memory = this;
             component->Initialize();
 
-            size_t offset = componentId * sizeof(T);
-            return reinterpret_cast<T*>(byteVector.data() + offset);
+            return component;
         }
 
         void* GetComponent(unsigned int entityId, const std::type_index& typeIndex) {
-            auto it = _components.find(typeIndex);
-            if (it == _components.end()) {
+            if (_entities.size() <= entityId) {
+                _log->error("Entity id is out of range");
                 return nullptr;
             }
-
-            if (!_typeInfos.contains(typeIndex)) {
-                return nullptr;
-            }
-
-            int componentId = _entities[entityId].GetComponent(typeIndex);
-            if (componentId >= 0) {
-                const auto& byteVector = it->second;
-
-                size_t offset = componentId * _typeInfos[typeIndex].Size;
-                if (offset + _typeInfos[typeIndex].Size > _components[typeIndex].size()) {
-                    throw std::runtime_error(std::format("Component Id is out of range for type: {}",
-                                                         typeIndex.name()));
-                }
-
-                return it->second.data() + offset;
-            }
-
-            return nullptr;
+            return _components[typeIndex]->GetComponentPtr(entityId);
         }
 
         template<typename T>
         T* GetComponent(unsigned int entityId) {
             auto typeIndex = std::type_index(typeid(T));
-
-            if (!_components.contains(typeIndex)) {
-                return nullptr;
-            }
-
-            int componentId = _entities[entityId].GetComponent(typeIndex);
-
-            if (componentId >= 0) {
-                auto& byteVector = _components[typeIndex];
-                size_t offset = componentId * sizeof(T);
-                if (offset + sizeof(T) > byteVector.size()) {
-                    throw std::runtime_error(std::format("Component Id is out of range for type: {}",
-                                                         typeid(T).name()));
-                }
-
-                return reinterpret_cast<T*>(byteVector.data() + offset);
-            }
-
-            return nullptr;
+            return static_cast<T*>(GetComponent(entityId, typeIndex));
         }
 
         template<typename T>
-        ComponentView<T> GetAllComponents() {
-            auto typeIndex = std::type_index(typeid(T));
-
-            auto it = _components.find(typeIndex);
-            if (it == _components.end()) {
-                return {nullptr, 0}; // Empty view
-            }
-
-            auto& byteVector = it->second;
-
-            // Ensure the memory can be correctly interpreted as T
-            if (byteVector.size() % sizeof(T) != 0) {
-                throw std::runtime_error(
-                    std::format("Memory block size is not a multiple of the component size for type: {}",
-                                typeid(T).name()));
-            }
-
-            return {byteVector.data(), byteVector.size() / sizeof(T)};
+         std::vector<std::aligned_storage_t<sizeof(T), alignof(T)>>* GetAllComponents() {
+            ComponentPool<T> pool = getOrCreatePool<T>();
+            return pool.GetComponentStorage();
         }
+
+        void UpdateAllComponents(float deltaTime);
 
         void Destroy();
 
     protected:
         static inline unsigned int _nextTypeId = 0;
 
-        std::vector<ECS::Entity> _entities;
-        std::unordered_map<std::type_index, std::vector<std::byte> > _components;
+        std::vector<std::unique_ptr<ECS::IEntity>> _entities;
+        std::unordered_map<std::type_index, std::unique_ptr<IComponentPool> > _components;
         std::unordered_map<std::type_index, TypeInfo> _typeInfos;
+
+        template<typename T>
+        ComponentPool<T>& getOrCreatePool() {
+            auto typeIdx = std::type_index(typeid(T));
+            auto it = _components.find(typeIdx);
+            if (it == _components.end()) {
+                auto newPool = std::make_unique<ComponentPool<T> >();
+                auto ptr = newPool.get();
+                _components[typeIdx] = std::move(newPool);
+                return *ptr;
+            }
+            return *static_cast<ComponentPool<T>*>(it->second.get());
+        }
     };
 }

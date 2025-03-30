@@ -12,19 +12,18 @@ namespace LowEngine::ECS {
         Sprite.setOrigin({static_cast<float>(size.x) / 2, static_cast<float>(size.y) / 2});
     }
 
+    void SpriteComponent::Update(float deltaTime) {
+        auto transformComponent = Memory->GetComponent<TransformComponent>(EntityId);
+        Sprite.setPosition(transformComponent->Position);
+        Sprite.setRotation(transformComponent->Rotation);
+        Sprite.setScale(transformComponent->Scale);
+    }
+
     void SpriteComponent::SetSprite(const std::string& textureAlias) {
         SetSprite(LowEngine::Assets::GetTexture(textureAlias));
     }
 
     void SpriteComponent::SetSprite(int textureId) {
         SetSprite(LowEngine::Assets::GetTexture(textureId));
-    }
-
-    void SpriteComponent::ApplyTransforms(const LowEngine::ECS::TransformComponent* transforms) {
-        if (transforms == nullptr) return;
-
-        Sprite.setPosition(transforms->Position);
-        Sprite.setRotation(transforms->Rotation);
-        Sprite.setScale(transforms->Scale);
     }
 }

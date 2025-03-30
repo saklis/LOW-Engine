@@ -14,6 +14,11 @@ namespace LowEngine::ECS {
 
         virtual ~TransformComponent() = default;
 
+        static const std::vector<std::type_index>& Dependencies() {
+            static std::vector<std::type_index> dependencies = {};
+            return dependencies;
+        }
+
         void Initialize() override {
         }
 

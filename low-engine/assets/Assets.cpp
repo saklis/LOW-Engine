@@ -11,6 +11,17 @@ namespace LowEngine {
             throw std::runtime_error("Failed to load default texture!");
         }
         _textures.emplace_back(std::move(defaultTexture));
+
+        // create default texture alias
+        _textureAliases["default"] = 0;
+
+        // create default font
+        sf::Font defaultFont;
+        if (!defaultFont.openFromMemory(unitblock_ttf, unitblock_ttf_len)) {
+            _log->error("Failed to load default font!");
+            throw std::runtime_error("Failed to load default font!");
+        }
+        _fonts.emplace_back(std::move(defaultFont));
     }
 
     int Assets::LoadTexture(const std::string& path) {
@@ -135,6 +146,10 @@ namespace LowEngine {
             throw std::runtime_error("Texture alias does not exist");
         }
         return GetTexture(GetInstance()->_textureAliases[textureAlias]);
+    }
+
+    sf::Font& Assets::GetDefaultFont() {
+        return GetInstance()->_fonts[0];
     }
 
     void Assets::UnloadAll() {

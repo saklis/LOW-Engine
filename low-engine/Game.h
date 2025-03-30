@@ -4,6 +4,7 @@
 #include "Log.h"
 #include "assets/Assets.h"
 
+#include "ecs/ECSHeaders.h"
 #include "scene/SceneManager.h"
 #include "input/InputManager.h"
 
@@ -14,7 +15,6 @@ namespace LowEngine {
         bool ShowDevTools = false;
 
         sf::RenderWindow Window;
-        sf::View MainView;
         sf::Time DeltaTime;
 
         SceneManager Scenes;

@@ -10,6 +10,14 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/$<CONFIG>)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/$<CONFIG>)
+
+if (UNIX)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+    set(CMAKE_INSTALL_RPATH "$ORIGIN")
+endif()
+
 set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/lords-of-war/assets")
 
 ###############################################################################
@@ -101,6 +109,7 @@ set_target_properties(${ENGINE_NAME} PROPERTIES OUTPUT_NAME "LowEngine" PREFIX "
 target_include_directories(${ENGINE_NAME} PUBLIC
         "${PROJECT_SOURCE_DIR}/low-engine"
         "${SFML_DIR}/include"
+        "${SFGUI_DIR}/include"
 )
 
 # Link LowEngine to third-party libs
@@ -109,9 +118,9 @@ target_link_libraries(${ENGINE_NAME} PUBLIC
         sfml-window
         sfml-graphics
         sfml-audio
-        spdlog::spdlog
-#        ImGui
+        # ImGui <- linked by ImGui-SFML
         ImGui-SFML
+        spdlog::spdlog
 )
 
 # High performance logging (optional)
@@ -154,6 +163,7 @@ set_target_properties(${GAME_NAME} PROPERTIES
 # MinGW-libs
 ###############################################################################
 
+if (WIN32)
 foreach (libFile IN LISTS MINGW_LIBS)
     add_custom_command(
             TARGET ${GAME_NAME}
@@ -164,6 +174,9 @@ foreach (libFile IN LISTS MINGW_LIBS)
             COMMENT "Copying ${libFile} to output dir"
     )
 endforeach ()
+elseif (UNIX)
+    # skip - libraries should be available in OS
+endif ()
 
 ###############################################################################
 # POST-build commands

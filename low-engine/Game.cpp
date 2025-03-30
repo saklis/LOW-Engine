@@ -24,12 +24,9 @@ namespace LowEngine {
         Window.setFramerateLimit(60);
         Window.setKeyRepeatEnabled(false);
 
-        sf::Vector2f viewSize = {static_cast<float>(width), static_cast<float>(height)};
-        MainView.setSize(viewSize);
-        MainView.setCenter({viewSize.x / 2, viewSize.y / 2});
-        Window.setView(MainView);
-
-        ImGui::SFML::Init(Window);
+        if (AllowDevTools) {
+            if (!DevTools::Initialize(Window)) return false;
+        }
 
         return Window.isOpen();
     }
@@ -37,49 +34,44 @@ namespace LowEngine {
     bool Game::IsWindowOpen() {
         DeltaTime = _clock.restart(); // time elapsed since last loop iteration
 
+        if (ShowDevTools) DevTools::BeginReadInput();
         Input.ClearActionState();
         while (const std::optional event = Window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
                 Scenes.DestroyAll();
                 Assets::UnloadAll();
-                ImGui::SFML::Shutdown();
+                if (AllowDevTools) {
+                    DevTools::Free();
+                }
                 Window.close();
                 return false;
             }
 
             if (event->is<sf::Event::Resized>()) {
                 auto windowSize = static_cast<sf::Vector2f>(Window.getSize());
-                auto viewSize = MainView.getSize();
-
-                if (windowSize.x / windowSize.y > viewSize.x / viewSize.y) {
-                    viewSize.x = windowSize.x;
-                    viewSize.y = windowSize.x / (viewSize.x / viewSize.y);
-                    MainView.setSize(viewSize);
-                } else {
-                    viewSize.y = windowSize.y;
-                    viewSize.x = windowSize.y * (viewSize.x / viewSize.y);
-                    MainView.setSize(viewSize);
-                }
-
-                Window.setView(MainView);
+                Scenes.GetCurrentScene().SetWindowSize(windowSize);
+                // Scenes.GetCurrentScene().GetCurrentCamera()->SetWindowSize(windowSize);
             }
 
             if (AllowDevTools) {
                 if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
-                    if (keyPressed->code == sf::Keyboard::Key::F12 && keyPressed->control) {
+                    if (keyPressed->code == sf::Keyboard::Key::F12) {
                         ShowDevTools = !ShowDevTools;
                     }
                 }
+
+                DevTools::ReadInput(Window, event);
             }
 
-            ImGui::SFML::ProcessEvent(Window, *event);
             Input.Read(event);
         }
+        if (ShowDevTools) DevTools::EndReadInput();
+
         Input.Update();
 
-        ImGui::SFML::Update(Window, DeltaTime);
         if (ShowDevTools) {
-            DevTools::Display(*this);
+            DevTools::Update(Window, DeltaTime);
+            DevTools::Build(*this);
         }
 
         Update(DeltaTime.asSeconds());
@@ -96,7 +88,10 @@ namespace LowEngine {
         Window.clear();
 
         Scenes.GetCurrentScene().Draw(Window);
-        ImGui::SFML::Render(Window);
+
+        if (ShowDevTools) {
+            DevTools::Render(Window);
+        }
 
         Window.display();
     }

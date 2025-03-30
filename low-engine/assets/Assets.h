@@ -13,6 +13,10 @@
 #include "Log.h"
 
 #include "animation/AnimationSheet.h"
+#include "SFML/Graphics/Font.hpp"
+#include "SFML/Graphics/Sprite.hpp"
+
+#include "defaults/unitblock.hpp"
 
 namespace LowEngine {
     class Assets {
@@ -51,6 +55,8 @@ namespace LowEngine {
 
         static sf::Texture& GetTexture(const std::string& textureAlias);
 
+        static sf::Font& GetDefaultFont();
+
         static void UnloadAll();
 
     protected:
@@ -68,5 +74,8 @@ namespace LowEngine {
         std::vector<sf::Texture> _textures;
         std::unordered_map<std::string, int> _textureAliases;
         std::unordered_map<unsigned int, Animation::AnimationSheet> _animationSheets;
+
+        std::vector<sf::Font> _fonts;
+        std::unordered_map<std::string, sf::Font> _fontAliases;
     };
 }

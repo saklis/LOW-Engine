@@ -4,9 +4,11 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace LowEngine::Animation {
     struct AnimationClip {
+        std::string Name;
         unsigned int StartFrame = 0;
         unsigned int EndFrame = 0;
         unsigned int FrameCount = 0;
@@ -28,7 +30,8 @@ namespace LowEngine::Animation {
 
         void AddAnimationClip(const std::string& name, unsigned int frameIndex, unsigned int frameCount, float frameDuration);
 
-        Animation::AnimationClip* GetAnimationClip(const std::string& name);
+        std::vector<std::string> GetAnimationClipNames();
+        AnimationClip* GetAnimationClip(const std::string& name);
 
     protected:
         std::unordered_map<std::string, AnimationClip> _animations;

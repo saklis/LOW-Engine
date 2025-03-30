@@ -17,7 +17,7 @@ namespace LowEngine::ECS {
 
     void AnimatedSpriteComponent::Play(const std::string& animationName, bool loop) {
         if (Sheet == nullptr) {
-            _log->error("Cannot play animation {}. No animation sheet or clip set.", animationName);
+            _log->error("Cannot play animation {}. No animation sheet set.", animationName);
             return;
         }
 
