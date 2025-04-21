@@ -1,9 +1,6 @@
 #include "SpriteComponent.h"
 
 namespace LowEngine::ECS {
-    SpriteComponent::SpriteComponent() : Sprite(LowEngine::Assets::GetDefaultTexture()) {
-    }
-
     void SpriteComponent::SetSprite(const sf::Texture& texture) {
         Sprite.setTexture(texture);
 
@@ -13,17 +10,18 @@ namespace LowEngine::ECS {
     }
 
     void SpriteComponent::Update(float deltaTime) {
-        auto transformComponent = Memory->GetComponent<TransformComponent>(EntityId);
+        auto transformComponent = _memory->GetComponent<TransformComponent>(EntityId);
         Sprite.setPosition(transformComponent->Position);
         Sprite.setRotation(transformComponent->Rotation);
         Sprite.setScale(transformComponent->Scale);
+        Sprite.Layer = Layer;
     }
 
     void SpriteComponent::SetSprite(const std::string& textureAlias) {
-        SetSprite(LowEngine::Assets::GetTexture(textureAlias));
+        SetSprite(Assets::GetTexture(textureAlias));
     }
 
     void SpriteComponent::SetSprite(int textureId) {
-        SetSprite(LowEngine::Assets::GetTexture(textureId));
+        SetSprite(Assets::GetTexture(textureId));
     }
 }

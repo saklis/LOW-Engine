@@ -10,9 +10,11 @@ namespace LowEngine::ECS {
         sf::Angle Rotation = sf::degrees(0.0f);
         sf::Vector2f Scale = sf::Vector2f(1.0f, 1.0f);
 
-        TransformComponent() = default;
+        explicit TransformComponent(Memory::Memory* memory)
+            : IComponent(memory) {
+        }
 
-        virtual ~TransformComponent() = default;
+        ~TransformComponent() override = default;
 
         static const std::vector<std::type_index>& Dependencies() {
             static std::vector<std::type_index> dependencies = {};

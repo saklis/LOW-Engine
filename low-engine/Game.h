@@ -42,5 +42,7 @@ namespace LowEngine {
         void StartLog();
 
         void StopLog();
+
+        void OnWindowClosed();
     };
 }

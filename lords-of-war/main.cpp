@@ -4,15 +4,31 @@
 
 int main() {
     // assets
-    LowEngine::Assets::LoadTextureWithAnimationSheet("assets/textures/units/player-spritemap.png", "player", 46, 50, 8, 4);
-    LowEngine::Assets::AddAnimationClip("player", "run", 24, 8, 0.20);
+    LowEngine::Assets::LoadTextureWithAnimationSheet("assets/textures/terrain/green_terrain.png", "green_terrain", 16, 16, 3, 2);
+    LowEngine::Assets::AddAnimationClip("green_terrain", "water", 3, 3, 0.50);
 
-    LowEngine::Assets::LoadTextureWithAnimationSheet("assets/textures/units/rogue.png", "rogue", 32, 32, 10, 10);
-    LowEngine::Assets::AddAnimationClip("rogue", "idle", 1, 10, 0.20);
-    LowEngine::Assets::AddAnimationClip("rogue", "special", 11, 10, 0.10);
-    LowEngine::Assets::AddAnimationClip("rogue", "walk", 21, 10, 0.10);
-    LowEngine::Assets::AddAnimationClip("rogue", "attack", 31, 10, 0.05);
-    LowEngine::Assets::AddAnimationClip("rogue", "die", 41, 10, 0.10);
+    LowEngine::Assets::LoadTextureWithAnimationSheet("assets/textures/terrain/green_features.png", "green_features", 16, 16, 4, 2);
+    LowEngine::Assets::AddAnimationClip("green_features", "forest1", 0, 2, 0.1);
+    LowEngine::Assets::AddAnimationClip("green_features", "forest2", 2, 2, 0.1);
+
+    auto mapId = LowEngine::Assets::LoadMap("assets/maps/terrain_map_01/BasicMap.ldtkl", "BasicMap", {
+                                                {
+                                                    LowEngine::Terrain::LayerType::Terrain,
+                                                    LowEngine::Assets::GetTextureId("green_terrain"),
+                                                    {
+                                                        /*0:*/ {}, // no animation clip - just a static tile
+                                                        /*1:*/ {"water"}
+                                                    }
+                                                },
+                                                {
+                                                    LowEngine::Terrain::LayerType::Features,
+                                                    LowEngine::Assets::GetTextureId("green_features"),
+                                                    {
+                                                        /*0:*/ {"forest1", "forest2"},
+                                                        /*1:*/{}
+                                                    }
+                                                }
+                                            });
 
     // engine instance
     LowEngine::Game engine;
@@ -20,51 +36,35 @@ int main() {
     if (!success) return 1;
 
     // create scene
-
     LowEngine::Scene& mainScene = engine.Scenes.CreateScene("main scene");
+    mainScene.SetSpriteSorting(LowEngine::Scene::SpriteSortingMethod::Layers);
     engine.Scenes.SelectScene(mainScene);
 
+    // create map
+    auto mapEntity = mainScene.AddEntity("Map");
+    if (mapEntity) {
+        auto mapTransform = mapEntity->AddComponent<LowEngine::ECS::TransformComponent>();
+        if (mapTransform) {
+            mapTransform->Position = {-350, -250};
+        }
+
+        auto mapComponent = mapEntity->AddComponent<LowEngine::ECS::MapComponent>();
+        if (mapComponent) {
+            mapComponent->SetMapId(mapId);
+            mapComponent->Layer = -5;
+        }
+    }
+
+    // create camera
     auto cameraEntity = mainScene.AddEntity("Main Camera");
-    auto cameraTransform = cameraEntity->AddComponent<LowEngine::ECS::TransformComponent>();
-    if (cameraTransform) {
-        cameraTransform->Position = { 200, 200 };
-    }
-    auto camera = cameraEntity->AddComponent<LowEngine::ECS::CameraComponent>();
-    mainScene.SetCurrentCamera(cameraEntity->Id);
-
-    auto player = mainScene.AddEntity("player");
-    auto playerTransform = player->AddComponent<LowEngine::ECS::TransformComponent>();
-    if (playerTransform) {
-        playerTransform->Position = { 0, 0 };
-        playerTransform->Scale = { 4, 4 };
-    }
-    auto playerAnimation = player->AddComponent<LowEngine::ECS::AnimatedSpriteComponent>();
-    if (playerAnimation) {
-        playerAnimation->SetSprite("rogue");
-        playerAnimation->Play("attack", true);
-    }
-
-    auto sceond = mainScene.AddEntity("sceond");
-    auto sceondTransform = sceond->AddComponent<LowEngine::ECS::TransformComponent>();
-    if (sceondTransform) {
-        sceondTransform->Position = { 200, 200 };
-        sceondTransform->Scale = { -4, 4 };
-    }
-    auto sceondAnimation = sceond->AddComponent<LowEngine::ECS::AnimatedSpriteComponent>();
-    if (sceondAnimation) {
-        sceondAnimation->SetSprite("rogue");
-        sceondAnimation->Play("walk", true);
-    }
-
-    ///////////////// STUFF
-
-    auto playerTransform2 = player->GetComponent<LowEngine::ECS::TransformComponent>();
-    if (playerTransform2) {
-        playerTransform2->Position = { 200, 200 };
+    if (cameraEntity) {
+        cameraEntity->AddComponent<LowEngine::ECS::TransformComponent>();
+        cameraEntity->AddComponent<LowEngine::ECS::CameraComponent>();
+        mainScene.SetCurrentCamera(cameraEntity->Id);
     }
 
     while (engine.IsWindowOpen()) {
-        // main game loop
+        // game logic
     }
 
     return 0;

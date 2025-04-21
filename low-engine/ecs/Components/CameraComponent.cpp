@@ -4,7 +4,7 @@
 namespace LowEngine::ECS {
 
     void CameraComponent::Update(float deltaTime) {
-        auto transformComponent = Memory->GetComponent<TransformComponent>(EntityId);
+        auto transformComponent = _memory->GetComponent<TransformComponent>(EntityId);
         if (transformComponent) {
             _view.setCenter(transformComponent->Position);
             _view.setRotation(transformComponent->Rotation);

@@ -19,6 +19,15 @@ namespace LowEngine {
         spdlog::drop(Config::LOGGER_NAME);
     }
 
+    void Game::OnWindowClosed() {
+        Scenes.DestroyAll();
+        Assets::UnloadAll();
+        if (AllowDevTools) {
+            DevTools::Free();
+        }
+        Window.close();
+    }
+
     bool Game::OpenWindow(const sf::String& title, unsigned int width, unsigned int height) {
         Window.create(sf::VideoMode({width, height}), title);
         Window.setFramerateLimit(60);
@@ -35,32 +44,27 @@ namespace LowEngine {
         DeltaTime = _clock.restart(); // time elapsed since last loop iteration
 
         if (ShowDevTools) DevTools::BeginReadInput();
+
         Input.ClearActionState();
         while (const std::optional event = Window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
-                Scenes.DestroyAll();
-                Assets::UnloadAll();
-                if (AllowDevTools) {
-                    DevTools::Free();
-                }
-                Window.close();
+                OnWindowClosed();
                 return false;
             }
 
             if (event->is<sf::Event::Resized>()) {
                 auto windowSize = static_cast<sf::Vector2f>(Window.getSize());
                 Scenes.GetCurrentScene().SetWindowSize(windowSize);
-                // Scenes.GetCurrentScene().GetCurrentCamera()->SetWindowSize(windowSize);
             }
 
             if (AllowDevTools) {
                 if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
-                    if (keyPressed->code == sf::Keyboard::Key::F12) {
+                    if (keyPressed->code == sf::Keyboard::Key::F1) {
                         ShowDevTools = !ShowDevTools;
                     }
                 }
 
-                DevTools::ReadInput(Window, event);
+                if (ShowDevTools) DevTools::ReadInput(Window, event);
             }
 
             Input.Read(event);
@@ -89,9 +93,7 @@ namespace LowEngine {
 
         Scenes.GetCurrentScene().Draw(Window);
 
-        if (ShowDevTools) {
-            DevTools::Render(Window);
-        }
+        if (ShowDevTools) DevTools::Render(Window);
 
         Window.display();
     }

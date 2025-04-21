@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.30)
 project(Lords-of-War)
 
+if (CMAKE_GENERATOR MATCHES "Visual Studio")
+    set(CMAKE_SYSTEM_VERSION 10.0) # Windows SDK 11.0
+endif()
+
 set(ENGINE_NAME "LowEngine")
 set(GAME_NAME "Lords-of-War")
 
@@ -49,6 +53,9 @@ set(SFML_BUILD_AUDIO ON CACHE BOOL "Build SFML Audio module" FORCE)
 set(SFML_BUILD_NETWORK OFF CACHE BOOL "Build SFML Network module" FORCE)
 set(SFML_BUILD_EXAMPLES OFF CACHE BOOL "Build SFML examples" FORCE)
 set(SFML_BUILD_TESTS OFF CACHE BOOL "Build SFML tests/benchmarks" FORCE)
+if (CMAKE_GENERATOR MATCHES "Visual Studio")
+    set(SFML_GENERATE_PDB ON CACHE BOOL "Include PDB files" FORCE)
+endif()
 add_subdirectory(${SFML_DIR} EXCLUDE_FROM_ALL)
 foreach (sfmlTarget IN ITEMS sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
     if (TARGET ${sfmlTarget})
@@ -83,6 +90,10 @@ if (TARGET spdlog)
     )
 endif ()
 
+# Nlohmann JSON
+set(NLOHMANN_JSON_DIR "${CMAKE_SOURCE_DIR}/3rd_party/nlohmann_json")
+add_subdirectory(${NLOHMANN_JSON_DIR} EXCLUDE_FROM_ALL)
+
 ###############################################################################
 # LOW ENGINE RUNTIME
 ###############################################################################
@@ -110,6 +121,7 @@ target_include_directories(${ENGINE_NAME} PUBLIC
         "${PROJECT_SOURCE_DIR}/low-engine"
         "${SFML_DIR}/include"
         "${SFGUI_DIR}/include"
+        "${NLOHMANN_JSON_DIR}/include"
 )
 
 # Link LowEngine to third-party libs
@@ -121,6 +133,7 @@ target_link_libraries(${ENGINE_NAME} PUBLIC
         # ImGui <- linked by ImGui-SFML
         ImGui-SFML
         spdlog::spdlog
+        nlohmann_json::nlohmann_json
 )
 
 # High performance logging (optional)

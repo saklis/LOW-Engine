@@ -36,8 +36,8 @@ namespace LowEngine {
     }
 
     void DevTools::DisplayWorldOutliner(Scene& scene, int posX, int posY, int width, int height) {
-        ImGui::SetNextWindowPos(ImVec2(posX, posY), ImGuiCond_Appearing);
-        ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Appearing);
+        ImGui::SetNextWindowPos(ImVec2(posX, posY));
+        ImGui::SetNextWindowSize(ImVec2(width, height));
         ImGui::Begin(std::format("Scene Outliner: '{}'", scene.Name).c_str());
 
         auto entities = scene.GetEntities();
@@ -54,8 +54,8 @@ namespace LowEngine {
     }
 
     void DevTools::DisplayProperties(Scene& scene, int posX, int posY, int width, int height) {
-        ImGui::SetNextWindowPos(ImVec2(posX, posY), ImGuiCond_Appearing);
-        ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Appearing);
+        ImGui::SetNextWindowPos(ImVec2(posX, posY));
+        ImGui::SetNextWindowSize(ImVec2(width, height));
         if (_selectedEntityId != -1) {
             auto entity = scene.GetEntity(_selectedEntityId);
             ImGui::Begin(std::format("Properties: '{}'", entity->Name).c_str());

@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "graphics/Sprite.h"
 #include "memory/Memory.h"
 
 namespace LowEngine::ECS {
@@ -13,19 +14,27 @@ namespace LowEngine::ECS {
     public:
         unsigned int EntityId = 0;
         bool Active = false;
-        Memory::Memory* Memory;
 
-        IComponent() = default;
+        explicit IComponent(Memory::Memory* memory) : _memory(memory) {
+        };
 
         virtual ~IComponent() = default;
 
         virtual void Initialize() = 0;
 
-        virtual void Update(float deltaTime) = 0;
+        virtual void Update(float deltaTime) {
+        };
+
+        virtual LowEngine::Sprite* Draw() {
+            return nullptr;
+        };
 
         template<typename T>
         static std::vector<std::type_index> GetDependencies() {
             return T::Dependencies();
         }
+
+    protected:
+        Memory::Memory* _memory;
     };
 }

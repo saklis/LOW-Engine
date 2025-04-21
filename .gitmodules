@@ -10,3 +10,6 @@
 [submodule "3rd_party/imgui-sfml"]
 	path = 3rd_party/imgui-sfml
 	url = https://github.com/SFML/imgui-sfml.git
+[submodule "3rd_party/nlohmann_json"]
+	path = 3rd_party/nlohmann_json
+	url = https://github.com/nlohmann/json

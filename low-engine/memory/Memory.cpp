@@ -20,10 +20,16 @@ namespace LowEngine::Memory {
         }
     }
 
+    void Memory::CollectSprites(std::vector<Sprite>& sprites) {
+        for (auto& [type, pool] : _components) {
+            pool->CollectSprites(sprites);
+        }
+    }
+
     void Memory::Destroy() {
         _entities.clear();
         for (auto& component: _components) {
-            //component.second.clear();
+            component.second.reset();
         }
         _components.clear();
     }

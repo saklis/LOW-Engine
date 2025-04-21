@@ -14,10 +14,14 @@ namespace LowEngine::ECS {
         bool Loop = true;
 
         static const std::vector<std::type_index>& Dependencies() {
-            static std::vector<std::type_index> dependencies = {
+            static std::vector dependencies = {
                 std::type_index(typeid(TransformComponent))
             };
             return dependencies;
+        }
+
+        explicit AnimatedSpriteComponent(Memory::Memory* memory)
+            : SpriteComponent(memory) {
         }
 
         void SetSprite(const std::string& textureAlias) override;
@@ -35,6 +39,10 @@ namespace LowEngine::ECS {
         }
 
         void Update(float deltaTime) override;
+
+        LowEngine::Sprite* Draw() override {
+            return &Sprite;
+        }
 
     protected:
         void SetSprite(const sf::Texture& texture) override;

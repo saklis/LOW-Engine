@@ -9,7 +9,9 @@ namespace LowEngine::ECS {
         sf::Vector2f ViewSize = sf::Vector2f(0.0f, 0.0f);
         float ZoomFactor = 1.0f;
 
-
+        explicit CameraComponent(Memory::Memory* memory)
+            : IComponent(memory) {
+        }
 
         ~CameraComponent() override = default;
 

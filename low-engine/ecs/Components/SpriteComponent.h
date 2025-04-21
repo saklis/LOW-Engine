@@ -2,24 +2,27 @@
 
 #include "assets/Assets.h"
 
+#include "SFML/Graphics/Texture.hpp"
+
 #include "ecs/IComponent.h"
 #include "ecs/Components/TransformComponent.h"
-
-#include "SFML/Graphics/Texture.hpp"
-#include "SFML/Graphics/Sprite.hpp"
+#include "graphics/Sprite.h"
 
 namespace LowEngine::ECS {
     class SpriteComponent : public IComponent {
     public:
         unsigned int TextureId = 0;
-        sf::Sprite Sprite;
+        Sprite Sprite;
+        int Layer = 0;
 
-        SpriteComponent();
+        explicit SpriteComponent(Memory::Memory* memory)
+            : IComponent(memory), Sprite(Assets::GetDefaultTexture()) {
+        }
 
         virtual ~SpriteComponent() = default;
 
         static const std::vector<std::type_index>& Dependencies() {
-            static std::vector<std::type_index> dependencies = {
+            static std::vector dependencies = {
                 std::type_index(typeid(TransformComponent))
             };
             return dependencies;
@@ -29,6 +32,10 @@ namespace LowEngine::ECS {
         }
 
         void Update(float deltaTime) override;
+
+        LowEngine::Sprite* Draw() override {
+            return &Sprite;
+        }
 
         virtual void SetSprite(const std::string& textureAlias);
 

@@ -5,11 +5,17 @@
 #include "SFML/Graphics/RenderWindow.hpp"
 
 #include "memory/Memory.h"
-#include "ecs/Entity.h"
+#include "ecs/ECSHeaders.h"
 
 namespace LowEngine {
     class Scene {
     public:
+        enum class SpriteSortingMethod {
+            None,
+            Layers,
+            YAxisIncremental
+        };
+
         bool Active = false;
         std::string Name;
 
@@ -40,13 +46,16 @@ namespace LowEngine {
 
         void* GetComponent(unsigned int entity_id, std::type_index typeIndex);
 
-        bool SetCurrentCamera(int entityId);
+        bool SetCurrentCamera(size_t entityId);
         void SetWindowSize(sf::Vector2f windowSize);
+
+        void SetSpriteSorting(SpriteSortingMethod method);
 
         void Destroy();
 
     protected:
-        int _cameraEntityId = -1;
+        size_t _cameraEntityId = -1;
+        SpriteSortingMethod _spriteSortingMethod = SpriteSortingMethod::None;
         Memory::Memory _memory;
     };
 }

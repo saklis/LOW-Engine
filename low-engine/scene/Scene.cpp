@@ -1,7 +1,6 @@
 #include <algorithm>
 
 #include "Scene.h"
-#include "ecs/ECSHeaders.h"
 
 namespace LowEngine {
     Scene::Scene(const std::string& name): Name(name), _memory() {
@@ -22,21 +21,23 @@ namespace LowEngine {
             cameraComponent->SetView(window);
         }
 
-        std::vector<sf::Sprite> sprites;
+        std::vector<Sprite> sprites;
+        _memory.CollectSprites(sprites);
 
-        auto spritesView = _memory.GetAllComponents<ECS::SpriteComponent>();
-        for (auto& spriteData: *spritesView) {
-            sprites.emplace_back(reinterpret_cast<ECS::SpriteComponent*>(&spriteData)->Sprite);
+        switch (_spriteSortingMethod) {
+            case SpriteSortingMethod::YAxisIncremental:
+                std::sort(sprites.begin(), sprites.end(), [](const Sprite& a, const Sprite& b) {
+                    return a.getPosition().y < b.getPosition().y;
+                });
+                break;
+            case SpriteSortingMethod::Layers:
+                std::sort(sprites.begin(), sprites.end(), [](const Sprite& a, const Sprite& b) {
+                    return a.Layer < b.Layer;
+                });
+                break;
+            case SpriteSortingMethod::None:
+            default: ;
         }
-
-        auto animatedSpritesView = _memory.GetAllComponents<ECS::AnimatedSpriteComponent>();
-        for (auto& animatedSpriteData: *animatedSpritesView) {
-            sprites.emplace_back(reinterpret_cast<ECS::AnimatedSpriteComponent*>(&animatedSpriteData)->Sprite);
-        }
-
-        std::sort(sprites.begin(), sprites.end(), [](const sf::Sprite& a, const sf::Sprite& b) {
-            return a.getPosition().y < b.getPosition().y;
-        });
 
         for (auto& sprite: sprites) {
             window.draw(sprite);
@@ -51,7 +52,7 @@ namespace LowEngine {
         return _memory.GetEntity<ECS::Entity>(entityId);
     }
 
-    std::vector<std::unique_ptr<ECS::IEntity>>* Scene::GetEntities() {
+    std::vector<std::unique_ptr<ECS::IEntity> >* Scene::GetEntities() {
         return _memory.GetAllEntities();
     }
 
@@ -59,7 +60,7 @@ namespace LowEngine {
         return _memory.GetComponent(entity_id, typeIndex);
     }
 
-    bool Scene::SetCurrentCamera(int entityId) {
+    bool Scene::SetCurrentCamera(size_t entityId) {
         auto cameraComp = _memory.GetComponent<ECS::CameraComponent>(entityId);
         if (cameraComp == nullptr) {
             _log->warn("Entity {} does not have a camera component", entityId);
@@ -82,6 +83,10 @@ namespace LowEngine {
         } else {
             _log->warn("Current camera entity {} does not have a camera component", _cameraEntityId);
         }
+    }
+
+    void Scene::SetSpriteSorting(SpriteSortingMethod method) {
+        _spriteSortingMethod = method;
     }
 
     void Scene::Destroy() {
