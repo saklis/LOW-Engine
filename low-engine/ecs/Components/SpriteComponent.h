@@ -19,7 +19,15 @@ namespace LowEngine::ECS {
             : IComponent(memory), Sprite(Assets::GetDefaultTexture()) {
         }
 
+        SpriteComponent(Memory::Memory* memory, SpriteComponent const* other)
+            : IComponent(memory, other), TextureId(other->TextureId), Sprite(other->Sprite), Layer(other->Layer) {
+        }
+
         virtual ~SpriteComponent() = default;
+
+        void CloneInto(Memory::Memory* newMemory, void* rawStorage) const override {
+            new(rawStorage) SpriteComponent(newMemory, this);
+        }
 
         static const std::vector<std::type_index>& Dependencies() {
             static std::vector dependencies = {

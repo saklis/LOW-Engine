@@ -17,9 +17,13 @@ namespace LowEngine {
         };
 
         bool Active = false;
+        bool IsTemporary = false;
+        bool IsPaused = false;
+
         std::string Name;
 
         Scene() = default;
+        Scene(Scene const& other);
 
         explicit Scene(const std::string& name);
 
@@ -32,6 +36,7 @@ namespace LowEngine {
         ECS::Entity* AddEntity(const std::string& name = "Entity");
 
         ECS::Entity* GetEntity(unsigned int entityId);
+        ECS::Entity* FindEntity(const std::string& name);
         std::vector<std::unique_ptr<ECS::IEntity>>* GetEntities();
 
         template<typename T, typename... Args>
@@ -54,7 +59,7 @@ namespace LowEngine {
         void Destroy();
 
     protected:
-        size_t _cameraEntityId = -1;
+        size_t _cameraEntityId = Config::MAX_SIZE;
         SpriteSortingMethod _spriteSortingMethod = SpriteSortingMethod::None;
         Memory::Memory _memory;
     };

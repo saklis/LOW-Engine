@@ -14,6 +14,8 @@ namespace LowEngine::Memory {
     public:
         virtual ~IComponentPool() = default;
 
+        virtual std::unique_ptr<IComponentPool> Clone(Memory* newMemory) const = 0;
+
         virtual void* GetComponentPtr(size_t entityId) = 0;
 
         virtual void Update(float deltaTime) = 0;
@@ -24,8 +26,23 @@ namespace LowEngine::Memory {
     template<typename T>
     class ComponentPool : public IComponentPool {
     public:
-        explicit ComponentPool(size_t capacity = Config::MAX_COMPONENTS) {
+        explicit ComponentPool(size_t capacity = Config::DEFAULT_COMPONENTS_COUNT) {
             Storage.reserve(capacity);
+        }
+
+        ComponentPool(ComponentPool const& other, Memory* newMem)
+            : ComponentPool(other.Storage.capacity()) {
+            for (auto const& [entityId, oldIndex]: other.IndexMap) {
+                Storage.emplace_back();
+
+                void* slot = &Storage.back();
+                auto* oldComp = reinterpret_cast<const T*>(&other.Storage[oldIndex]);
+                oldComp->CloneInto(newMem, slot);
+
+                size_t newIndex = Storage.size() - 1;
+                IndexMap[entityId] = newIndex;
+                ReverseMap[newIndex] = entityId;
+            }
         }
 
         ~ComponentPool() override {
@@ -33,6 +50,13 @@ namespace LowEngine::Memory {
                 reinterpret_cast<T*>(&component)->~T();
             }
         };
+
+        std::unique_ptr<IComponentPool> Clone(Memory* newMemory) const override {
+            return std::make_unique<ComponentPool<T> >(
+                *static_cast<ComponentPool<T> const*>(this),
+                newMemory
+            );
+        }
 
         template<typename... Args>
         T* CreateComponent(Memory* memory, size_t entityId, Args&&... args) {
@@ -44,7 +68,6 @@ namespace LowEngine::Memory {
             // get index to create component
             size_t index = Storage.size();
             if (index >= Storage.capacity()) {
-                // error handling or resize storage here
                 return nullptr;
             }
 
@@ -115,7 +138,7 @@ namespace LowEngine::Memory {
         }
 
         void CollectSprites(std::vector<Sprite>& sprites) override {
-            for (auto& storage : Storage) {
+            for (auto& storage: Storage) {
                 T* component = reinterpret_cast<T*>(&storage);
                 Sprite* sprite = component->Draw();
                 if (sprite != nullptr) {

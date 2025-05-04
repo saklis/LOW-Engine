@@ -13,9 +13,36 @@ namespace LowEngine {
             throw std::runtime_error("Failed to load default texture!");
         }
         _textures.emplace_back(std::move(defaultTexture));
-
-        // create default texture alias
         _textureAliases["default"] = 0;
+
+        _log->debug("Generated default texture with id {}", 0);
+
+        // create default sound
+        sf::SoundBuffer defaultSound;
+        const unsigned int sampleRate = 44100;
+        const float duration = 1.f;
+        const auto sampleCount = static_cast<size_t>(sampleRate * duration);
+        std::vector<short> samples(sampleCount);
+
+        // Generate a 440 Hz sine wave tone
+        const double amplitude = 30000;
+        const double frequency = 440.0;
+        const double twoPiF = 2 * 3.14159 * frequency;
+
+        for (size_t i = 0; i < sampleCount; ++i) {
+            samples[i] = static_cast<short>(amplitude * std::sin(twoPiF * i / sampleRate));
+        }
+
+        std::vector<sf::SoundChannel> channelMap{ sf::SoundChannel::Mono };
+
+        if (!defaultSound.loadFromSamples(samples.data(), samples.size(), 1, sampleRate, channelMap)) {
+            _log->error("Failed to load default sound!");
+            throw std::runtime_error("Failed to load default sound!");
+        }
+        _sounds.emplace_back(std::move(defaultSound));
+        _soundAliases["default"] = 0;
+
+        _log->debug("Generated default sound with id {}", 0);
 
         // create default font
         sf::Font defaultFont;
@@ -24,6 +51,8 @@ namespace LowEngine {
             throw std::runtime_error("Failed to load default font!");
         }
         _fonts.emplace_back(std::move(defaultFont));
+
+        _log->debug("Generated default font with id {}", _fonts.size() - 1);
     }
 
     size_t Assets::LoadTexture(const std::string& path) {
@@ -31,39 +60,49 @@ namespace LowEngine {
             sf::Texture texture(path);
             GetInstance()->_textures.emplace_back(std::move(texture));
             size_t index = static_cast<int>(GetInstance()->_textures.size() - 1);
+
+            _log->debug("New texture loaded: {} with id {}", path, index);
+
             return index;
         } catch (sf::Exception& ex) {
             _log->error("Failed to load texture: {}", path);
             _log->error("Error: {}", ex.what());
-            return -1;
+            return Config::MAX_SIZE;
         }
     }
 
     size_t Assets::LoadTexture(const std::string& path, const std::string& alias) {
         size_t index = LoadTexture(path);
-        if (index != -1) {
+        if (index != Config::MAX_SIZE) {
             GetInstance()->_textureAliases[alias] = index;
         }
+
+        _log->debug("Texture with id {} loaded with alias '{}'", index, alias);
+
         return index;
     }
 
-    void Assets::LoadTextureWithAnimationSheet(const std::string& path, size_t frameWidth,
-                                               size_t frameHeight,
-                                               size_t frameCountX, size_t frameCountY) {
+    size_t Assets::LoadTextureWithAnimationSheet(const std::string& path, size_t frameWidth,
+                                                 size_t frameHeight,
+                                                 size_t frameCountX, size_t frameCountY) {
         size_t textureId = LoadTexture(path);
-        if (textureId != -1) {
+        if (textureId != Config::MAX_SIZE) {
             AddAnimationSheet(textureId, frameWidth, frameHeight, frameCountX, frameCountY);
         }
+
+        return textureId;
     }
 
-    void Assets::LoadTextureWithAnimationSheet(const std::string& path, const std::string& alias,
-                                               size_t frameWidth,
-                                               size_t frameHeight, size_t frameCountX,
-                                               size_t frameCountY) {
+    size_t Assets::LoadTextureWithAnimationSheet(const std::string& path, const std::string& alias,
+                                                 size_t frameWidth,
+                                                 size_t frameHeight, size_t frameCountX,
+                                                 size_t frameCountY) {
         size_t textureId = LoadTexture(path, alias);
-        if (textureId != -1) {
+        if (textureId != Config::MAX_SIZE) {
             AddAnimationSheet(textureId, frameWidth, frameHeight, frameCountX, frameCountY);
         }
+
+        return textureId;
     }
 
     void Assets::AddAnimationSheet(size_t textureId, size_t frameWidth, size_t frameHeight,
@@ -76,6 +115,9 @@ namespace LowEngine {
             sheet.FrameHeight = frameHeight;
             sheet.FrameCountX = frameCountX;
             sheet.FrameCountY = frameCountY;
+
+            _log->debug("Animation sheet added for texture id: {} with frame size: {}x{} and frame count: {}x{}",
+                        textureId, frameWidth, frameHeight, frameCountX, frameCountY);
         } else {
             _log->error("Texture with id: {} already has an animation sheet.", textureId);
         }
@@ -103,6 +145,9 @@ namespace LowEngine {
         firstFrameOrigin.x = firstFrameIndex % animSheet->second.FrameCountX * animSheet->second.FrameWidth;
         firstFrameOrigin.y = firstFrameIndex / animSheet->second.FrameCountX * animSheet->second.FrameHeight;
         GetInstance()->_animationSheets[textureId].AddAnimationClip(name, firstFrameIndex, frameCount, frameDuration, firstFrameOrigin);
+
+        _log->debug("Animation clip added for texture id: {} with name: '{}' and frame count: {}",
+                    textureId, name, frameCount);
     }
 
     void Assets::AddAnimationClip(const std::string& textureAlias, const std::string& name,
@@ -117,7 +162,7 @@ namespace LowEngine {
                          frameDuration);
     }
 
-    size_t Assets::LoadMap(const std::string& path, const std::vector<Terrain::LayerToTextureMapping>& mappings) {
+    size_t Assets::LoadTileMap(const std::string& path, const std::vector<Terrain::LayerToTextureMapping>& mappings) {
         std::ifstream file(path);
         if (!file.is_open()) {
             _log->error("Failed to load terrain: {}", path);
@@ -127,7 +172,7 @@ namespace LowEngine {
         nlohmann::json jsonData;
         file >> jsonData;
 
-        Terrain::Map map(GetDefaultTexture());
+        Terrain::TileMap map(GetDefaultTexture());
         map.LoadFromLDTkJson(jsonData);
 
         std::random_device rd;
@@ -218,24 +263,37 @@ namespace LowEngine {
 
         GetInstance()->_maps.emplace_back(std::move(map));
         size_t index = static_cast<int>(GetInstance()->_maps.size() - 1);
+
+        _log->debug("New map loaded: {} with id {}", path, index);
+
         return index;
     }
 
-    size_t Assets::LoadMap(const std::string& path, const std::string& alias, const std::vector<Terrain::LayerToTextureMapping>& mappings) {
-        size_t index = LoadMap(path, mappings);
+    size_t Assets::LoadTileMap(const std::string& path, const std::string& alias, const std::vector<Terrain::LayerToTextureMapping>& mappings) {
+        size_t index = LoadTileMap(path, mappings);
         if (index != -1) {
             GetInstance()->_mapAliases[alias] = index;
         }
         return index;
     }
 
-    Terrain::Map& Assets::GetMap(size_t mapId) {
+    Terrain::TileMap& Assets::GetTileMap(size_t mapId) {
         if (GetInstance()->_maps.size() <= mapId) {
             _log->error("Map with id {} does not exist", mapId);
             throw std::runtime_error("Map with id does not exist");
         }
 
         return GetInstance()->_maps[mapId];
+    }
+
+    Terrain::TileMap& Assets::GetTileMap(const std::string& mapAlias) {
+        auto map = GetInstance()->_mapAliases.find(mapAlias);
+        if (map == GetInstance()->_mapAliases.end()) {
+            _log->error("Map with alias {} does not exist", mapAlias);
+            throw std::runtime_error("Map with alias does not exist");
+        }
+
+        return GetInstance()->_maps[map->second];
     }
 
     Animation::AnimationSheet* Assets::GetAnimationSheet(size_t textureId) {
@@ -286,6 +344,55 @@ namespace LowEngine {
         return GetInstance()->_fonts[0];
     }
 
+    size_t Assets::LoadSound(const std::string& path) {
+        try {
+            sf::SoundBuffer sound(path);
+            GetInstance()->_sounds.emplace_back(std::move(sound));
+            size_t index = static_cast<int>(GetInstance()->_sounds.size() - 1);
+
+            _log->debug("New sound loaded: {} with id {}", path, index);
+
+            return index;
+        } catch (sf::Exception& ex) {
+            _log->error("Failed to load sound: {}", path);
+            _log->error("Error: {}", ex.what());
+            return -1;
+        }
+    }
+
+    size_t Assets::LoadSound(const std::string& path, const std::string& alias) {
+        size_t index = LoadSound(path);
+        if (index != -1) {
+            GetInstance()->_soundAliases[alias] = index;
+        }
+
+        _log->debug("Sound with id {} loaded with alias '{}'", index, alias);
+
+        return index;
+    }
+
+    sf::SoundBuffer& Assets::GetDefaultSound() {
+        return GetInstance()->_sounds[0];
+    }
+
+    sf::SoundBuffer& Assets::GetSound(size_t soundId) {
+        if (GetInstance()->_sounds.size() <= soundId) {
+            _log->error("Sound with id {} does not exist", soundId);
+            throw std::runtime_error("Sound with id does not exist");
+        }
+
+        return GetInstance()->_sounds[soundId];
+    }
+
+    sf::SoundBuffer& Assets::GetSound(const std::string& soundAlias) {
+        if (GetInstance()->_soundAliases.find(soundAlias) == GetInstance()->_soundAliases.end()) {
+            _log->error("Sound alias {} does not exist", soundAlias);
+            throw std::runtime_error("Sound alias does not exist");
+        }
+
+        return GetSound(GetInstance()->_soundAliases[soundAlias]);
+    }
+
     void Assets::UnloadAll() {
         GetInstance()->_maps.clear();
         GetInstance()->_mapAliases.clear();
@@ -296,5 +403,10 @@ namespace LowEngine {
 
         GetInstance()->_fonts.clear();
         GetInstance()->_fontAliases.clear();
+
+        GetInstance()->_sounds.clear();
+        GetInstance()->_soundAliases.clear();
+
+        _log->info("All assets unloaded");
     }
 }

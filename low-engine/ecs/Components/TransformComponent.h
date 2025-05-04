@@ -14,7 +14,15 @@ namespace LowEngine::ECS {
             : IComponent(memory) {
         }
 
+        TransformComponent(Memory::Memory* memory, TransformComponent const* other)
+            : IComponent(memory, other), Position(other->Position), Rotation(other->Rotation), Scale(other->Scale) {
+        }
+
         ~TransformComponent() override = default;
+
+        void CloneInto(Memory::Memory* newMemory, void* rawStorage) const override {
+            new(rawStorage) TransformComponent(newMemory, this);
+        }
 
         static const std::vector<std::type_index>& Dependencies() {
             static std::vector<std::type_index> dependencies = {};

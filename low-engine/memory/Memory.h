@@ -30,12 +30,14 @@ namespace LowEngine::Memory {
         };
 
         Memory();
+        Memory(Memory const& other);
 
         template<typename T>
         T* CreateEntity(const std::string& name) {
             auto entity = std::make_unique<T>(this);
             entity->Activate(name);
             _entities.push_back(std::move(entity));
+            _entities.back()->Id = _entities.size() - 1;
             return static_cast<T*>(_entities.back().get());
         }
 
@@ -44,13 +46,19 @@ namespace LowEngine::Memory {
             return static_cast<T*>(_entities[entityId].get());
         }
 
+        template<typename T>
+        T* FindEntity(const std::string& name) {
+            for (const auto& entity: _entities) {
+                if (entity->Name == name) {
+                    return static_cast<T*>(entity.get());
+                }
+            }
+            return nullptr;
+        }
+
         std::vector<std::unique_ptr<ECS::IEntity> >* GetAllEntities() {
             return &_entities;
         }
-
-        //ECS::Entity* GetEntity(unsigned int entityId);
-
-        //std::vector<ECS::Entity>& GetEntities();
 
         template<typename T, typename... Args>
         T* CreateComponent(size_t entityId, Args&&... args) {
@@ -75,18 +83,8 @@ namespace LowEngine::Memory {
                 }
             }
 
-            // size_t index = pool.FindFreeSlot();
-            // if (index < 0) {
-            //     _log->error("Component pool for type {} is full.", typeid(T).name());
-            //     return nullptr;
-            // }
-
-            ComponentPool<T>& pool = getOrCreatePool<T>();
+            ComponentPool<T>& pool = GetOrCreatePool<T>();
             T* component = pool.CreateComponent(this, entityId, std::forward<Args>(args)...);
-
-            // unsigned int componentId = index;
-            //_entities[entityId].AddComponent(std::type_index(typeid(T)), componentId);
-
             component->EntityId = entityId;
             component->Active = true;
             component->Initialize();
@@ -113,13 +111,13 @@ namespace LowEngine::Memory {
 
         template<typename T>
         std::vector<std::aligned_storage_t<sizeof(T), alignof(T)> >* GetAllComponents() {
-            ComponentPool<T> pool = getOrCreatePool<T>();
+            ComponentPool<T> pool = GetOrCreatePool<T>();
             return pool.GetComponentStorage();
         }
 
         template<typename T, typename Callback>
         void ForEachComponent(Callback&& callback) {
-            ComponentPool<T>& pool = getOrCreatePool<T>();
+            ComponentPool<T>& pool = GetOrCreatePool<T>();
             pool.ForEachComponent(std::forward<Callback>(callback));
         }
 
@@ -137,7 +135,7 @@ namespace LowEngine::Memory {
         std::unordered_map<std::type_index, TypeInfo> _typeInfos;
 
         template<typename T>
-        ComponentPool<T>& getOrCreatePool() {
+        ComponentPool<T>& GetOrCreatePool() {
             auto typeIdx = std::type_index(typeid(T));
             auto it = _components.find(typeIdx);
             if (it == _components.end()) {

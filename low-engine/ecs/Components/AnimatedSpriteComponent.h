@@ -24,6 +24,16 @@ namespace LowEngine::ECS {
             : SpriteComponent(memory) {
         }
 
+        AnimatedSpriteComponent(Memory::Memory* memory, AnimatedSpriteComponent const* other)
+            : SpriteComponent(memory, other),
+              Sheet(other->Sheet), Clip(other->Clip),
+              CurrentFrame(other->CurrentFrame), FrameTime(other->FrameTime), Loop(other->Loop) {
+        }
+
+        void CloneInto(Memory::Memory* newMemory, void* rawStorage) const override {
+            new(rawStorage) AnimatedSpriteComponent(newMemory, this);
+        }
+
         void SetSprite(const std::string& textureAlias) override;
 
         void SetSprite(int textureId) override;
@@ -44,7 +54,8 @@ namespace LowEngine::ECS {
             return &Sprite;
         }
 
-    protected:
+    protected
+    :
         void SetSprite(const sf::Texture& texture) override;
 
         void UpdateFrameSize();

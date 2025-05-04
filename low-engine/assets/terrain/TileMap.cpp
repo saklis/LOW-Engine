@@ -1,9 +1,9 @@
 
-#include "Map.h"
+#include "TileMap.h"
 
 #include "Config.h"
 
-void LowEngine::Terrain::Map::Update(float deltaTime) {
+void LowEngine::Terrain::TileMap::Update(float deltaTime) {
     for (auto& state: TerrainLayer.AnimatedTiles | std::views::values) {
         state.FrameTime += deltaTime;
         if (state.FrameTime >= state.Clips[state.ClipIndex]->FrameDuration) {
@@ -27,7 +27,7 @@ void LowEngine::Terrain::Map::Update(float deltaTime) {
     }
 }
 
-void LowEngine::Terrain::Map::LoadFromLDTkJson(nlohmann::json::const_reference jsonData) {
+void LowEngine::Terrain::TileMap::LoadFromLDTkJson(nlohmann::json::const_reference jsonData) {
     Name = jsonData["identifier"].get<std::string>();
     Width = jsonData["pxWid"].get<size_t>();
     Height = jsonData["pxHei"].get<size_t>();

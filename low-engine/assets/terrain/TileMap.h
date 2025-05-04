@@ -4,7 +4,7 @@
 #include "Layer.h"
 
 namespace LowEngine::Terrain {
-    class Map {
+    class TileMap {
     public:
         std::string Name;
         size_t Width = 0;
@@ -13,7 +13,7 @@ namespace LowEngine::Terrain {
         Layer TerrainLayer;
         Layer FeaturesLayer;
 
-        explicit Map(const sf::Texture& defaultTexture) : TerrainLayer(defaultTexture), FeaturesLayer(defaultTexture) {
+        explicit TileMap(const sf::Texture& defaultTexture) : TerrainLayer(defaultTexture), FeaturesLayer(defaultTexture) {
             TerrainLayer.Type = Terrain;
             FeaturesLayer.Type = Features;
         }

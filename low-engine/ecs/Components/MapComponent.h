@@ -10,10 +10,18 @@ namespace LowEngine::ECS {
         int Layer = 0;
 
         explicit MapComponent(Memory::Memory* memory)
-            : IComponent(memory), m_Sprite(Assets::GetDefaultTexture()) {
+            : IComponent(memory), _sprite(Assets::GetDefaultTexture()) {
+        }
+
+        MapComponent(Memory::Memory* memory, MapComponent const* other)
+            : IComponent(memory, other), _sprite(other->_sprite), _mapId(other->_mapId), Layer(other->Layer) {
         }
 
         ~MapComponent() override = default;
+
+        void CloneInto(Memory::Memory* newMemory, void* rawStorage) const override {
+            new(rawStorage) MapComponent(newMemory, this);
+        }
 
         static const std::vector<std::type_index>& Dependencies() {
             static std::vector dependencies = {
@@ -27,14 +35,14 @@ namespace LowEngine::ECS {
 
         void Update(float deltaTime) override;
 
-        LowEngine::Sprite* Draw() override;
+        Sprite* Draw() override;
 
         void SetMapId(size_t mapId);
 
     protected:
-        size_t m_MapId = -1;
+        size_t _mapId = -1;
 
-        Sprite m_Sprite;
-        sf::RenderTexture m_Texture;
+        Sprite _sprite;
+        sf::RenderTexture _texture;
     };
 }

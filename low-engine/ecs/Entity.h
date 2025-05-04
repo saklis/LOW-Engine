@@ -19,6 +19,8 @@ namespace LowEngine::ECS {
     public:
         explicit Entity(Memory::Memory* memory);
 
+        Entity(Memory::Memory* memory, const Entity& other);
+
         void InitAsDefault();
 
         void Activate(const std::string& name);
@@ -27,12 +29,21 @@ namespace LowEngine::ECS {
 
         template<typename T, typename... Args>
         T* AddComponent(Args&&... args) {
-            return _memory->CreateComponent<T>(Id, std::forward<Args>(args)...);
+            T* component = _memory->CreateComponent<T>(Id, std::forward<Args>(args)...);
+            if (component == nullptr) {
+                _log->error("Failed to create component of type {} for entity with id {}", DemangledTypeName(typeid(T)), Id);
+                return nullptr;
+            }
+
+            _log->debug("Component of type {} created for entity with id {}", DemangledTypeName(typeid(T)), Id);
+            return component;
         }
 
         // int GetComponent(const std::type_index& typeIndex);
 
         bool HasComponent(const std::type_index& typeIndex);
+
+        IEntity* Clone(Memory::Memory* newMemory) const override;
 
         template<typename T>
         T* GetComponent() {
@@ -42,8 +53,6 @@ namespace LowEngine::ECS {
         // std::vector<std::type_index> GetComponentTypes();
 
     protected:
-        static unsigned int _nextId;
-
         Memory::Memory* _memory;
         //std::vector<std::type_index> _components;
     };

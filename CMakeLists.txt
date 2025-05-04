@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.30)
-project(Lords-of-War)
+project(LowEngine)
 
 if (CMAKE_GENERATOR MATCHES "Visual Studio")
     set(CMAKE_SYSTEM_VERSION 10.0) # Windows SDK 11.0
 endif()
 
 set(ENGINE_NAME "LowEngine")
-set(GAME_NAME "Lords-of-War")
+set(EDITOR_NAME "LowEditor")
 
 option(BUILD_SHARED_ENGINE "Build LowEngine as a shared library" ON)
 
@@ -22,7 +22,7 @@ if (UNIX)
     set(CMAKE_INSTALL_RPATH "$ORIGIN")
 endif()
 
-set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/lords-of-war/assets")
+set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/low-editor/assets")
 
 ###############################################################################
 # OUTPUT
@@ -146,28 +146,28 @@ set_target_properties(${ENGINE_NAME} PROPERTIES
 )
 
 ###############################################################################
-# LORDS OF WAR GAME
+# LOW EDITOR
 ###############################################################################
 
-file(GLOB_RECURSE LOWGAME_SOURCE_FILES "${PROJECT_SOURCE_DIR}/lords-of-war/*.cpp")
-file(GLOB_RECURSE LOWGAME_HEADER_FILES "${PROJECT_SOURCE_DIR}/lords-of-war/*.h")
+file(GLOB_RECURSE LOWEDITOR_SOURCE_FILES "${PROJECT_SOURCE_DIR}/low-editor/*.cpp")
+file(GLOB_RECURSE LOWEDITOR_HEADER_FILES "${PROJECT_SOURCE_DIR}/low-editor/*.h")
 
 # executable
-add_executable(${GAME_NAME} ${LOWGAME_SOURCE_FILES} ${LOWGAME_HEADER_FILES})
-set_target_properties(${GAME_NAME} PROPERTIES OUTPUT_NAME "Lords of War")
+add_executable(${EDITOR_NAME} ${LOWEDITOR_SOURCE_FILES} ${LOWEDITOR_HEADER_FILES})
+set_target_properties(${EDITOR_NAME} PROPERTIES OUTPUT_NAME "LOW Editor")
 
 # Link the executable against our LowEngine library
-target_link_libraries(${GAME_NAME} PRIVATE
+target_link_libraries(${EDITOR_NAME} PRIVATE
         LowEngine
 )
 
-target_include_directories(${GAME_NAME} PRIVATE
-        "${PROJECT_SOURCE_DIR}/lords-of-war"
+target_include_directories(${EDITOR_NAME} PRIVATE
+        "${PROJECT_SOURCE_DIR}/low-editor"
 )
 
 # output
 
-set_target_properties(${GAME_NAME} PROPERTIES
+set_target_properties(${EDITOR_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BUILD_OUTPUT_DEBUG}
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
 )
@@ -179,7 +179,7 @@ set_target_properties(${GAME_NAME} PROPERTIES
 if (WIN32)
 foreach (libFile IN LISTS MINGW_LIBS)
     add_custom_command(
-            TARGET ${GAME_NAME}
+            TARGET ${EDITOR_NAME}
             POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${MINGW_LIBS_DIR}/${libFile}"

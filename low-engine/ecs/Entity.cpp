@@ -8,13 +8,15 @@
 // }
 
 namespace LowEngine::ECS {
-    // initialize default value to static field
-    unsigned int Entity::_nextId = 0;
-
     Entity::Entity(LowEngine::Memory::Memory* memory) {
-        Id = _nextId++; // assign current value to this instance and then increment
-
         _memory = memory;
+    }
+
+    Entity::Entity(Memory::Memory* memory, const Entity& other) {
+        _memory = memory;
+
+        Name = other.Name;
+        Active = other.Active;
     }
 
     void Entity::InitAsDefault() {
@@ -30,6 +32,10 @@ namespace LowEngine::ECS {
     bool Entity::HasComponent(const std::type_index& typeIndex) {
         void* componentPtr = _memory->GetComponent(Id, typeIndex);
         return componentPtr != nullptr;
+    }
+
+    IEntity* Entity::Clone(Memory::Memory* newMemory) const {
+        return new Entity(newMemory, *this);
     }
 
     // void Entity::AddComponent(const std::type_index& typeIndex, unsigned int componentId) {

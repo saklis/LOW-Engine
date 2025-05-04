@@ -15,7 +15,9 @@ namespace LowEngine {
 
         ~SceneManager() = default;
 
-        LowEngine::Scene& CreateScene(const std::string& name);
+        Scene& CreateScene(const std::string& name);
+
+        unsigned CreateTemporarySceneFromCurrent();
 
         // Select a scene as 'current'
         bool SelectScene(unsigned int index);
@@ -25,14 +27,15 @@ namespace LowEngine {
         bool SelectScene(const LowEngine::Scene& scene);
 
         // Get the current active scene
-        LowEngine::Scene& GetCurrentScene();
+        Scene& GetCurrentScene();
 
-        const LowEngine::Scene& GetCurrentScene() const;
+        const Scene& GetCurrentScene() const;
 
+        void DestroyCurrentScene();
         void DestroyAll();
 
     protected:
-        std::vector<LowEngine::Scene> _scenes;
+        std::vector<std::unique_ptr<Scene>> _scenes;
         unsigned int _currentSceneIndex;
     };
 }

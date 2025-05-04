@@ -3,8 +3,6 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 
-#include "devtools/DevTools.h"
-
 namespace LowEngine {
     void Game::StartLog() {
         _log = spdlog::basic_logger_mt(Config::LOGGER_NAME, "engine.log", true);
@@ -22,20 +20,13 @@ namespace LowEngine {
     void Game::OnWindowClosed() {
         Scenes.DestroyAll();
         Assets::UnloadAll();
-        if (AllowDevTools) {
-            DevTools::Free();
-        }
         Window.close();
     }
 
     bool Game::OpenWindow(const sf::String& title, unsigned int width, unsigned int height) {
         Window.create(sf::VideoMode({width, height}), title);
         Window.setFramerateLimit(60);
-        Window.setKeyRepeatEnabled(false);
-
-        if (AllowDevTools) {
-            if (!DevTools::Initialize(Window)) return false;
-        }
+        Window.setKeyRepeatEnabled(false); // for compatibility with Input system
 
         return Window.isOpen();
     }
@@ -43,9 +34,11 @@ namespace LowEngine {
     bool Game::IsWindowOpen() {
         DeltaTime = _clock.restart(); // time elapsed since last loop iteration
 
-        if (ShowDevTools) DevTools::BeginReadInput();
-
+        WindowEvents.clear();
         Input.ClearActionState();
+
+        bool isScenePaused = Scenes.GetCurrentScene().IsPaused;
+
         while (const std::optional event = Window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
                 OnWindowClosed();
@@ -57,44 +50,21 @@ namespace LowEngine {
                 Scenes.GetCurrentScene().SetWindowSize(windowSize);
             }
 
-            if (AllowDevTools) {
-                if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
-                    if (keyPressed->code == sf::Keyboard::Key::F1) {
-                        ShowDevTools = !ShowDevTools;
-                    }
-                }
+            if (!isScenePaused) Input.Read(event);
 
-                if (ShowDevTools) DevTools::ReadInput(Window, event);
-            }
-
-            Input.Read(event);
+            WindowEvents.emplace_back(event);
         }
-        if (ShowDevTools) DevTools::EndReadInput();
 
-        Input.Update();
-
-        if (ShowDevTools) {
-            DevTools::Update(Window, DeltaTime);
-            DevTools::Build(*this);
-        }
+        if (!isScenePaused) Input.Update();
 
         Update(DeltaTime.asSeconds());
-        Draw();
 
         return Window.isOpen();
     }
 
     void Game::Update(float deltaTime) {
-        Scenes.GetCurrentScene().Update(deltaTime);
-    }
-
-    void Game::Draw() {
-        Window.clear();
-
-        Scenes.GetCurrentScene().Draw(Window);
-
-        if (ShowDevTools) DevTools::Render(Window);
-
-        Window.display();
+        if (!Scenes.GetCurrentScene().IsPaused) {
+            Scenes.GetCurrentScene().Update(deltaTime);
+        }
     }
 }

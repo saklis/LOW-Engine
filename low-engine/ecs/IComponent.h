@@ -18,6 +18,13 @@ namespace LowEngine::ECS {
         explicit IComponent(Memory::Memory* memory) : _memory(memory) {
         };
 
+        IComponent(Memory::Memory* memory, IComponent const* other) : _memory(memory) {
+            EntityId = other->EntityId;
+            Active = other->Active;
+        };
+
+        virtual void CloneInto(Memory::Memory* newMemory, void*  rawStorage) const = 0;
+
         virtual ~IComponent() = default;
 
         virtual void Initialize() = 0;

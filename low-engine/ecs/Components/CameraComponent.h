@@ -13,7 +13,15 @@ namespace LowEngine::ECS {
             : IComponent(memory) {
         }
 
+        CameraComponent(Memory::Memory* memory, CameraComponent const* other)
+            : IComponent(memory, other), _view(other->_view), ViewSize(other->ViewSize), ZoomFactor(other->ZoomFactor) {
+        }
+
         ~CameraComponent() override = default;
+
+        void CloneInto(Memory::Memory* newMemory, void* rawStorage) const override {
+            new(rawStorage) CameraComponent(newMemory, this);
+        }
 
         static const std::vector<std::type_index>& Dependencies() {
             static std::vector<std::type_index> dependencies = {

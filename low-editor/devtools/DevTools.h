@@ -12,10 +12,6 @@ namespace LowEngine {
 
         static void Free();
 
-        static void BeginReadInput();
-
-        static void EndReadInput();
-
         static void ReadInput(const sf::RenderWindow& window, const std::optional<sf::Event>& event);
 
         static void Update(sf::RenderWindow& window, sf::Time deltaTime);
@@ -29,6 +25,10 @@ namespace LowEngine {
         static inline void* _selectedComponent = nullptr;
         static inline std::type_index _selectedComponentType = typeid(void);
 
+        static void DisplayMenuBar(LowEngine::Game& game);
+
+        static void DisplayToolbar(Game& game, const sf::Vector2u& displaySize, float YOffset);
+
         static void DisplayWorldOutliner(Scene& scene, int posX, int posY, int width, int height);
 
         static void DisplayProperties(Scene& scene, int posX, int posY, int width, int height);
@@ -39,8 +39,12 @@ namespace LowEngine {
 
         static void DisplayCameraComponentProperties(Scene& scene);
 
-        static const char* DemangledTypeName(const std::type_index& type);
-
         static std::string InsertSpaces(const std::string& str);
+
+        static sf::Texture playTexture;
+        static sf::Texture pauseTexture;
+        static sf::Texture stopTexture;
+
+        static bool LoadIcons();
     };
 }
