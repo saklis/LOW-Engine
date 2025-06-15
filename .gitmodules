@@ -1,6 +1,7 @@
 [submodule "3rd_party/SFML"]
 	path = 3rd_party/SFML
 	url = https://github.com/SFML/SFML.git
+	branch = master
 [submodule "3rd_party/spdlog"]
 	path = 3rd_party/spdlog
 	url = https://github.com/gabime/spdlog.git
