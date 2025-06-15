@@ -5,6 +5,12 @@
 namespace LowEngine {
     class Sprite : public sf::Sprite {
     public:
+        /**
+         * @brief Layer number.
+         *
+         * Sprite of this component will be drawn on this layer.
+         * This applies only if Scene's sorting mode is set to Layer.
+         */
         int Layer = 0;
 
         explicit Sprite(const sf::Texture& texture)

@@ -15,7 +15,7 @@
 
 #include "Log.h"
 
-#include "animation/AnimationSheet.h"
+#include "animation/SpriteSheet.h"
 #include "terrain/TileMap.h"
 
 #include "SFML/Graphics/Font.hpp"
@@ -23,7 +23,7 @@
 
 #include "defaults/unitblock.hpp"
 #include "SFML/Audio/SoundBuffer.hpp"
-#include "terrain/LayerToTextureMapping.h"
+#include "terrain/LayerDefinition.h"
 
 namespace LowEngine {
     /**
@@ -57,7 +57,7 @@ namespace LowEngine {
          * @param frameCountY Number of frames in Y direction
          * @return Unique ID of loaded texture
          */
-        static size_t LoadTextureWithAnimationSheet(const std::string& path, size_t frameWidth,
+        static size_t LoadTextureWithSpriteSheet(const std::string& path, size_t frameWidth,
                                                     size_t frameHeight, size_t frameCountX,
                                                     size_t frameCountY);
 
@@ -71,7 +71,7 @@ namespace LowEngine {
          * @param frameCountY Number of frames in Y direction
          * @return Unique ID of loaded texture
          */
-        static size_t LoadTextureWithAnimationSheet(const std::string& path, const std::string& alias,
+        static size_t LoadTextureWithSpriteSheet(const std::string& path, const std::string& alias,
                                                     size_t frameWidth, size_t frameHeight,
                                                     size_t frameCountX, size_t frameCountY);
 
@@ -83,7 +83,7 @@ namespace LowEngine {
          * @param frameCountX Number of frames in X direction
          * @param frameCountY Number of frames in Y direction
          */
-        static void AddAnimationSheet(size_t textureId, size_t frameWidth, size_t frameHeight,
+        static void AddSpriteSheet(size_t textureId, size_t frameWidth, size_t frameHeight,
                                       size_t frameCountX, size_t frameCountY);
 
         /**
@@ -94,11 +94,12 @@ namespace LowEngine {
          * @param frameCountX Number of frames in X direction
          * @param frameCountY Number of frames in Y direction
          */
-        static void AddAnimationSheet(const std::string& textureAlias, size_t frameWidth,
+        static void AddSpriteSheet(const std::string& textureAlias, size_t frameWidth,
                                       size_t frameHeight, size_t frameCountX, size_t frameCountY);
 
         /**
          * @brief Define Animation Clip for a texture.
+         *
          * Texture need to have an animation sheet defined before.
          * @param textureId ID of the texture
          * @param name Name of the animation clip
@@ -111,6 +112,7 @@ namespace LowEngine {
 
         /**
          * @brief Define Animation Clip for a texture with alias.
+         *
          * Texture need to have an animation sheet defined before.
          * @param textureAlias Texture alias
          * @param name Name of the animation clip
@@ -123,6 +125,7 @@ namespace LowEngine {
 
         /**
          * @brief Load tile map from file.
+         *
          * Supports LDTk format (*.ldtkl). Names of layers in file MUST follow the same naming convention as in LowEngine::Terrain::LayerType enum.
          *
          * Mappings are used to assign texture to layer. Only texture following specified layout are supported.
@@ -133,13 +136,14 @@ namespace LowEngine {
          * Aliases for Clips must be provided on appropriate indexes of LayerToTextureMapping::AnimationClipNames vector.
          * Multiple clips can be defined for a single tile - in that case particular tile with have Clip assigned randomly.
          * @param path Path to the map file (*.ldtkl)
-         * @param mappings Vector for each layer to map texture and Animations Clips.
+         * @param definitions Vector for each layer to map texture and Animations Clips.
          * @return Map ID
          */
-        static size_t LoadTileMap(const std::string& path, const std::vector<Terrain::LayerToTextureMapping>& mappings);
+        static size_t LoadTileMap(const std::string& path, const std::vector<Terrain::LayerDefinition>& definitions);
 
         /**
          * @brief Load tile map from file with alias.
+         *
          * Supports LDTk format (*.ldtkl). Names of layers in file MUST follow the same naming convention as in LowEngine::Terrain::LayerType enum.
          *
          * Mappings are used to assign texture to layer. Only texture following specified layout are supported.
@@ -151,10 +155,10 @@ namespace LowEngine {
          * Multiple clips can be defined for a single tile - in that case particular tile with have Clip assigned randomly.
          * @param path Path to the map file (*.ldtkl)
          * @param alias Alias that will be used to access the map
-         * @param mappings Vector for each layer to map texture and Animations Clips.
+         * @param definitions Vector for each layer to map texture and Animations Clips.
          * @return Map ID
          */
-        static size_t LoadTileMap(const std::string& path, const std::string& alias, const std::vector<Terrain::LayerToTextureMapping>& mappings);
+        static size_t LoadTileMap(const std::string& path, const std::string& alias, const std::vector<Terrain::LayerDefinition>& definitions);
 
         /**
          * @brief Retrieve a tile map by its ID.
@@ -171,18 +175,25 @@ namespace LowEngine {
         static Terrain::TileMap& GetTileMap(const std::string& mapAlias);
 
         /**
+         * @brief Retrieve Id of the map by its alias.
+         * @param mapAlias Alias of the map.
+         * @return Id of the map.
+         */
+        static size_t GetTileMapId(const std::string& mapAlias);
+
+        /**
          * @brief Retrieve the animation sheet associated with a texture ID.
          * @param textureId The unique ID of the texture.
          * @return Pointer to the `Animation::AnimationSheet` if it exists, otherwise `nullptr`.
          */
-        static Animation::AnimationSheet* GetAnimationSheet(size_t textureId);
+        static Animation::SpriteSheet* GetSpriteSheet(size_t textureId);
 
         /**
          * @brief Retrieve the animation sheet associated with a texture alias.
          * @param textureAlias The alias of the texture.
          * @return Pointer to the `Animation::AnimationSheet` if it exists, otherwise throws an exception.
          */
-        static Animation::AnimationSheet* GetAnimationSheet(const std::string& textureAlias);
+        static Animation::SpriteSheet* GetSpriteSheet(const std::string& textureAlias);
 
         /**
          * @brief Retrieve the default texture.
@@ -254,6 +265,7 @@ namespace LowEngine {
 
         /**
          * @brief Unload all loaded assets, including textures, sounds, fonts, and tile maps and others.
+         *
          * This method clears all internal storage and resets the asset manager to its initial state.
          */
         static void UnloadAll();
@@ -274,12 +286,17 @@ namespace LowEngine {
             return &instance;
         }
 
+        static void LoadTerrainLayerData(const Terrain::LayerDefinition* terrainLayerDefinition, Terrain::TileMap& map);
+        static void LoadFeatureLayerData(const Terrain::LayerDefinition* featuresLayerDefinition, Terrain::TileMap& map);
+
+        static void ReadNavDataForLayer(Terrain::TileMap& map, Terrain::Layer& layer, const Terrain::LayerDefinition* layerDefinition);
+
         std::vector<Terrain::TileMap> _maps;
         std::unordered_map<std::string, size_t> _mapAliases;
 
         std::vector<sf::Texture> _textures;
         std::unordered_map<std::string, size_t> _textureAliases;
-        std::unordered_map<size_t, Animation::AnimationSheet> _animationSheets;
+        std::unordered_map<size_t, Animation::SpriteSheet> _animationSheets;
 
         std::vector<sf::Font> _fonts;
         std::unordered_map<std::string, sf::Font> _fontAliases;

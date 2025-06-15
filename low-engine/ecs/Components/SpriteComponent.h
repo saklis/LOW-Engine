@@ -9,10 +9,29 @@
 #include "graphics/Sprite.h"
 
 namespace LowEngine::ECS {
+    /**
+     * Represents a component that displays a Sprite.
+     *
+     * Depends on Transform Component
+     */
     class SpriteComponent : public IComponent {
     public:
-        unsigned int TextureId = 0;
+        /**
+         * @brief Id of the texture used by the Sprite.
+         */
+        size_t TextureId = 0;
+
+        /**
+         * @brief This component's Sprite.
+         */
         Sprite Sprite;
+
+        /**
+         * @brief Layer number.
+         *
+         * Sprite of this component will be drawn on this layer.
+         * This applies only if Scene's sorting mode is set to Layer.
+         */
         int Layer = 0;
 
         explicit SpriteComponent(Memory::Memory* memory)
@@ -45,11 +64,23 @@ namespace LowEngine::ECS {
             return &Sprite;
         }
 
-        virtual void SetSprite(const std::string& textureAlias);
+        /**
+         * @brief Changes the texture the Sprite is using.
+         * @param textureAlias Texture's alias.
+         */
+        virtual void SetTexture(const std::string& textureAlias);
 
-        virtual void SetSprite(int textureId);
+        /**
+         * @brief Changes the texture the Sprite is using.
+         * @param textureId Texture's Id.
+         */
+        virtual void SetTexture(int textureId);
 
     protected:
-        virtual void SetSprite(const sf::Texture& texture);
+        /**
+         * @brief Changes the texture the Sprite is using.
+         * @param texture Reference to texture.
+         */
+        virtual void SetTexture(const sf::Texture& texture);
     };
 }

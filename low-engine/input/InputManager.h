@@ -10,6 +10,13 @@
 #include "SFML/Window/Event.hpp"
 
 namespace LowEngine::Input {
+    /**
+     * @brief Represents the state of modifier keys such as Shift, Control, and Alt.
+     *
+     * This structure is used to track the state of both left and right modifier keys,
+     * including Left Shift, Left Control, Left Alt, Right Shift, Right Control, and Right Alt.
+     * Each key state is represented as a boolean value, indicating whether the key is pressed or not.
+     */
     struct ModifierKey {
         bool LShift = false;
         bool LCtrl = false;
@@ -45,6 +52,16 @@ namespace LowEngine::Input {
         return action != modifier;
     }
 
+    /**
+     * @brief Represents an action key with associated modifier states.
+     *
+     * This structure is used to define a key along with the state of left and right modifier keys, including Shift, Control, and Alt.
+     * It allows for more precise input functionality by combining a specific key press with additional modifier keys.
+     *
+     * The primary key is defined using an `sf::Keyboard::Key`, and modifiers are represented as individual boolean values
+     * for left and right Shift, Control, and Alt keys. Instances of this structure can be constructed with or without specifying the key
+     * and modifier states.
+     */
     struct ActionKey {
         sf::Keyboard::Key Key = sf::Keyboard::Key::Unknown;
         bool LShift = false;
@@ -90,6 +107,9 @@ namespace LowEngine::Input {
 }
 
 namespace std {
+    /**
+     * @brief Hash specialization for ActionKey, required by unordered_map
+     */
     template<>
     struct hash<LowEngine::Input::ActionKey> {
         std::size_t operator()(const LowEngine::Input::ActionKey& k) const noexcept {
@@ -105,12 +125,22 @@ namespace std {
 }
 
 namespace LowEngine::Input {
+    /**
+     * @brief Responsible for monitoring input events and maintaining status of defined Actions.
+     */
     class InputManager {
     public:
         InputManager() = default;
 
         ~InputManager() = default;
 
+        /**
+         * @brief Add new Action that should be maintained.
+         * @tparam Keys List of modifier keys. Needs to be of type sf::Keyboard::Key
+         * @param actionName Name of the new Action.
+         * @param key Key that should be assigned to this Action
+         * @param modifiers Modifier keys that should apply, if any
+         */
         template<typename... Keys>
         void AddAction(const std::string& actionName, sf::Keyboard::Key key, Keys... modifiers) {
             static_assert((std::is_same_v<sf::Keyboard::Key, Keys> && ...),
@@ -126,6 +156,13 @@ namespace LowEngine::Input {
             _actions[actionName] = std::move(newAction);
         };
 
+        /**
+         * @brief Add new Action that should be maintained.
+         * @tparam Keys List of modifier keys. Needs to be of type sf::Keyboard::Key
+         * @param actionName Name of the new Action.
+         * @param mouseButton Mouse button that should be assigned to this Action
+         * @param modifiers Modifier keys that should apply, if any
+         */
         template<typename... Keys>
         void AddAction(const std::string& actionName, sf::Mouse::Button mouseButton, Keys... modifiers) {
             static_assert((std::is_same_v<sf::Keyboard::Key, Keys> && ...),
@@ -135,32 +172,44 @@ namespace LowEngine::Input {
             newAction.Name = actionName;
             newAction.Type = ActionType::Mouse;
 
+            newAction.MouseButton = mouseButton;
             ApplyKeyboardModifiers(newAction, {modifiers...});
 
             _actions[actionName] = std::move(newAction);
         };
 
+        /**
+         * @brief Retrieve current position of mouse pointer on the window.
+         *
+         * Position is relative to upper-left corner of the window.
+         * @return Current mouse position.
+         */
         sf::Vector2i GetMousePosition();
 
-        const Action& GetAction(const std::string& actionName) const;
+        /**
+         * @brief Retrieve defined Action by its name.
+         *
+         * Retrieved Action can be used to read its current state.
+         * @param actionName Name of the action.
+         * @return Action with provided name. Returns nullptr if Action with name doesn't exist.
+         */
+        const Action* GetAction(const std::string& actionName) const;
 
+        /**
+         * @brief INTERNAL: Clear current state for all Actions.
+         */
         void ClearActionState();
 
+        /**
+         * @brief INTERNAL: Read input event from SFML.
+         * @param event Current event.
+         */
         void Read(const std::optional<sf::Event>& event);
 
         void Update();
 
     protected:
         bool _inputChanged = false;
-
-        /**
-         * @var _emptyAction
-         * @brief Represents a default or no-op action.
-         *
-         * This variable is used in cases such as default initialization,
-         * fallback mechanisms, or preventing null reference errors during action lookup.
-         */
-        Action _emptyAction = {};
         std::unordered_map<std::string, Action> _actions;
 
         std::vector<sf::Keyboard::Key> _currentKeys;
@@ -168,6 +217,11 @@ namespace LowEngine::Input {
         sf::Vector2i _currentMousePosition;
         ModifierKey _currentModifiers;
 
+        /**
+         * @brief Apply provided modifiers to the Action.
+         * @param action Action that should have modifiers applied.
+         * @param modifierKeys Modifiers to apply.
+         */
         void ApplyKeyboardModifiers(Action& action, const std::vector<sf::Keyboard::Key>& modifierKeys);
     };
 }

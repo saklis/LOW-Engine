@@ -4,13 +4,39 @@
 #include "SpriteComponent.h"
 
 namespace LowEngine::ECS {
+    /**
+     * @brief Represents a component that draws an animated sprite.
+     *
+     * Depends on Transform Component
+     */
     class AnimatedSpriteComponent : public SpriteComponent {
     public:
-        Animation::AnimationSheet* Sheet = nullptr;
+        /**
+         * @brief Pointer to Sprite Sheet that should be source of the animation frames.
+         */
+        Animation::SpriteSheet* Sheet = nullptr;
+
+        /**
+         * @brief Pointer to Animation Clip that describes currently selected animation.
+         */
         Animation::AnimationClip* Clip = nullptr;
 
-        unsigned int CurrentFrame = 0;
+        /**
+         * @brief Index of animation's current frame.
+         */
+        size_t CurrentFrame = 0;
+
+        /**
+         * @brief Timer for current frame.
+         */
         float FrameTime = 0.0f;
+
+        /**
+         * @brief Should animation loop?
+         *
+         * If True, animation will restart from the begining after last frame.
+         * If set to False, Animation will freeze on last frame.
+         */
         bool Loop = true;
 
         static const std::vector<std::type_index>& Dependencies() {
@@ -34,15 +60,38 @@ namespace LowEngine::ECS {
             new(rawStorage) AnimatedSpriteComponent(newMemory, this);
         }
 
-        void SetSprite(const std::string& textureAlias) override;
+        /**
+         * @brief Set texture that will be used as source for animation frames.
+         *
+         * Setting Texture will automatically load its Sprite Sheet
+         * @param textureAlias Texture's alias.
+         */
+        void SetTexture(const std::string& textureAlias) override;
 
-        void SetSprite(int textureId) override;
+        /**
+         * @brief Set texture that will be used as source for animation frames.
+         *
+         * Setting Texture will automatically load its Sprite Sheet
+         * @param textureId Texture's Id.
+         */
+        void SetTexture(int textureId) override;
 
+        /**
+         * @brief Play animation.
+         *
+         * Function will automatically find and load correct Animation Clip.
+         * @param animationName Animation's name.
+         * @param loop Should animation loop?
+         */
         void Play(const std::string& animationName, bool loop = true);
 
+        /**
+         * @brief Stop currently playing animation.
+         *
+         * Function will clear Animation Clip.
+         * When Animation is stopped, Sprite will freez on last displayed frame.
+         */
         void Stop();
-
-        void SetLooping(bool looping);
 
         void Initialize() override {
             SpriteComponent::Initialize();
@@ -54,10 +103,12 @@ namespace LowEngine::ECS {
             return &Sprite;
         }
 
-    protected
-    :
-        void SetSprite(const sf::Texture& texture) override;
+    protected:
+        void SetTexture(const sf::Texture& texture) override;
 
+        /**
+         * @brief Updates Sprite properties to match selected Texture's properties.
+         */
         void UpdateFrameSize();
     };
 }

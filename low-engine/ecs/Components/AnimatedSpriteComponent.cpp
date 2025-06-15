@@ -1,49 +1,44 @@
 #include "AnimatedSpriteComponent.h"
 
 namespace LowEngine::ECS {
-    void AnimatedSpriteComponent::SetSprite(const std::string& textureAlias) {
-        SpriteComponent::SetSprite(textureAlias);
-        Sheet = Assets::GetAnimationSheet(textureAlias);
+    void AnimatedSpriteComponent::SetTexture(const std::string& textureAlias) {
+        SpriteComponent::SetTexture(textureAlias);
+        Sheet = Assets::GetSpriteSheet(textureAlias);
 
         UpdateFrameSize();
     }
 
-    void AnimatedSpriteComponent::SetSprite(int32_t textureId) {
-        SpriteComponent::SetSprite(textureId);
-        Sheet = Assets::GetAnimationSheet(textureId);
+    void AnimatedSpriteComponent::SetTexture(int32_t textureId) {
+        SpriteComponent::SetTexture(textureId);
+        Sheet = Assets::GetSpriteSheet(textureId);
 
         UpdateFrameSize();
     }
 
     void AnimatedSpriteComponent::Play(const std::string& animationName, bool loop) {
         if (Sheet == nullptr) {
-            _log->error("Cannot play animation {}. No animation sheet set.", animationName);
+            _log->error("Cannot play animation {}. No sprite sheet is not set.", animationName);
             return;
         }
 
         Clip = Sheet->GetAnimationClip(animationName);
 
+        if (Clip == nullptr) {
+            _log->error("Cannot play animation {}. Animation clip does not exist.", animationName);
+            return;
+        }
+
         CurrentFrame = 0;
         FrameTime = 0.0f;
         Loop = loop;
 
-        sf::IntRect frame;
-        frame.position.x = static_cast<int>(Clip->StartFrame % Sheet->FrameCountX * Sheet->FrameWidth);
-        frame.position.y = static_cast<int>(Clip->StartFrame / Sheet->FrameCountX * Sheet->FrameHeight);
-        frame.size.x = static_cast<int>(Sheet->FrameWidth);
-        frame.size.y = static_cast<int>(Sheet->FrameHeight);
-
-        Sprite.setTextureRect(frame);
+        Sprite.setTextureRect(Clip->Frames[CurrentFrame]);
     }
 
     void AnimatedSpriteComponent::Stop() {
         Clip = nullptr;
         CurrentFrame = 0;
         FrameTime = 0.0f;
-    }
-
-    void AnimatedSpriteComponent::SetLooping(bool looping) {
-        Loop = looping;
     }
 
     void AnimatedSpriteComponent::Update(float deltaTime) {
@@ -65,21 +60,15 @@ namespace LowEngine::ECS {
             }
         }
 
-        sf::IntRect frame;
-        frame.position.x = static_cast<int>((Clip->StartFrame + CurrentFrame) % Sheet->FrameCountX * Sheet->FrameWidth);
-        frame.position.y = static_cast<int>(Clip->StartFrame / Sheet->FrameCountX * Sheet->FrameHeight);
-        frame.size.x = static_cast<int>(Sheet->FrameWidth);
-        frame.size.y = static_cast<int>(Sheet->FrameHeight);
-
-        Sprite.setTextureRect(frame);
+        Sprite.setTextureRect(Clip->Frames[CurrentFrame]);
     }
 
-    void AnimatedSpriteComponent::SetSprite(const sf::Texture& texture) {
-        SpriteComponent::SetSprite(texture);
+    void AnimatedSpriteComponent::SetTexture(const sf::Texture& texture) {
+        SpriteComponent::SetTexture(texture);
     }
 
     void AnimatedSpriteComponent::UpdateFrameSize() {
-        auto size = sf::Vector2<int>(Sheet->FrameWidth, Sheet->FrameHeight);
+        auto size = sf::Vector2<int>(static_cast<int>(Sheet->FrameSize.x), static_cast<int>(Sheet->FrameSize.y));
         Sprite.setTextureRect(sf::IntRect({0, 0}, size));
         Sprite.setOrigin({static_cast<float>(size.x) / 2, static_cast<float>(size.y) / 2});
     }

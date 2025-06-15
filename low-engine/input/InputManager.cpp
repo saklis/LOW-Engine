@@ -5,14 +5,13 @@ namespace LowEngine::Input {
         return _currentMousePosition;
     }
 
-    const Action& InputManager::GetAction(const std::string& actionName) const {
+    const Action* InputManager::GetAction(const std::string& actionName) const {
         auto action = _actions.find(actionName);
         if (action != _actions.end()) {
-            return action->second;
+            return &(action->second);
         }
 
-        // if action not found, return empty
-        return _emptyAction;
+        return nullptr;
     }
 
     void InputManager::ClearActionState() {

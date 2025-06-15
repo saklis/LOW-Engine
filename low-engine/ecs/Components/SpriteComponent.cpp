@@ -1,7 +1,7 @@
 #include "SpriteComponent.h"
 
 namespace LowEngine::ECS {
-    void SpriteComponent::SetSprite(const sf::Texture& texture) {
+    void SpriteComponent::SetTexture(const sf::Texture& texture) {
         Sprite.setTexture(texture);
 
         auto size = static_cast<sf::Vector2<int>>(texture.getSize());
@@ -17,11 +17,11 @@ namespace LowEngine::ECS {
         Sprite.Layer = Layer;
     }
 
-    void SpriteComponent::SetSprite(const std::string& textureAlias) {
-        SetSprite(Assets::GetTexture(textureAlias));
+    void SpriteComponent::SetTexture(const std::string& textureAlias) {
+        SetTexture(Assets::GetTexture(textureAlias));
     }
 
-    void SpriteComponent::SetSprite(int textureId) {
-        SetSprite(Assets::GetTexture(textureId));
+    void SpriteComponent::SetTexture(int textureId) {
+        SetTexture(Assets::GetTexture(textureId));
     }
 }

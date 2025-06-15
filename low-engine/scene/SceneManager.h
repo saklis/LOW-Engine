@@ -9,33 +9,80 @@
 namespace LowEngine {
     class Game;
 
+    /**
+     * @brief Scene Manager keeps a list of all existing scenes, alloes creation of new onse and switching between them.
+     */
     class SceneManager {
     public:
         SceneManager();
 
         ~SceneManager() = default;
 
-        Scene& CreateScene(const std::string& name);
+        /**
+         * @brief Create new scene.
+         *
+         * New scene will not be automatically set as active scene.
+         * @param name Name of the new scene.
+         * @return Pointer to the new scene. Returns nullptr in case of error.
+         */
+        Scene* CreateScene(const std::string& name);
 
-        unsigned CreateTemporarySceneFromCurrent();
+        /**
+         * @brief Create a deep copy of current scene.
+         * @param nameSufix Suffix that will be added to the scene's Name.
+         * @return Id of the new scene.
+         */
+        size_t CreateCopySceneFromCurrent(const std::string& nameSufix);
 
-        // Select a scene as 'current'
-        bool SelectScene(unsigned int index);
+        /**
+         * @brief Set scene with provided Id as 'current'
+         * @param index Id of the scene.
+         * @return True if current scene was changed. Returns false in case of error.
+         */
+        bool SelectScene(size_t index);
 
+        /**
+         * @brief Set scene with provided name as 'current'
+         * @param name Name of the scene.
+         * @return True if current scene was changed. Returns false in case of error.
+         */
         bool SelectScene(const std::string& name);
 
+        /**
+         * @brief Set refered scene as 'current'.
+         * @param scene Reference to the scene.
+         * @return True if current scene was changed. Returns false in case of error.
+         */
         bool SelectScene(const LowEngine::Scene& scene);
 
-        // Get the current active scene
-        Scene& GetCurrentScene();
+        /**
+         * @brief Retrieve pointer to scene that is marked as 'current'.
+         * @return Pointer to scene. Returns nullptr in case of error.
+         */
+        Scene* GetCurrentScene();
 
+        /**
+         * @brief Retrieve const reference to the scene that is marked as 'current'.
+         *
+         *
+         * @return
+         */
         const Scene& GetCurrentScene() const;
 
+        /**
+         * @brief Destroy current scene.
+         *
+         * Scene lower on the "stack" will be marked as current.
+         */
         void DestroyCurrentScene();
+
+        /**
+         * @brief Destroy all scenes.
+         */
         void DestroyAll();
 
     protected:
         std::vector<std::unique_ptr<Scene>> _scenes;
-        unsigned int _currentSceneIndex;
+        size_t _currentSceneIndex;
     };
 }

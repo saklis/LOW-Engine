@@ -15,18 +15,43 @@ namespace LowEngine::Memory {
 }
 
 namespace LowEngine::ECS {
+    /**
+     * @brief Base Entity for the engine.
+     */
     class Entity : public IEntity {
     public:
+        /**
+         * @brief Constructs an Entity object.
+         *
+         * Initializes an entity using the provided memory manager.
+         *
+         * @param memory A pointer to the memory manager instance responsible for managing components of the entity.
+         */
         explicit Entity(Memory::Memory* memory);
 
+        /**
+         * @brief Constructs an Entity object with a copy of another entity.
+         *
+         * Creates an entity based on the given memory manager and a copy of an existing entity.
+         *
+         * @param memory A pointer to the memory manager instance responsible for managing components of the entity.
+         * @param other The source Entity object to copy during construction.
+         */
         Entity(Memory::Memory* memory, const Entity& other);
 
-        void InitAsDefault();
-
+        /**
+         * @brief Activate this instance and assigning it a name.
+         * @param name Name that should be assigned to Entity.
+         */
         void Activate(const std::string& name);
 
-        //void AddComponent(const std::type_index& typeIndex, unsigned int componentId);
-
+        /**
+         * @brief Add new component to this entity.
+         * @tparam T Type of the component to add.
+         * @tparam Args Arguments for Component's Initialize() function.
+         * @param args Arguments for Component's Initialize() function.
+         * @return Pointer to newly created Componet.
+         */
         template<typename T, typename... Args>
         T* AddComponent(Args&&... args) {
             T* component = _memory->CreateComponent<T>(Id, std::forward<Args>(args)...);
@@ -39,21 +64,36 @@ namespace LowEngine::ECS {
             return component;
         }
 
-        // int GetComponent(const std::type_index& typeIndex);
+        /**
+         * @brief Check if this Entity has a Component of given type.
+         * @param typeIndex Type of the Component that should be queried.
+         * @return True if this Entity has Component of queried type. False otherwise
+         */
+        bool HasComponent(const std::type_index& typeIndex) override;
 
-        bool HasComponent(const std::type_index& typeIndex);
-
+        /**
+         * @brief Create a deep-copy of the Entity.
+         *
+         * Entity's clone will be created in newMomery.
+         * @param newMemory Pointer to new Memory instance in which clone should be created.
+         * @return Pointer to cloned Entity.
+         */
         IEntity* Clone(Memory::Memory* newMemory) const override;
 
+        /**
+         * @brief Retrieve Component of given type.
+         * @tparam T Type of the component to retrieve.
+         * @return Pointer to Component. Nullptr if component doesn't exists.
+         */
         template<typename T>
         T* GetComponent() {
             return _memory->GetComponent<T>(Id);
         }
 
-        // std::vector<std::type_index> GetComponentTypes();
-
     protected:
+        /**
+         * @brief Pointer to Memory manager that is responsible for this instance of Entity. Will also contian all of its components.
+         */
         Memory::Memory* _memory;
-        //std::vector<std::type_index> _components;
     };
 }

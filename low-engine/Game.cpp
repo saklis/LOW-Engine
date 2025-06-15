@@ -1,8 +1,5 @@
 #include "Game.h"
 
-#include <imgui-SFML.h>
-#include <imgui.h>
-
 namespace LowEngine {
     void Game::StartLog() {
         _log = spdlog::basic_logger_mt(Config::LOGGER_NAME, "engine.log", true);
@@ -23,10 +20,10 @@ namespace LowEngine {
         Window.close();
     }
 
-    bool Game::OpenWindow(const sf::String& title, unsigned int width, unsigned int height) {
+    bool Game::OpenWindow(const sf::String& title, unsigned int width, unsigned int height, unsigned int framerateLimit) {
         Window.create(sf::VideoMode({width, height}), title);
-        Window.setFramerateLimit(60);
-        Window.setKeyRepeatEnabled(false); // for compatibility with Input system
+        Window.setFramerateLimit(framerateLimit);
+        Window.setKeyRepeatEnabled(false); // leave Input system to trace state of Actions
 
         return Window.isOpen();
     }
@@ -37,7 +34,7 @@ namespace LowEngine {
         WindowEvents.clear();
         Input.ClearActionState();
 
-        bool isScenePaused = Scenes.GetCurrentScene().IsPaused;
+        bool isScenePaused = Scenes.GetCurrentScene()->IsPaused;
 
         while (const std::optional event = Window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
@@ -47,7 +44,7 @@ namespace LowEngine {
 
             if (event->is<sf::Event::Resized>()) {
                 auto windowSize = static_cast<sf::Vector2f>(Window.getSize());
-                Scenes.GetCurrentScene().SetWindowSize(windowSize);
+                Scenes.GetCurrentScene()->SetWindowSize(windowSize);
             }
 
             if (!isScenePaused) Input.Read(event);
@@ -63,8 +60,8 @@ namespace LowEngine {
     }
 
     void Game::Update(float deltaTime) {
-        if (!Scenes.GetCurrentScene().IsPaused) {
-            Scenes.GetCurrentScene().Update(deltaTime);
+        if (!Scenes.GetCurrentScene()->IsPaused) {
+            Scenes.GetCurrentScene()->Update(deltaTime);
         }
     }
 }

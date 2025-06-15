@@ -69,9 +69,10 @@ namespace LowEngine {
          * @param title The title of the window.
          * @param width The width of the window.
          * @param height The height of the window.
+         * @param framerateLimit Limit the framerate to a maximum fixed frequency. 0 means no limit.
          * @return true if the game's window was initialized successfully, false otherwise.
          */
-        bool OpenWindow(const sf::String& title, unsigned int width, unsigned int height);
+        bool OpenWindow(const sf::String& title, unsigned int width, unsigned int height, unsigned int framerateLimit = 0);
 
         /**
          * @brief Main game loop.
@@ -96,7 +97,7 @@ namespace LowEngine {
             requires (std::is_invocable_r_v<void, Extras, sf::RenderWindow&> && ...)
         void Draw(Extras&&... callbackChain) {
             Window.clear();
-            Scenes.GetCurrentScene().Draw(Window);
+            Scenes.GetCurrentScene()->Draw(Window);
             (std::forward<Extras>(callbackChain)(Window), ...);
             Window.display();
         }

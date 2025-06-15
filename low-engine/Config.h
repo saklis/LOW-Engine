@@ -12,9 +12,9 @@ namespace LowEngine {
          * @brief Default count of the component in the pool for each scene.
          *
          * This value is used to reserve the Component Pool for each scene.
-         * Component Pool can be expanded during the scene lifetime.
+         * Component Pool will automatically expand during the scene's lifetime.
          */
-        inline static const std::size_t DEFAULT_COMPONENTS_COUNT = 1000;
+        inline static const std::size_t DEFAULT_COMPONENT_POOL_SIZE = 1000;
 
         /**
          * @brief Name of the logger used in the engine.

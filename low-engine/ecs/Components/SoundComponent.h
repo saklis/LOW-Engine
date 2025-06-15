@@ -5,8 +5,14 @@
 #include "ecs/IComponent.h"
 
 namespace LowEngine::ECS {
+    /**
+     * @brief Represents a component that play a sound.
+     */
     class SoundComponent : public IComponent {
     public:
+        /**
+         * @brief Instance of the Sound that manages the playback.
+         */
         sf::Sound Sound;
 
         explicit SoundComponent(Memory::Memory* memory)
@@ -23,8 +29,15 @@ namespace LowEngine::ECS {
             new(rawStorage) SoundComponent(newMemory, this);
         }
 
+        /**
+         * @brief Set sound to be played.
+         * @param soundAlias Alias of the sound to play.
+         */
         void SetSound(const std::string& soundAlias);
 
+        /**
+         * @brief Play currently set sound.
+         */
         void Play();
 
         static const std::vector<std::type_index>& Dependencies() {

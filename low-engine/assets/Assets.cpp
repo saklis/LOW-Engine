@@ -33,7 +33,7 @@ namespace LowEngine {
             samples[i] = static_cast<short>(amplitude * std::sin(twoPiF * i / sampleRate));
         }
 
-        std::vector<sf::SoundChannel> channelMap{ sf::SoundChannel::Mono };
+        std::vector<sf::SoundChannel> channelMap{sf::SoundChannel::Mono};
 
         if (!defaultSound.loadFromSamples(samples.data(), samples.size(), 1, sampleRate, channelMap)) {
             _log->error("Failed to load default sound!");
@@ -82,39 +82,37 @@ namespace LowEngine {
         return index;
     }
 
-    size_t Assets::LoadTextureWithAnimationSheet(const std::string& path, size_t frameWidth,
-                                                 size_t frameHeight,
-                                                 size_t frameCountX, size_t frameCountY) {
+    size_t Assets::LoadTextureWithSpriteSheet(const std::string& path, size_t frameWidth,
+                                              size_t frameHeight,
+                                              size_t frameCountX, size_t frameCountY) {
         size_t textureId = LoadTexture(path);
         if (textureId != Config::MAX_SIZE) {
-            AddAnimationSheet(textureId, frameWidth, frameHeight, frameCountX, frameCountY);
+            AddSpriteSheet(textureId, frameWidth, frameHeight, frameCountX, frameCountY);
         }
 
         return textureId;
     }
 
-    size_t Assets::LoadTextureWithAnimationSheet(const std::string& path, const std::string& alias,
-                                                 size_t frameWidth,
-                                                 size_t frameHeight, size_t frameCountX,
-                                                 size_t frameCountY) {
+    size_t Assets::LoadTextureWithSpriteSheet(const std::string& path, const std::string& alias,
+                                              size_t frameWidth,
+                                              size_t frameHeight, size_t frameCountX,
+                                              size_t frameCountY) {
         size_t textureId = LoadTexture(path, alias);
         if (textureId != Config::MAX_SIZE) {
-            AddAnimationSheet(textureId, frameWidth, frameHeight, frameCountX, frameCountY);
+            AddSpriteSheet(textureId, frameWidth, frameHeight, frameCountX, frameCountY);
         }
 
         return textureId;
     }
 
-    void Assets::AddAnimationSheet(size_t textureId, size_t frameWidth, size_t frameHeight,
-                                   size_t frameCountX,
-                                   size_t frameCountY) {
+    void Assets::AddSpriteSheet(size_t textureId, size_t frameWidth, size_t frameHeight,
+                                size_t frameCountX,
+                                size_t frameCountY) {
         auto it = GetInstance()->_animationSheets.find(textureId);
         if (it == GetInstance()->_animationSheets.end()) {
-            Animation::AnimationSheet& sheet = GetInstance()->_animationSheets[textureId];
-            sheet.FrameWidth = frameWidth;
-            sheet.FrameHeight = frameHeight;
-            sheet.FrameCountX = frameCountX;
-            sheet.FrameCountY = frameCountY;
+            Animation::SpriteSheet& sheet = GetInstance()->_animationSheets[textureId];
+            sheet.FrameSize = sf::Vector2(frameWidth, frameHeight);
+            sheet.FrameCount = sf::Vector2(frameCountX, frameCountY);
 
             _log->debug("Animation sheet added for texture id: {} with frame size: {}x{} and frame count: {}x{}",
                         textureId, frameWidth, frameHeight, frameCountX, frameCountY);
@@ -123,15 +121,15 @@ namespace LowEngine {
         }
     }
 
-    void Assets::AddAnimationSheet(const std::string& textureAlias, size_t frameWidth, size_t frameHeight,
-                                   size_t frameCountX, size_t frameCountY) {
+    void Assets::AddSpriteSheet(const std::string& textureAlias, size_t frameWidth, size_t frameHeight,
+                                size_t frameCountX, size_t frameCountY) {
         if (GetInstance()->_textureAliases.find(textureAlias) == GetInstance()->_textureAliases.end()) {
             _log->error("Texture alias {} does not exist", textureAlias);
             throw std::runtime_error("Texture alias does not exist");
         }
 
-        AddAnimationSheet(GetInstance()->_textureAliases[textureAlias], frameWidth, frameHeight, frameCountX,
-                          frameCountY);
+        AddSpriteSheet(GetInstance()->_textureAliases[textureAlias], frameWidth, frameHeight, frameCountX,
+                       frameCountY);
     }
 
     void Assets::AddAnimationClip(size_t textureId, const std::string& name, size_t firstFrameIndex,
@@ -142,8 +140,8 @@ namespace LowEngine {
             return;
         }
         sf::Vector2<size_t> firstFrameOrigin;
-        firstFrameOrigin.x = firstFrameIndex % animSheet->second.FrameCountX * animSheet->second.FrameWidth;
-        firstFrameOrigin.y = firstFrameIndex / animSheet->second.FrameCountX * animSheet->second.FrameHeight;
+        firstFrameOrigin.x = firstFrameIndex % animSheet->second.FrameCount.x * animSheet->second.FrameSize.x;
+        firstFrameOrigin.y = firstFrameIndex / animSheet->second.FrameCount.x * animSheet->second.FrameSize.y;
         GetInstance()->_animationSheets[textureId].AddAnimationClip(name, firstFrameIndex, frameCount, frameDuration, firstFrameOrigin);
 
         _log->debug("Animation clip added for texture id: {} with name: '{}' and frame count: {}",
@@ -162,11 +160,29 @@ namespace LowEngine {
                          frameDuration);
     }
 
-    size_t Assets::LoadTileMap(const std::string& path, const std::vector<Terrain::LayerToTextureMapping>& mappings) {
+    size_t Assets::LoadTileMap(const std::string& path, const std::vector<Terrain::LayerDefinition>& definitions) {
         std::ifstream file(path);
         if (!file.is_open()) {
-            _log->error("Failed to load terrain: {}", path);
+            _log->error("Failed to load terrain file: {}", path);
             throw std::runtime_error("Failed to load terrain");
+        }
+
+        // get layer definitions
+        const Terrain::LayerDefinition* terrainLayerDefinition = nullptr;
+        const Terrain::LayerDefinition* featuresLayerDefinition = nullptr;
+
+        for (auto& definition: definitions) {
+            switch (definition.Type) {
+                case Terrain::Terrain:
+                    terrainLayerDefinition = &definition;
+                    break;
+                case Terrain::Features:
+                    featuresLayerDefinition = &definition;
+                    break;
+                default:
+                    _log->error("Invalid layer definition type: '{}'", LayerTypeToString(definition.Type));
+                    throw std::runtime_error("Invalid layer definition type");
+            }
         }
 
         nlohmann::json jsonData;
@@ -175,90 +191,13 @@ namespace LowEngine {
         Terrain::TileMap map(GetDefaultTexture());
         map.LoadFromLDTkJson(jsonData);
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-
-        for (auto& mapping: mappings) {
-            switch (mapping.Type) {
-                case Terrain::Terrain: {
-                    map.TerrainLayer.LoadTexture(mapping.TextureId);
-
-                    auto animSheet = GetAnimationSheet(mapping.TextureId);
-                    for (size_t clipNameIndex = 0; clipNameIndex < mapping.AnimationClipNames.size(); clipNameIndex++) {
-                        auto clipNames = mapping.AnimationClipNames[clipNameIndex];
-                        if (!clipNames.empty()) {
-                            if (animSheet == nullptr) {
-                                _log->error("Animation sheet does not exist for texture id {}", mapping.TextureId);
-                                throw std::runtime_error("Animation sheet does not exist");
-                            }
-                            for (const auto& clipName: clipNames) {
-                                auto clip = animSheet->GetAnimationClip(clipName);
-                                if (clip == nullptr) {
-                                    _log->error("Animation clip {} does not exist for texture id {}", clipName, mapping.TextureId);
-                                    throw std::runtime_error("Animation clip does not exist");
-                                }
-                                map.TerrainLayer.AnimatedTiles[clipNameIndex].Clips.emplace_back(clip);
-                            }
-                        }
-                    }
-
-                    for (size_t cellIndex = 0; cellIndex < map.TerrainLayer.Cells.size(); cellIndex++) {
-                        auto cellValue = map.TerrainLayer.Cells[cellIndex];
-                        if (cellValue != Config::MAX_SIZE) {
-                            if (map.TerrainLayer.AnimatedTiles.size() > 1) {
-                                if (map.TerrainLayer.AnimatedTiles.find(cellValue) != map.TerrainLayer.AnimatedTiles.end()) {
-                                    std::uniform_int_distribution<> dis(0, static_cast<int>(map.TerrainLayer.AnimatedTiles.size() - 1));
-                                    size_t clipIndex = dis(gen);
-                                    map.TerrainLayer.CellClipIndex[cellIndex] = clipIndex;
-                                }
-                            } else {
-                                map.TerrainLayer.CellClipIndex[cellIndex] = 0;
-                            }
-                        }
-                    }
-                }
-                break;
-
-                case Terrain::Features: {
-                    map.FeaturesLayer.LoadTexture(mapping.TextureId);
-
-                    auto animSheet = GetAnimationSheet(mapping.TextureId);
-                    for (size_t clipNameIndex = 0; clipNameIndex < mapping.AnimationClipNames.size(); clipNameIndex++) {
-                        auto clipNames = mapping.AnimationClipNames[clipNameIndex];
-                        if (!clipNames.empty()) {
-                            if (animSheet == nullptr) {
-                                _log->error("Animation sheet does not exist for texture id {}", mapping.TextureId);
-                                throw std::runtime_error("Animation sheet does not exist");
-                            }
-                            for (const auto& clipName: clipNames) {
-                                auto clip = animSheet->GetAnimationClip(clipName);
-                                if (clip == nullptr) {
-                                    _log->error("Animation clip {} does not exist for texture id {}", clipName, mapping.TextureId);
-                                    throw std::runtime_error("Animation clip does not exist");
-                                }
-                                map.FeaturesLayer.AnimatedTiles[clipNameIndex].Clips.emplace_back(clip);
-                            }
-                        }
-                    }
-
-                    for (size_t cellIndex = 0; cellIndex < map.FeaturesLayer.Cells.size(); cellIndex++) {
-                        auto cellValue = map.FeaturesLayer.Cells[cellIndex];
-                        if (cellValue != Config::MAX_SIZE) {
-                            auto animTile = map.FeaturesLayer.AnimatedTiles.find(cellValue);
-                            if (animTile != map.FeaturesLayer.AnimatedTiles.end()) {
-                                if (animTile->second.Clips.size() >= 2) {
-                                    std::uniform_int_distribution<> dis(0, static_cast<int>(animTile->second.Clips.size() - 1));
-                                    size_t clipIndex = dis(gen);
-                                    map.FeaturesLayer.CellClipIndex[cellIndex] = clipIndex;
-                                } else {
-                                    map.FeaturesLayer.CellClipIndex[cellIndex] = 0;
-                                }
-                            }
-                        }
-                    }
-                }
-                break;
-            }
+        if (terrainLayerDefinition != nullptr) {
+            LoadTerrainLayerData(terrainLayerDefinition, map);
+            ReadNavDataForLayer(map, map.TerrainLayer, terrainLayerDefinition);
+        }
+        if (featuresLayerDefinition != nullptr) {
+            LoadFeatureLayerData(featuresLayerDefinition, map);
+            ReadNavDataForLayer(map, map.FeaturesLayer, featuresLayerDefinition);
         }
 
         GetInstance()->_maps.emplace_back(std::move(map));
@@ -269,8 +208,8 @@ namespace LowEngine {
         return index;
     }
 
-    size_t Assets::LoadTileMap(const std::string& path, const std::string& alias, const std::vector<Terrain::LayerToTextureMapping>& mappings) {
-        size_t index = LoadTileMap(path, mappings);
+    size_t Assets::LoadTileMap(const std::string& path, const std::string& alias, const std::vector<Terrain::LayerDefinition>& definitions) {
+        size_t index = LoadTileMap(path, definitions);
         if (index != -1) {
             GetInstance()->_mapAliases[alias] = index;
         }
@@ -296,7 +235,16 @@ namespace LowEngine {
         return GetInstance()->_maps[map->second];
     }
 
-    Animation::AnimationSheet* Assets::GetAnimationSheet(size_t textureId) {
+    size_t Assets::GetTileMapId(const std::string& mapAlias) {
+        auto map = GetInstance()->_mapAliases.find(mapAlias);
+        if (map == GetInstance()->_mapAliases.end()) {
+            _log->error("Map with alias {} does not exist", mapAlias);
+            throw std::runtime_error("Map with alias does not exist");
+        }
+        return map->second;
+    }
+
+    Animation::SpriteSheet* Assets::GetSpriteSheet(size_t textureId) {
         auto it = GetInstance()->_animationSheets.find(textureId);
         if (it == GetInstance()->_animationSheets.end()) {
             return nullptr;
@@ -304,12 +252,12 @@ namespace LowEngine {
         return &it->second;
     }
 
-    Animation::AnimationSheet* Assets::GetAnimationSheet(const std::string& textureAlias) {
+    Animation::SpriteSheet* Assets::GetSpriteSheet(const std::string& textureAlias) {
         if (GetInstance()->_textureAliases.find(textureAlias) == GetInstance()->_textureAliases.end()) {
             _log->error("Texture alias {} does not exist", textureAlias);
             throw std::runtime_error("Texture alias does not exist");
         }
-        return GetAnimationSheet(GetInstance()->_textureAliases[textureAlias]);
+        return GetSpriteSheet(GetInstance()->_textureAliases[textureAlias]);
     }
 
     sf::Texture& Assets::GetDefaultTexture() {
@@ -408,5 +356,104 @@ namespace LowEngine {
         GetInstance()->_soundAliases.clear();
 
         _log->info("All assets unloaded");
+    }
+
+    void Assets::LoadTerrainLayerData(const Terrain::LayerDefinition* terrainLayerDefinition, Terrain::TileMap& map) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+
+        size_t textureId = terrainLayerDefinition->TextureId;
+
+        map.TerrainLayer.LoadTexture(textureId);
+        auto animSheet = GetSpriteSheet(textureId);
+        if (animSheet == nullptr) {
+            _log->error("Sprite sheet does not exist for texture id {}", textureId);
+            throw std::runtime_error("Sprite sheet does not exist");
+        }
+
+        for (auto& cellDefinition: terrainLayerDefinition->CellDefinitions) {
+            for (auto animClipName: cellDefinition.second.AnimationClipNames) {
+                auto clip = animSheet->GetAnimationClip(animClipName);
+                if (clip == nullptr) {
+                    _log->error("Animation clip {} does not exist for texture id {}", animClipName, textureId);
+                    throw std::runtime_error("Animation clip does not exist");
+                }
+                map.TerrainLayer.AnimatedTiles[cellDefinition.first].Clips.emplace_back(clip);
+            }
+        }
+
+        for (size_t cellIndex = 0; cellIndex < map.TerrainLayer.Cells.size(); cellIndex++) {
+            auto cellValue = map.TerrainLayer.Cells[cellIndex];
+            if (cellValue != Config::MAX_SIZE) {
+                if (map.TerrainLayer.AnimatedTiles.size() > 1) {
+                    if (map.TerrainLayer.AnimatedTiles.find(cellValue) != map.TerrainLayer.AnimatedTiles.end()) {
+                        std::uniform_int_distribution<> dis(0, static_cast<int>(map.TerrainLayer.AnimatedTiles.size() - 1));
+                        size_t clipIndex = dis(gen);
+                        map.TerrainLayer.CellClipIndex[cellIndex] = clipIndex;
+                    }
+                } else {
+                    map.TerrainLayer.CellClipIndex[cellIndex] = 0;
+                }
+            }
+        }
+    }
+
+    void Assets::LoadFeatureLayerData(const Terrain::LayerDefinition* featuresLayerDefinition, Terrain::TileMap& map) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+
+        size_t textureId = featuresLayerDefinition->TextureId;
+
+        map.FeaturesLayer.LoadTexture(textureId);
+        auto animSheet = GetSpriteSheet(textureId);
+        if (animSheet == nullptr) {
+            _log->error("Sprite sheet does not exist for texture id {}", textureId);
+            throw std::runtime_error("Sprite sheet does not exist");
+        }
+
+        for (auto& cellDefinition: featuresLayerDefinition->CellDefinitions) {
+            for (auto animClipName: cellDefinition.second.AnimationClipNames) {
+                auto clip = animSheet->GetAnimationClip(animClipName);
+                if (clip == nullptr) {
+                    _log->error("Animation clip {} does not exist for texture id {}", animClipName, textureId);
+                    throw std::runtime_error("Animation clip does not exist");
+                }
+                map.FeaturesLayer.AnimatedTiles[cellDefinition.first].Clips.emplace_back(clip);
+            }
+        }
+
+        for (size_t cellIndex = 0; cellIndex < map.FeaturesLayer.Cells.size(); cellIndex++) {
+            auto cellValue = map.FeaturesLayer.Cells[cellIndex];
+            if (cellValue != Config::MAX_SIZE) {
+                auto animTile = map.FeaturesLayer.AnimatedTiles.find(cellValue);
+                if (animTile != map.FeaturesLayer.AnimatedTiles.end()) {
+                    if (animTile->second.Clips.size() >= 2) {
+                        std::uniform_int_distribution<> dis(0, static_cast<int>(animTile->second.Clips.size() - 1));
+                        size_t clipIndex = dis(gen);
+                        map.FeaturesLayer.CellClipIndex[cellIndex] = clipIndex;
+                    } else {
+                        map.FeaturesLayer.CellClipIndex[cellIndex] = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    void Assets::ReadNavDataForLayer(Terrain::TileMap& map, Terrain::Layer& layer, const Terrain::LayerDefinition* layerDefinition) {
+        for (size_t i = 0; i < map.NavGrid.Cells.size(); i++) {
+            auto& navCell = map.NavGrid.Cells[i];
+            navCell.Position.x = i % map.NavGrid.Width;
+            navCell.Position.y = i / map.NavGrid.Width;
+
+            size_t terrainCellIndexType = layer.Cells[i];
+            if (terrainCellIndexType != Config::MAX_SIZE) {
+                auto& typeDefinition = layerDefinition->CellDefinitions.at(terrainCellIndexType);
+
+                navCell.IsWalkable = typeDefinition.IsWalkable;
+                navCell.IsSwimmable = typeDefinition.IsSwimmable;
+                navCell.IsFlyable = typeDefinition.IsFlyable;
+                navCell.MoveCost = typeDefinition.MoveCost;
+            }
+        }
     }
 }

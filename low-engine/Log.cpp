@@ -6,7 +6,7 @@ namespace LowEngine {
 
     const char* DemangledTypeName(const std::type_index& type) {
         const char* typeName = type.name(); // MSVC name is demangled by default
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__) || defined(__MINGW32__) || defined(__MINGW64__)
         // Use GCC/Clang's ABI demangling
         static thread_local std::string buffer;
         int status;

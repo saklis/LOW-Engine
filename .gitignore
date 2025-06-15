@@ -37,6 +37,7 @@
 .vs/
 
 # output dirs
+_deps
 bin/
 build/
 out/

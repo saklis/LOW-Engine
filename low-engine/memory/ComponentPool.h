@@ -10,23 +10,53 @@
 namespace LowEngine::Memory {
     class Memory;
 
+    /**
+     * @brief Interface abstracting Component Pool
+     */
     class IComponentPool {
     public:
         virtual ~IComponentPool() = default;
 
+        /**
+         * @brief Deep clone for Component Pool
+         * @param newMemory Pointer to Memory manager which will hold new copy of the Component Pool
+         * @return Pointer to new copy of Component Pool
+         */
         virtual std::unique_ptr<IComponentPool> Clone(Memory* newMemory) const = 0;
 
+        /**
+         * @brief Retrieve Component for particular Entity Id.
+         * @param entityId Id of the Entity to which Component belongs.
+         * @return Pointer to Component. Returns nullptr if Entity don't own Component of this type.
+         */
         virtual void* GetComponentPtr(size_t entityId) = 0;
 
+        /**
+         * @brief Call Update method for all Components.
+         * @param deltaTime Time passed since last update, in seconds.
+         */
         virtual void Update(float deltaTime) = 0;
 
+        /**
+         * @brief Check all Components in search of Sprites to draw.
+         *
+         * Sprites will be added to refered collection.
+         * @param[out] sprites Reference to collection that will be filled with Sprites that needs to be drawn.
+         */
         virtual void CollectSprites(std::vector<Sprite>& sprites) = 0;
     };
 
+
+    /**
+     * @brief Class representing a pool of components for managing entity-component storage.
+     *
+     * Component Pool stores components of particular type in sequential order in memory.
+     * It starts with a capacity of Config::DEFAULT_COMPONENT_POOL_SIZE, but will expand exponentially when limit is reached.
+     */
     template<typename T>
     class ComponentPool : public IComponentPool {
     public:
-        explicit ComponentPool(size_t capacity = Config::DEFAULT_COMPONENTS_COUNT) {
+        explicit ComponentPool(size_t capacity = Config::DEFAULT_COMPONENT_POOL_SIZE) {
             Storage.reserve(capacity);
         }
 
@@ -51,6 +81,11 @@ namespace LowEngine::Memory {
             }
         };
 
+        /**
+         * @brief Deep-copy this Component Pool. Store new copy in the provided Memory manager.
+         * @param newMemory Pointer to Memory manager that will store new copy.
+         * @return Pointer to new copy.
+         */
         std::unique_ptr<IComponentPool> Clone(Memory* newMemory) const override {
             return std::make_unique<ComponentPool<T> >(
                 *static_cast<ComponentPool<T> const*>(this),
@@ -58,6 +93,14 @@ namespace LowEngine::Memory {
             );
         }
 
+        /**
+         * @brief Create new Component and attach it to Entity with provided Id.
+         * @tparam Args List of arguments to pass to Component's constructor.
+         * @param memory Pointer to Memory manager that owns this Component Pool.
+         * @param entityId Id of the Entity that will own new Component
+         * @param args List of arguments that should be passed to Component's constructor.
+         * @return Pointer to new Component. Returns nullptr if case of error
+         */
         template<typename... Args>
         T* CreateComponent(Memory* memory, size_t entityId, Args&&... args) {
             if (IndexMap.find(entityId) != IndexMap.end()) {
@@ -68,20 +111,29 @@ namespace LowEngine::Memory {
             // get index to create component
             size_t index = Storage.size();
             if (index >= Storage.capacity()) {
-                return nullptr;
+                Storage.reserve(Storage.capacity() * 2);
+                _log->debug("Component pool: Reallocating memory for component type {}. Current size: {}", typeid(T).name(), Storage.capacity());
             }
 
             // placement-new to initialize memory
             Storage.emplace_back();
             T* component = new(&Storage.back()) T(memory, std::forward<Args>(args)...);
 
-            // map entityId to component index
-            IndexMap[entityId] = index;
-            ReverseMap[index] = entityId;
+            if (component != nullptr) {
+                // map entityId to component index
+                IndexMap[entityId] = index;
+                ReverseMap[index] = entityId;
+            } else {
+                Storage.pop_back(); // in case of error remove pre-allocated element on the vector
+            }
 
-            return component; // now initialized properly
+            return component;
         }
 
+        /**
+         * @brief Destroy Component owned by Entity with provided Id.
+         * @param entityId Id of the Entity that will have its Component destroyed.
+         */
         void DestroyComponent(size_t entityId) {
             auto it = IndexMap.find(entityId);
             if (it == IndexMap.end()) {
@@ -107,6 +159,11 @@ namespace LowEngine::Memory {
             ReverseMap.erase(lastIndex);
         }
 
+        /**
+         * @brief Retrieve pointer to a component belonging to Entity with provided Id.
+         * @param entityId Id of the Entity the component belong to.
+         * @return Pointer to component. Returns nullptr when Component not found
+         */
         void* GetComponentPtr(size_t entityId) override {
             auto it = IndexMap.find(entityId);
             if (it == IndexMap.end()) {
@@ -115,14 +172,11 @@ namespace LowEngine::Memory {
             return &Storage[it->second];
         }
 
-        std::vector<std::aligned_storage_t<sizeof(T), alignof(T)> >* GetComponentStorage() {
-            return &Storage;
-        }
-
-        T* GetComponentFromStorage(std::aligned_storage_t<sizeof(T), alignof(T)>& storage) {
-            return reinterpret_cast<T*>(&storage);
-        }
-
+        /**
+         * @brief Executes provided callback for all components.
+         * @tparam Callback Template for callback.
+         * @param callback Callback to execute.
+         */
         template<typename Callback>
         void ForEachComponent(Callback&& callback) {
             for (auto& storage: Storage) {
@@ -131,26 +185,56 @@ namespace LowEngine::Memory {
             }
         }
 
+        /**
+         * @brief Call update function for all active components.
+         * @param deltaTime Time passed since last update, in seconds.
+         */
         void Update(float deltaTime) override {
-            for (auto& component: Storage) {
-                reinterpret_cast<T*>(&component)->Update(deltaTime);
+            for (auto& storage: Storage) {
+                auto component = reinterpret_cast<T*>(&storage);
+                if (component->Active) {
+                    component->Update(deltaTime);
+                }
             }
         }
 
+        /**
+         * @brief Check all Components in search of Sprites to draw.
+         *
+         * Sprites will be added to refered collection.
+         * @param[out] sprites Reference to collection that will be filled with Sprites that needs to be drawn.
+         */
         void CollectSprites(std::vector<Sprite>& sprites) override {
             for (auto& storage: Storage) {
                 T* component = reinterpret_cast<T*>(&storage);
-                Sprite* sprite = component->Draw();
-                if (sprite != nullptr) {
-                    sprites.emplace_back(*sprite);
+                if (component->Active) {
+                    Sprite* sprite = component->Draw();
+                    if (sprite != nullptr) {
+                        sprites.emplace_back(*sprite);
+                    }
                 }
             }
         }
 
     protected:
+        /**
+         * @brief Collection of storage objects. Each object is a single component.
+         */
         std::vector<std::aligned_storage_t<sizeof(T), alignof(T)> > Storage;
 
+        /**
+         * @brief Map of Entity Id to Component Id.
+         *
+         * Key: Entity Id
+         * Value: Component Id
+         */
         std::unordered_map<size_t, size_t> IndexMap;
+        /**
+         * @brief Map of Component Id to Entity Id
+         *
+         * Key: Component Id
+         * Value Entity Id
+         */
         std::unordered_map<size_t, size_t> ReverseMap;
     };
 }

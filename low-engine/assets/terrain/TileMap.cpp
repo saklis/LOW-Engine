@@ -29,12 +29,15 @@ void LowEngine::Terrain::TileMap::Update(float deltaTime) {
 
 void LowEngine::Terrain::TileMap::LoadFromLDTkJson(nlohmann::json::const_reference jsonData) {
     Name = jsonData["identifier"].get<std::string>();
-    Width = jsonData["pxWid"].get<size_t>();
-    Height = jsonData["pxHei"].get<size_t>();
+    Size.x = jsonData["pxWid"].get<size_t>();
+    Size.y = jsonData["pxHei"].get<size_t>();
 
     for (auto& layer : jsonData["layerInstances"]) {
         if (layer["__identifier"] == "Terrain") {
             TerrainLayer.SetSize({layer["__cWid"].get<size_t>(), layer["__cHei"].get<size_t>()}, layer["__gridSize"].get<size_t>());
+            NavGrid.Cells.resize(layer["__cWid"].get<size_t>() * layer["__cHei"].get<size_t>());
+            NavGrid.Width = layer["__cWid"].get<size_t>();
+            NavGrid.Height = layer["__cHei"].get<size_t>();
 
             TerrainLayer.Cells.assign(TerrainLayer.CellCount.x * TerrainLayer.CellCount.y, Config::MAX_SIZE);
             for (auto& gridCell : layer["gridTiles"]) {

@@ -6,7 +6,7 @@ namespace LowEngine {
     Scene::Scene(const std::string& name): Name(name), _memory() {
     }
 
-    Scene::Scene(Scene const& other): Active(false) // don’t auto-activate the clone
+    Scene::Scene(Scene const& other): Initialized(false) // don’t auto-activate the clone
                                       , IsPaused(true)
                                       , Name(other.Name + " (TEMPORARY)")
                                       , _cameraEntityId(other._cameraEntityId)
@@ -16,7 +16,7 @@ namespace LowEngine {
     }
 
     void Scene::InitAsDefault() {
-        Active = true;
+        Initialized = true;
         Name = "Default scene";
     }
 
@@ -47,7 +47,7 @@ namespace LowEngine {
                 });
                 break;
             case SpriteSortingMethod::None:
-            default: ;
+            default: /* no sorting */;
         }
 
         for (auto& sprite: sprites) {

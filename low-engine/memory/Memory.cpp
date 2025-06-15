@@ -8,6 +8,7 @@ namespace LowEngine::Memory {
     Memory::Memory(Memory const& other) : _typeInfos(other._typeInfos) {
         _nextTypeId = other._nextTypeId;
 
+        // clone entities
         for (auto const& entPtr: other._entities) {
             _entities.emplace_back(
                 std::unique_ptr<ECS::IEntity>(entPtr->Clone(this))
@@ -15,6 +16,7 @@ namespace LowEngine::Memory {
             _entities.back()->Id = _entities.size() - 1;
         }
 
+        // clone components
         for (auto const& [typeIdx, poolPtr]: other._components) {
             _components[typeIdx] = poolPtr->Clone(this);
         }
