@@ -28,5 +28,5 @@ namespace LowEngine {
      * @brief Helper function to make type names readable.
      * @param type The type index of the type to demangle.
      */
-    const char* DemangledTypeName(const std::type_index& type);
+    std::string DemangledTypeName(const std::type_index& type);
 }

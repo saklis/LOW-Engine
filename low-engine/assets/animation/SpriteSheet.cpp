@@ -1,7 +1,8 @@
 #include "SpriteSheet.h"
 
 namespace LowEngine::Animation {
-    void SpriteSheet::AddAnimationClip(const std::string& name, size_t frameIndex, size_t frameCount, float frameDuration, const sf::Vector2<size_t>& firstFrameOrigin) {
+    void SpriteSheet::AddAnimationClip(const std::string& name, size_t frameIndex, size_t frameCount, float frameDuration,
+                                       const sf::Vector2<size_t>& firstFrameOrigin) {
         AnimationClip& anim = _animations[name];
         anim.Name = name;
         anim.StartFrame = frameIndex;
@@ -25,7 +26,7 @@ namespace LowEngine::Animation {
 
     std::vector<std::string> SpriteSheet::GetAnimationClipNames() {
         std::vector<std::string> names;
-        for (auto& animation : _animations) {
+        for (auto& animation: _animations) {
             names.emplace_back(animation.first);
         }
         return names;

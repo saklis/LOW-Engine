@@ -39,6 +39,7 @@ namespace LowEngine::Memory {
             unsigned int Id = 0;
             std::type_index TypeIndex = std::type_index(typeid(void));
             size_t Size = 0;
+            std::vector<std::type_index> Dependencies;
         };
 
         Memory();
@@ -62,6 +63,31 @@ namespace LowEngine::Memory {
             _entities.push_back(std::move(entity));
             _entities.back()->Id = _entities.size() - 1;
             return static_cast<T*>(_entities.back().get());
+        }
+
+        template<typename T>
+        void DestroyEntity(T* entity) {
+            if (entity == nullptr) {
+                _log->error("Cannot destroy a null entity");
+                return;
+            }
+
+            size_t entityId = entity->Id;
+            if (entityId >= _entities.size()) {
+                _log->error("Entity id is out of range");
+                return;
+            }
+
+            // Remove all components associated with the entity
+            for (const auto& typeInfo: _typeInfos) {
+                auto typeIndex = typeInfo.first;
+                if (_components.contains(typeIndex)) {
+                    _components[typeIndex]->DestroyComponent(entityId);
+                }
+            }
+
+            // Remove the entity itself
+            _entities[entityId].reset();
         }
 
         /**
@@ -90,7 +116,7 @@ namespace LowEngine::Memory {
         template<typename T>
         T* FindEntity(const std::string& name) {
             for (const auto& entity: _entities) {
-                if (entity->Name == name) {
+                if (entity != nullptr && entity->Name == name) {
                     return static_cast<T*>(entity.get());
                 }
             }
@@ -125,6 +151,7 @@ namespace LowEngine::Memory {
                 ti.Id = _nextTypeId++;
                 ti.TypeIndex = std::type_index(typeid(T));
                 ti.Size = sizeof(T);
+                ti.Dependencies = T::Dependencies();
             }
 
             if (entityId >= _entities.size()) {
@@ -133,9 +160,16 @@ namespace LowEngine::Memory {
             }
 
             // checking dependencies
-            for (const auto& depType: T::Dependencies()) {
-                if (!_entities[entityId]->HasComponent(depType)) {
-                    _log->error("Component {} is required by {} but not found.", depType.name(), typeid(T).name());
+            const auto& typeInfo = _typeInfos[std::type_index(typeid(T))];
+            for (const auto& dependency: typeInfo.Dependencies) {
+                if (_components.find(dependency) == _components.end()) {
+                    _log->error("Component {} is a dependency for {}, but it is not registered", DemangledTypeName(dependency),
+                                DemangledTypeName(typeid(T)));
+                    return nullptr;
+                }
+                if (_components[dependency]->GetComponentPtr(entityId) == nullptr) {
+                    _log->error("Component {} is a dependency for {}, but it is not attached to Entity with id {}", DemangledTypeName(dependency),
+                                DemangledTypeName(typeid(T)), entityId);
                     return nullptr;
                 }
             }
@@ -149,6 +183,44 @@ namespace LowEngine::Memory {
             }
 
             return component;
+        }
+
+        template<typename T>
+        bool IsComponentSafeToDestroy(size_t entityId) {
+            // check if component is a dependency for any other component
+            for (const auto& _component: _components) {
+                const std::type_index& compType = _component.first;
+                const std::unique_ptr<IComponentPool>& pool = _component.second;
+
+                if (compType == std::type_index(typeid(T))) continue; // skip self-dependency
+
+                auto componentPtr = pool->GetComponentPtr(entityId);
+                if (componentPtr == nullptr) continue; // no component of this type attached to Entity
+
+                const auto& typeInfo = _typeInfos[compType];
+                if (std::find(typeInfo.Dependencies.begin(), typeInfo.Dependencies.end(), std::type_index(typeid(T))) != typeInfo.Dependencies.
+                    end()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /**
+         * @brief Destroy Component of given type.
+         * @tparam T Type of the Component that should be destroyed.
+         * @param entityId Id of the Entity that owns Component.
+         *
+         * This method will remove Component from Entity and destroy it.
+         */
+        template<typename T>
+        void DestroyComponent(size_t entityId) {
+            auto typeIndex = std::type_index(typeid(T));
+            if (_components.find(typeIndex) == _components.end()) {
+                _log->warn("Component type {} not found", DemangledTypeName(typeid(T)));
+                return;
+            }
+            _components[typeIndex]->DestroyComponent(entityId);
         }
 
         /**

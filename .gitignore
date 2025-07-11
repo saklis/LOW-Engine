@@ -42,5 +42,6 @@ bin/
 build/
 out/
 cmake-build-debug/
+cmake-build-release/
 cmake-build-debug-32bit/
 cmake-build-release-32bit/

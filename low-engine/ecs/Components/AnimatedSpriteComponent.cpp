@@ -8,7 +8,7 @@ namespace LowEngine::ECS {
         UpdateFrameSize();
     }
 
-    void AnimatedSpriteComponent::SetTexture(int32_t textureId) {
+    void AnimatedSpriteComponent::SetTexture(size_t textureId) {
         SpriteComponent::SetTexture(textureId);
         Sheet = Assets::GetSpriteSheet(textureId);
 

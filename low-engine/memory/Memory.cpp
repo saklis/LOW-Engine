@@ -10,6 +10,8 @@ namespace LowEngine::Memory {
 
         // clone entities
         for (auto const& entPtr: other._entities) {
+            if (entPtr == nullptr) continue;
+
             _entities.emplace_back(
                 std::unique_ptr<ECS::IEntity>(entPtr->Clone(this))
             );

@@ -74,7 +74,7 @@ namespace LowEngine::ECS {
          * @brief Changes the texture the Sprite is using.
          * @param textureId Texture's Id.
          */
-        virtual void SetTexture(int textureId);
+        virtual void SetTexture(size_t textureId);
 
     protected:
         /**

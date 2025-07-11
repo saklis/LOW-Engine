@@ -19,7 +19,7 @@ namespace LowEngine {
 
     size_t SceneManager::CreateCopySceneFromCurrent(const std::string& nameSufix) {
         if (_scenes.empty()) {
-            _log->info("No scene to copy");
+            _log->warn("No scene to copy");
             return Config::MAX_SIZE;
         }
 
@@ -31,6 +31,8 @@ namespace LowEngine {
         clone->IsTemporary = true;
 
         _scenes.push_back(std::move(clone));
+
+        _log->info("Scene '{}' created as a copy of current scene '{}'", _scenes.back().get()->Name, current->Name);
         return _scenes.size() - 1;
     }
 

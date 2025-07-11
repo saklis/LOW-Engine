@@ -45,6 +45,8 @@
 
 #pragma once
 
+#include <fstream>
+#include <sstream>
 
 #include <imgui.h>
 #include <imgui-SFML.h>
@@ -70,6 +72,8 @@ namespace LowEngine {
         static inline size_t _selectedEntityId = -1;
         static inline void* _selectedComponent = nullptr;
         static inline std::type_index _selectedComponentType = typeid(void);
+
+        static void DisplayLog(size_t posX, size_t posY, size_t sizeX, size_t sizeY);
 
         static void DisplayMenuBar(LowEngine::Game& game);
 

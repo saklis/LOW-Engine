@@ -65,6 +65,19 @@ namespace LowEngine::ECS {
         }
 
         /**
+         * @brief Destroy Component of given type.
+         * @tparam T Type of the Component that should be destroyed.
+         *
+         * This method will remove Component from Entity and destroy it.
+         */
+        template<typename T>
+        void DestroyComponent() {
+            _memory->DestroyComponent<T>(Id);
+
+            _log->debug("Component of type {} destroyed for entity with id {}", DemangledTypeName(typeid(T)), Id);
+        }
+
+        /**
          * @brief Check if this Entity has a Component of given type.
          * @param typeIndex Type of the Component that should be queried.
          * @return True if this Entity has Component of queried type. False otherwise

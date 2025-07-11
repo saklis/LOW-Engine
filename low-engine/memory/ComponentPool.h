@@ -44,6 +44,14 @@ namespace LowEngine::Memory {
          * @param[out] sprites Reference to collection that will be filled with Sprites that needs to be drawn.
          */
         virtual void CollectSprites(std::vector<Sprite>& sprites) = 0;
+
+        bool IsDependantOn(size_t entityId, const std::type_info& typeInfo);
+
+        /**
+         * @brief Destroy Component owned by Entity with provided Id.
+         * @param entityId Id of the Entity that will have its Component destroyed.
+         */
+        virtual void DestroyComponent(size_t entityId) = 0;
     };
 
 
@@ -134,7 +142,7 @@ namespace LowEngine::Memory {
          * @brief Destroy Component owned by Entity with provided Id.
          * @param entityId Id of the Entity that will have its Component destroyed.
          */
-        void DestroyComponent(size_t entityId) {
+        void DestroyComponent(size_t entityId) override {
             auto it = IndexMap.find(entityId);
             if (it == IndexMap.end()) {
                 return; // component not found

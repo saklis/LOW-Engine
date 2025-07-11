@@ -223,6 +223,19 @@ namespace LowEngine {
         static size_t GetTextureId(const std::string& textureAlias);
 
         /**
+         * @brief Retrieve the alias of a texture by its ID.
+         * @param textureId The unique ID of the texture.
+         * @return The alias of the requested texture.
+         */
+        static std::string GetTextureAlias(size_t textureId);
+
+        /**
+         * @brief Retrieve all texture aliases.
+         * @return Vector of strings containing all texture aliases.
+         */
+        static std::vector<std::string> GetTextureAliases();
+
+        /**
          * @brief Retrive the default font.
          * @return Reference to the default font.
          */

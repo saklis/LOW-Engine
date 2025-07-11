@@ -190,10 +190,43 @@ namespace LowEngine {
         auto scene = game.Scenes.GetCurrentScene();
         DisplayWorldOutliner(scene, 10, 30, 250, displaySize.y - 40);
         DisplayProperties(scene, displaySize.x - 260, 30, 250, displaySize.y - 40);
+
+        DisplayLog(270, displaySize.y - 260, displaySize.x - 540, 260);
     }
 
     void DevTools::Render(sf::RenderWindow& window) {
         ImGui::SFML::Render(window);
+    }
+
+    void DevTools::DisplayLog(size_t posX, size_t posY, size_t sizeX, size_t sizeY) {
+        static size_t lastLogSize = 0;
+
+        ImGui::SetNextWindowPos(ImVec2(posX, posY));
+        ImGui::SetNextWindowSize(ImVec2(sizeX, sizeY));
+        ImGui::Begin("Log");
+
+        std::ifstream logFile("engine.log");
+        std::stringstream buffer;
+        if (logFile.is_open()) {
+            buffer << logFile.rdbuf();
+            logFile.close();
+        } else {
+            ImGui::Text("Failed to open log file.");
+        }
+
+        std::string logContent = buffer.str();
+
+        ImGui::BeginChild("Log Content", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar);
+        ImGui::TextUnformatted(logContent.c_str());
+
+        if (logContent.size() != lastLogSize) {
+            ImGui::SetScrollHereY(1.0f);
+            lastLogSize = logContent.size();
+        }
+
+        ImGui::EndChild();
+
+        ImGui::End();
     }
 
     void DevTools::DisplayMenuBar(LowEngine::Game& game) {
@@ -288,6 +321,7 @@ namespace LowEngine {
 
         // STOP button
         if (ImGui::ImageButton("##Stop", stopTexture.getNativeHandle(), ImVec2{buttonSize, buttonSize}, uv0, uv1)) {
+            _selectedEntityId = -1;
             game.Scenes.DestroyCurrentScene();
         }
         if (!isCurrentSceneTemporary) ImGui::EndDisabled();
@@ -300,8 +334,56 @@ namespace LowEngine {
         ImGui::SetNextWindowSize(ImVec2(width, height));
         ImGui::Begin(std::format("Scene: '{}'", scene->Name).c_str());
 
+        if (ImGui::Button("+", ImVec2(20, 20))) {
+            ImGui::OpenPopup("Create Entity");
+        }
+
+        if (ImGui::BeginPopup("Create Entity")) {
+            static char nameBuffer[255] = "New Entity"; // 'static' to retain value between frames
+
+            ImGui::Text("Name of the new Entity:");
+            ImGui::SameLine();
+            ImGui::InputText("##Name of the new Entity", nameBuffer, sizeof(nameBuffer));
+            if (ImGui::Button("Create")) {
+                if (std::strlen(nameBuffer) > 0) {
+                    auto newEntity = scene->AddEntity(nameBuffer);
+                    if (newEntity) {
+                        _selectedEntityId = newEntity->Id;
+                    }
+                }
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
+
+        ImGui::SameLine();
+
+        if (_selectedEntityId == -1) ImGui::BeginDisabled();
+        if (ImGui::Button("-", ImVec2(20, 20))) {
+            ImGui::OpenPopup("Destroy Entity");
+        }
+        if (_selectedEntityId == -1) ImGui::EndDisabled();
+
+        if (ImGui::BeginPopup("Destroy Entity")) {
+            ImGui::Text("Are you sure you want to destroy the selected Entity?");
+            if (ImGui::Button("Yes")) {
+                if (_selectedEntityId != -1) {
+                    scene->DestroyEntity(_selectedEntityId);
+                    _selectedEntityId = -1;
+                }
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
+
+        ImGui::Separator();
+
         auto entities = scene->GetEntities();
         for (auto& entity: *entities) {
+            if (entity == nullptr) continue;
+
             std::string label = std::format("[{}] {}", entity.get()->Id, entity.get()->Name);
             bool selected = _selectedEntityId != -1 && entity.get()->Id == _selectedEntityId;
 
@@ -329,6 +411,26 @@ namespace LowEngine {
                 scene->Update(0.0f);
             }
 
+            if (ImGui::Button("(+) Add Component", ImVec2(width - 15, 20))) {
+                ImGui::OpenPopup("Add component");
+            }
+
+            if (ImGui::BeginPopup("Add component")) {
+                if (ImGui::MenuItem("Transform")) {
+                    scene->AddComponent<ECS::TransformComponent>(_selectedEntityId);
+                    scene->Update(0.0f);
+                }
+                if (ImGui::MenuItem("Animated Sprite")) {
+                    scene->AddComponent<ECS::AnimatedSpriteComponent>(_selectedEntityId);
+                    scene->Update(0.0f);
+                }
+                if (ImGui::MenuItem("Camera")) {
+                    scene->AddComponent<ECS::CameraComponent>(_selectedEntityId);
+                    scene->Update(0.0f);
+                }
+                ImGui::EndPopup();
+            }
+
             DisplayTransformComponentProperties(*scene);
             DisplayAnimatedSpriteComponentProperties(*scene);
             DisplayCameraComponentProperties(*scene);
@@ -345,7 +447,22 @@ namespace LowEngine {
         auto tc = scene.GetComponent<ECS::TransformComponent>(entity->Id);
         if (tc == nullptr) return;
 
-        if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
+        bool opened = ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen);
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+            ImGui::OpenPopup("TransformComponentContextMenu");
+        }
+
+        if (ImGui::BeginPopup("TransformComponentContextMenu")) {
+            if (ImGui::MenuItem("Delete")) {
+                if (scene.IsComponentSafeToDestroy<ECS::TransformComponent>(entity->Id)) {
+                    entity->DestroyComponent<ECS::TransformComponent>();
+                }
+            }
+            ImGui::EndPopup();
+        }
+
+        if (opened) {
             ImGui::Text("Position:");
             ImGui::SameLine();
             float position[2] = {tc->Position.x, tc->Position.y};
@@ -378,28 +495,77 @@ namespace LowEngine {
         auto asc = scene.GetComponent<ECS::AnimatedSpriteComponent>(entity->Id);
         if (asc == nullptr) return;
 
-        auto clipNames = asc->Sheet->GetAnimationClipNames();
+        std::vector<std::string> clipNames;
+        if (asc->Sheet != nullptr) {
+            const auto& definedClipNames = asc->Sheet->GetAnimationClipNames();
+            clipNames.insert(clipNames.end(), definedClipNames.begin(), definedClipNames.end());
+        }
+
+        const auto& textureAliases = Assets::GetTextureAliases();
+        std::vector<const char*> textureAliasesCStr;
+        for (const auto& alias: textureAliases) {
+            textureAliasesCStr.push_back(alias.c_str());
+        }
+
+        int currentTextureId = -1;
+        if (asc->TextureId > 0) {
+            std::string currentTextureAlias = Assets::GetTextureAlias(asc->TextureId);
+            for (size_t i = 0; i < textureAliases.size(); ++i) {
+                if (textureAliases[i] == currentTextureAlias) {
+                    currentTextureId = static_cast<int>(i);
+                    break;
+                }
+            }
+        }
+
         std::vector<const char*> clipNamesCStr;
         for (const auto& name: clipNames) {
             clipNamesCStr.push_back(name.c_str());
         }
 
-        int currentItem = 0;
-        for (size_t i = 0; i < clipNames.size(); ++i) {
-            if (clipNames[i] == asc->Clip->Name) {
-                currentItem = i;
-                break;
+        int currentClip = 0;
+
+        if (asc->Clip != nullptr) {
+            for (size_t i = 0; i < clipNames.size(); ++i) {
+                if (clipNames[i] == asc->Clip->Name) {
+                    currentClip = i;
+                    break;
+                }
             }
         }
 
-        if (ImGui::CollapsingHeader("Animated Sprite", ImGuiTreeNodeFlags_DefaultOpen)) {
+        bool opened = ImGui::CollapsingHeader("Animated Sprite", ImGuiTreeNodeFlags_DefaultOpen);
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+            ImGui::OpenPopup("AnimatedSpriteComponentContextMenu");
+        }
+
+        if (ImGui::BeginPopup("AnimatedSpriteComponentContextMenu")) {
+            if (ImGui::MenuItem("Delete")) {
+                entity->DestroyComponent<ECS::AnimatedSpriteComponent>();
+            }
+            ImGui::EndPopup();
+        }
+
+        if (opened) {
+            ImGui::Text("Texture:");
+            ImGui::SameLine();
+            if (ImGui::Combo("##Texture:", &currentTextureId, textureAliasesCStr.data(), textureAliasesCStr.size())) {
+                std::string textureAlias = textureAliasesCStr[currentTextureId];
+                asc->SetTexture(textureAlias);
+                scene.Update(0.0f);
+            }
+
+            if (asc->Clip == nullptr) currentClip = -1;
+
+            ImGui::Text("Clip name:");
+            ImGui::SameLine();
+            if (ImGui::Combo("##Clip name:", &currentClip, clipNamesCStr.data(), clipNamesCStr.size())) {
+                asc->Play(clipNames[currentClip], asc->Loop);
+                scene.Update(0.0f);
+            }
+
             if (asc->Clip != nullptr) {
-                ImGui::Text("Clip name:");
-                ImGui::SameLine();
-                if (ImGui::Combo("##Clip name:", &currentItem, clipNamesCStr.data(), clipNamesCStr.size())) {
-                    asc->Play(clipNames[currentItem], asc->Loop);
-                    scene.Update(0.0f);
-                }
                 ImGui::Separator();
                 ImGui::Text("Start frame: %i", asc->Clip->StartFrame);
                 ImGui::Text("End frame: %i", asc->Clip->EndFrame);
@@ -416,7 +582,20 @@ namespace LowEngine {
         auto cc = scene.GetComponent<ECS::CameraComponent>(entity->Id);
         if (cc == nullptr) return;
 
-        if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
+        bool opened = ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen);
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+            ImGui::OpenPopup("CameraComponentContextMenu");
+        }
+
+        if (ImGui::BeginPopup("CameraComponentContextMenu")) {
+            if (ImGui::MenuItem("Delete")) {
+                entity->DestroyComponent<ECS::CameraComponent>();
+            }
+            ImGui::EndPopup();
+        }
+
+        if (opened) {
             ImGui::Text("Zoom factor:");
             ImGui::SameLine();
             float zoomFactor = cc->ZoomFactor;

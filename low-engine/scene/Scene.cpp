@@ -6,9 +6,9 @@ namespace LowEngine {
     Scene::Scene(const std::string& name): Name(name), _memory() {
     }
 
-    Scene::Scene(Scene const& other): Initialized(false) // don’t auto-activate the clone
+    Scene::Scene(Scene const& other, const std::string& nameSufix): Initialized(false) // don’t auto-activate the clone
                                       , IsPaused(true)
-                                      , Name(other.Name + " (TEMPORARY)")
+                                      , Name(other.Name + nameSufix)
                                       , _cameraEntityId(other._cameraEntityId)
                                       , _spriteSortingMethod(other._spriteSortingMethod)
                                       , _memory(other._memory) // calls Memory(const Memory&) → deep copy!
@@ -66,6 +66,20 @@ namespace LowEngine {
         return entity;
     }
 
+    bool Scene::IsEntitySafeToDestroy(size_t entityId) const {
+        if (this->_cameraEntityId == entityId) return false;
+        return true;
+    }
+
+    void Scene::DestroyEntity(size_t entityId) {
+        auto entityToDelete = _memory.GetEntity<ECS::Entity>(entityId);
+        if (entityToDelete) {
+            _memory.DestroyEntity(entityToDelete);
+        }else {
+            _log->warn("Entity with Id '{}' does not exists, so it can't be deleted.", entityId);
+        }
+    }
+
 
     ECS::Entity* Scene::GetEntity(unsigned int entityId) {
         return _memory.GetEntity<ECS::Entity>(entityId);
@@ -79,8 +93,8 @@ namespace LowEngine {
         return _memory.GetAllEntities();
     }
 
-    void* Scene::GetComponent(unsigned int entity_id, std::type_index typeIndex) {
-        return _memory.GetComponent(entity_id, typeIndex);
+    void* Scene::GetComponent(unsigned int entityId, std::type_index typeIndex) {
+        return _memory.GetComponent(entityId, typeIndex);
     }
 
     bool Scene::SetCurrentCamera(size_t entityId) {

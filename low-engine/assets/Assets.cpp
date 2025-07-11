@@ -288,6 +288,25 @@ namespace LowEngine {
         return GetInstance()->_textureAliases[textureAlias];
     }
 
+    std::string Assets::GetTextureAlias(size_t textureId) {
+        for (auto& pair: GetInstance()->_textureAliases) {
+            if (pair.second == textureId) {
+                return pair.first;
+            }
+        }
+
+        _log->error("Texture with id {} does not have an alias", textureId);
+        throw std::runtime_error("Texture with id does not have an alias");
+    }
+
+    std::vector<std::string> Assets::GetTextureAliases() {
+        std::vector<std::string> aliases;
+        for (const auto& pair: GetInstance()->_textureAliases) {
+            aliases.push_back(pair.first);
+        }
+        return aliases;
+    }
+
     sf::Font& Assets::GetDefaultFont() {
         return GetInstance()->_fonts[0];
     }

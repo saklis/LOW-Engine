@@ -56,7 +56,7 @@ namespace LowEngine::ECS {
 
         if (startCell.x >= map.NavGrid.Width || startCell.y >= map.NavGrid.Height ||
             endCell.x >= map.NavGrid.Width || endCell.y >= map.NavGrid.Height) {
-            _log->warn("Tile Map -> FindPath: Start or end position is out of bounds of the navigation grid.");
+            //_log->warn("Tile Map -> FindPath: Start or end position is out of bounds of the navigation grid.");
             return {};
         }
 

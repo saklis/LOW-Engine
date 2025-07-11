@@ -6,6 +6,7 @@
 
 #include "memory/Memory.h"
 #include "ecs/ECSHeaders.h"
+#include "TGUI/Event.hpp"
 
 namespace LowEngine {
     /**
@@ -73,7 +74,7 @@ namespace LowEngine {
 
         Scene() = default;
 
-        Scene(Scene const& other);
+        Scene(Scene const& other, const std::string& nameSufix = " (COPY)");
 
         explicit Scene(const std::string& name);
 
@@ -102,6 +103,21 @@ namespace LowEngine {
          * @return Pointer to new scene. Returns nullptr in case of error.
          */
         ECS::Entity* AddEntity(const std::string& name = "Entity");
+
+        /**
+         * @brief Check if Entity with provided Id is safe to destroy.
+         * @param entityId Id of the Entity to check.
+         * @return True if Entity is safe to destroy, False otherwise.
+         */
+        bool IsEntitySafeToDestroy(size_t entityId) const;
+
+        /**
+         * @brief Destroy Entity with provided Id.
+         * @param entityId Id of the Entity to destroy.
+         *
+         * This method will remove all Components owned by Entity and then remove the Entity itself.
+         */
+        void DestroyEntity(size_t entityId);
 
         /**
          * @brief Retrieve pointer to Entity with provided Id.
@@ -134,8 +150,34 @@ namespace LowEngine {
          * @return Pointer to new Component. Returns nullptr in case of error.
          */
         template<typename T, typename... Args>
-        T* AddComponent(unsigned int entityId, Args&&... args) {
+        T* AddComponent(size_t entityId, Args&&... args) {
             return _memory.CreateComponent<T>(entityId, std::forward<Args>(args)...);
+        }
+
+        /**
+         * @brief Check if Component of given type is safe to destroy.
+         * @param entityId Id of the Entity that owns Component.
+         * @return True if Component is safe to destroy, False otherwise.
+         */
+        template<typename T>
+        bool IsComponentSafeToDestroy(size_t entityId) {
+            if (typeid(T) == typeid(ECS::CameraComponent)) {
+                if (this->_cameraEntityId == entityId) return false;
+            }
+
+            return _memory.IsComponentSafeToDestroy<T>(entityId);
+        }
+
+        /**
+         * @brief Remove Component from Entity in this scene.
+         * @tparam T Type of the component to remove.
+         * @param entityId Id of the Entity that should no longer own Component.
+         *
+         * This method will remove Component from Entity and destroy it.
+         */
+        template<typename T>
+        void DestroyComponent(size_t entityId) {
+            _memory.DestroyComponent<T>(entityId);
         }
 
         /**
@@ -145,17 +187,17 @@ namespace LowEngine {
          * @return Pointer to Component. Returns nullptr in case of error.
          */
         template<typename T>
-        T* GetComponent(unsigned int entityId) {
+        T* GetComponent(size_t entityId) {
             return _memory.GetComponent<T>(entityId);
         }
 
         /**
          * @brief Retrieve pointer to Component owned by provided Entity.
-         * @param entity_id Id of the Entity.
+         * @param entityId Id of the Entity.
          * @param typeIndex Type of the component to retrieve.
          * @return Pointer to Component. Returns nullptr in case of error.
          */
-        void* GetComponent(unsigned int entity_id, std::type_index typeIndex);
+        void* GetComponent(size_t entityId, std::type_index typeIndex);
 
         /**
          * @brief Set provided Entity as one that manages current View.

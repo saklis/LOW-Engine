@@ -18,10 +18,12 @@ namespace LowEngine::ECS {
     }
 
     void SpriteComponent::SetTexture(const std::string& textureAlias) {
-        SetTexture(Assets::GetTexture(textureAlias));
+        size_t textureId = Assets::GetTextureId(textureAlias);
+        SetTexture(textureId);
     }
 
-    void SpriteComponent::SetTexture(int textureId) {
+    void SpriteComponent::SetTexture(size_t textureId) {
+        TextureId = textureId;
         SetTexture(Assets::GetTexture(textureId));
     }
 }

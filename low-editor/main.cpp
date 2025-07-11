@@ -32,15 +32,13 @@ void FindPathBetweenPositions(LowEngine::Game& game) {
     if (currentMapEntity) {
         auto tileMap = currentMapEntity->GetComponent<LowEngine::ECS::TileMapComponent>();
         if (tileMap) {
-            auto path = tileMap->FindPath(StartPosition, EndPosition, LowEngine::Terrain::Navigation::MovementType::Walk);
+            CurrentPath.clear();
 
+            auto path = tileMap->FindPath(StartPosition, EndPosition, LowEngine::Terrain::Navigation::MovementType::Walk);
             if (!path.empty()) {
-                CurrentPath.clear();
                 for (const auto& point: path) {
                     CurrentPath.emplace_back(point.x, point.y);
                 }
-            } else {
-                CurrentPath.clear();
             }
         }
     }
@@ -76,6 +74,12 @@ int main() {
                                            }
                                        }
                                    });
+
+    LowEngine::Assets::LoadTextureWithSpriteSheet("assets/textures/units/rogue.png", "rogue", 32, 32, 10, 10);
+    LowEngine::Assets::AddAnimationClip("rogue", "idle", 0, 10, 0.2f);
+    LowEngine::Assets::AddAnimationClip("rogue", "walk", 20, 10, 0.15f);
+    LowEngine::Assets::AddAnimationClip("rogue", "attack", 30, 10, 0.05f);
+    LowEngine::Assets::AddAnimationClip("rogue", "die", 40, 10, 0.15f);
 
     // create scene
     auto mainScene = game.Scenes.CreateScene("new scene");

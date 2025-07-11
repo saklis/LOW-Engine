@@ -74,7 +74,7 @@ namespace LowEngine::ECS {
          * Setting Texture will automatically load its Sprite Sheet
          * @param textureId Texture's Id.
          */
-        void SetTexture(int textureId) override;
+        void SetTexture(size_t textureId) override;
 
         /**
          * @brief Play animation.
