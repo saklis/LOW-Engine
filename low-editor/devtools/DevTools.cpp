@@ -192,6 +192,13 @@ namespace LowEngine {
         DisplayProperties(scene, displaySize.x - 260, 30, 250, displaySize.y - 40);
 
         DisplayLog(270, displaySize.y - 260, displaySize.x - 540, 260);
+
+        if (_isAssetBrowserVisible) {
+            DisplayAssetBrowser(game);
+        }
+        if (_isNewProjectWizardVisible) {
+            DisplayProjectWizard();
+        }
     }
 
     void DevTools::Render(sf::RenderWindow& window) {
@@ -205,23 +212,12 @@ namespace LowEngine {
         ImGui::SetNextWindowSize(ImVec2(sizeX, sizeY));
         ImGui::Begin("Log");
 
-        std::ifstream logFile("engine.log");
-        std::stringstream buffer;
-        if (logFile.is_open()) {
-            buffer << logFile.rdbuf();
-            logFile.close();
-        } else {
-            ImGui::Text("Failed to open log file.");
-        }
-
-        std::string logContent = buffer.str();
-
         ImGui::BeginChild("Log Content", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar);
-        ImGui::TextUnformatted(logContent.c_str());
+        ImGui::TextUnformatted(_logContent.data(), _logContent.data() + _logContent.size());
 
-        if (logContent.size() != lastLogSize) {
+        if (_logContent.size() != lastLogSize) {
             ImGui::SetScrollHereY(1.0f);
-            lastLogSize = logContent.size();
+            lastLogSize = _logContent.size();
         }
 
         ImGui::EndChild();
@@ -231,38 +227,111 @@ namespace LowEngine {
 
     void DevTools::DisplayMenuBar(LowEngine::Game& game) {
         if (ImGui::BeginMainMenuBar()) {
-            if (ImGui::BeginMenu("Scene")) {
-                if (ImGui::MenuItem("New")) {
+            if (ImGui::BeginMenu("Project")) {
+                if (ImGui::MenuItem("New Project")) {
+                    _isNewProjectWizardVisible = true;
                 }
-                if (ImGui::MenuItem("Open")) {
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("New Scene")) {
                 }
-                if (ImGui::MenuItem("Save")) {
+                if (ImGui::MenuItem("Open Scene")) {
+                }
+                if (ImGui::MenuItem("Save Scene")) {
                 }
 
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Assets")) {
-                if (ImGui::BeginMenu("Add...")) {
-                    if (ImGui::MenuItem("Texture")) {
-                    }
-                    if (ImGui::MenuItem("Animation Sheet")) {
-                    }
-                    if (ImGui::MenuItem("Animation Clip")) {
-                    }
-                    if (ImGui::MenuItem("Tile Map")) {
-                    }
-                    if (ImGui::MenuItem("Font")) {
-                    }
-
-                    ImGui::EndMenu();
-                }
                 if (ImGui::MenuItem("Browser")) {
+                    _isAssetBrowserVisible = true;
                 }
-
                 ImGui::EndMenu();
             }
 
             ImGui::EndMainMenuBar();
+        }
+    }
+
+    void DevTools::DisplayProjectWizard() {
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImVec2 size = ImVec2(1024, 768);
+        std::string projectFileExtension = ".lowproj";
+
+        ImGui::SetNextWindowPos(ImVec2(center.x - size.x / 2, center.y - size.y / 2));
+        ImGui::SetNextWindowSize(size);
+
+        ImGui::OpenPopup("New Project");
+        if (ImGui::BeginPopupModal("New Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("Create a new project");
+            ImGui::NewLine();
+
+            ImGui::Text("Project Name:");
+            ImGui::SameLine();
+            static char projectName[128] = "My New Project";
+            ImGui::InputText("##ProjectName", projectName, sizeof(projectName));
+
+            ImGui::Text("Project Path:");
+            ImGui::SameLine();
+            static char projectPath[256] = "C:/Projects/MyNewProject";
+            ImGui::InputText("##ProjectPath", projectPath, sizeof(projectPath));
+            ImGui::SameLine();
+            if (ImGui::Button("Browse")) {
+                IGFD::FileDialogConfig config;
+                config.path = ".";
+                config.fileName = projectName;
+                ImGuiFileDialog::Instance()->OpenDialog("ChooseProjectPath", "Choose Project Path", projectFileExtension.c_str(), config);
+            }
+
+            center = ImGui::GetMainViewport()->GetCenter();
+            size = ImVec2(800, 600);
+            ImGui::SetNextWindowPos(ImVec2(center.x - size.x / 2, center.y - size.y / 2), ImGuiCond_Appearing);
+            ImGui::SetNextWindowSize(size, ImGuiCond_Appearing);
+            if (ImGuiFileDialog::Instance()->Display("ChooseProjectPath")) {
+                if (ImGuiFileDialog::Instance()->IsOk()) {
+                    std::string currentPath = ImGuiFileDialog::Instance()->GetCurrentPath();
+                    std::strncpy(projectPath, currentPath.c_str(), sizeof(projectPath) - 1);
+                    projectPath[sizeof(projectPath) - 1] = '\0';
+
+                    std::string currentFileName = ImGuiFileDialog::Instance()->GetCurrentFileName();
+                    currentFileName.erase(currentFileName.size() - projectFileExtension.size()); // Remove file extension
+                    std::strncpy(projectName, currentFileName.c_str(), sizeof(projectName) - 1);
+                    projectName[sizeof(projectName) - 1] = '\0';
+                }
+                ImGuiFileDialog::Instance()->Close();
+            }
+
+
+            ImGui::Separator();
+
+            if (ImGui::Button("Create new project")) {
+                if (std::strlen(projectName) > 0 && std::strlen(projectPath) > 0) {
+                    // create new empty project file
+                    std::string projectFilePath = std::string(projectPath) + "\\" + projectName + projectFileExtension;
+                    std::ofstream projectFile(projectFilePath);
+                    if (projectFile.is_open()) {
+                        projectFile << "{\n";
+                        projectFile << "  \"name\": \"" << projectName << "\",\n";
+                        projectFile << "  \"path\": \"" << projectPath << "\"\n";
+                        projectFile << "}\n";
+                        projectFile.close();
+
+                        _isNewProjectWizardVisible = false;
+                        ImGui::CloseCurrentPopup();
+                    } else {
+                    }
+                }
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Close")) {
+                _isNewProjectWizardVisible = false;
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
         }
     }
 
@@ -603,6 +672,27 @@ namespace LowEngine {
                 cc->ZoomFactor = zoomFactor;
                 cc->Update(0.0f);
             }
+        }
+    }
+
+    void DevTools::DisplayAssetBrowser(Game& game) {
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImVec2 size = ImVec2(1224, 768);
+
+        ImGui::SetNextWindowPos(ImVec2(center.x - size.x / 2, center.y - size.y / 2));
+        ImGui::SetNextWindowSize(size);
+
+        ImGui::OpenPopup("Asset Browser");
+        if (ImGui::BeginPopupModal("Asset Browser", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("Asset Browser is under construction.");
+            ImGui::Separator();
+
+            if (ImGui::Button("Close")) {
+                _isAssetBrowserVisible = false;
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
         }
     }
 

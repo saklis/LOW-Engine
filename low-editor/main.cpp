@@ -81,31 +81,27 @@ int main() {
     LowEngine::Assets::AddAnimationClip("rogue", "attack", 30, 10, 0.05f);
     LowEngine::Assets::AddAnimationClip("rogue", "die", 40, 10, 0.15f);
 
+    LowEngine::Assets::LoadSound("assets/sounds/positive.wav", "positive");
+
     // create scene
     auto mainScene = game.Scenes.CreateScene("new scene");
     mainScene->IsPaused = true;
     game.Scenes.SelectScene(*mainScene);
 
     // camera entity
-    auto cameraEntity = mainScene->AddEntity("camera entity");
-    if (cameraEntity) {
-        auto tc = cameraEntity->AddComponent<LowEngine::ECS::TransformComponent>();
-        if (tc) {
-            tc->Position = {124.0f, 124.0f};
+    if (const auto cameraEntity = mainScene->GetCurrentCamera()) {
+        if (const auto tc = cameraEntity->GetComponent<LowEngine::ECS::TransformComponent>()) {
+            tc->Position = {124.0f, 175.0f};
         }
-        auto camera = cameraEntity->AddComponent<LowEngine::ECS::CameraComponent>();
-        if (camera) {
-            mainScene->SetCurrentCamera(cameraEntity->Id);
-            camera->ZoomFactor = 0.4f;
+        if (const auto camera = cameraEntity->GetComponent<LowEngine::ECS::CameraComponent>()) {
+            camera->ZoomFactor = 0.5f;
         }
     }
 
     // map entity
-    auto mapEntity = mainScene->AddEntity("map entity");
-    if (mapEntity) {
+    if (auto mapEntity = mainScene->AddEntity("map entity")) {
         auto tc = mapEntity->AddComponent<LowEngine::ECS::TransformComponent>();
-        auto map = mapEntity->AddComponent<LowEngine::ECS::TileMapComponent>();
-        if (map) {
+        if (auto map = mapEntity->AddComponent<LowEngine::ECS::TileMapComponent>()) {
             map->SetMapId(LowEngine::Assets::GetTileMapId("BasicMap"));
         }
     }

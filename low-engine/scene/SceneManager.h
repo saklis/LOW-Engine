@@ -19,7 +19,16 @@ namespace LowEngine {
         ~SceneManager() = default;
 
         /**
-         * @brief Create new scene.
+         * @brief Create new empty scene.
+         *
+         * New scene will not be automatically set as active scene.
+         * @param name Name of the new scene.
+         * @return Pointer to the new empty scene. Returns nullptr in case of error.
+         */
+        Scene* CreateEmptyScene(const std::string& name);
+
+        /**
+         * @brief Create new default scene with provided name.
          *
          * New scene will not be automatically set as active scene.
          * @param name Name of the new scene.

@@ -7,7 +7,7 @@ namespace LowEngine {
         _scenes[0]->InitAsDefault();
     }
 
-    Scene* SceneManager::CreateScene(const std::string& name) {
+    Scene* SceneManager::CreateEmptyScene(const std::string& name) {
         auto scene = std::make_unique<Scene>(name);
         scene->Initialized = true;
         _scenes.push_back(std::move(scene));
@@ -15,6 +15,29 @@ namespace LowEngine {
         _log->info("New scene created: '{}'", name);
 
         return _scenes.back().get();
+    }
+
+    Scene* SceneManager::CreateScene(const std::string& name) {
+        auto newScene = CreateEmptyScene(name);
+
+        if (newScene) {
+            // camera entity
+            auto cameraEntity = newScene->AddEntity("Default camera");
+            if (cameraEntity) {
+                if (auto tc = cameraEntity->AddComponent<ECS::TransformComponent>(); !tc) {
+                    _log->error("Failed to add TransformComponent to camera entity in scene '{}'", name);
+                    return nullptr;
+                }
+                if (auto camera = cameraEntity->AddComponent<ECS::CameraComponent>()) {
+                    newScene->SetCurrentCamera(cameraEntity->Id);
+                } else {
+                    _log->error("Failed to add camera component to entity in scene '{}'", name);
+                    return nullptr;
+                }
+            }
+        }
+
+        return newScene;
     }
 
     size_t SceneManager::CreateCopySceneFromCurrent(const std::string& nameSufix) {

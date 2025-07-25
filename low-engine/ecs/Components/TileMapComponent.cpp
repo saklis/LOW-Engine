@@ -80,7 +80,7 @@ namespace LowEngine::ECS {
     }
 
     void TileMapComponent::Resize(Terrain::TileMap& map) {
-        if (!_texture.resize({map.Size.x, map.Size.y})) {
+        if (!_texture.resize({static_cast<unsigned>(map.Size.x), static_cast<unsigned>(map.Size.y)})) {
             _log->error("Failed to resize map render texture to {}x{}.", map.Size.x, map.Size.y);
         }
         _texture.clear();

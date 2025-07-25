@@ -209,6 +209,12 @@ namespace LowEngine {
         bool SetCurrentCamera(size_t entityId);
 
         /**
+         * @brief Get current camera entity.
+         * @return Pointer to current camera Entity. Returns nullptr if no camera is set.
+         */
+        ECS::Entity* GetCurrentCamera();
+
+        /**
          * @brief Inform current camera entity that window size changed.
          * @param windowSize New window size.
          */

@@ -1,8 +1,15 @@
 #include "Game.h"
 
+#include "LogMemoryBufferSink.h"
+
 namespace LowEngine {
     void Game::StartLog() {
-        _log = spdlog::basic_logger_mt(Config::LOGGER_NAME, "engine.log", true);
+        auto fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("engine.log", true);
+        auto memorySink = std::make_shared<LogMemoryBufferSink>(_logContent);
+        std::vector<spdlog::sink_ptr> sinks{fileSink, memorySink};
+
+        _log = std::make_shared<spdlog::logger>(Config::LOGGER_NAME, sinks.begin(), sinks.end());
+
         _log->set_level(spdlog::level::debug);
         _log->set_pattern("[%Y-%m-%d %H:%M:%S] [%l] %v");
         _log->flush_on(spdlog::level::trace);

@@ -93,7 +93,7 @@ namespace LowEngine {
         return _memory.GetAllEntities();
     }
 
-    void* Scene::GetComponent(unsigned int entityId, std::type_index typeIndex) {
+    void* Scene::GetComponent(size_t entityId, std::type_index typeIndex) {
         return _memory.GetComponent(entityId, typeIndex);
     }
 
@@ -108,6 +108,15 @@ namespace LowEngine {
 
         _log->debug("Camera entity set to {} for scene '{}'", entityId, Name);
         return true;
+    }
+
+    ECS::Entity* Scene::GetCurrentCamera() {
+        if (_cameraEntityId == Config::MAX_SIZE) {
+            _log->debug("No camera entity set for scene '{}'", Name);
+            return nullptr;
+        }
+
+        return _memory.GetEntity<ECS::Entity>(_cameraEntityId);
     }
 
     void Scene::SetWindowSize(sf::Vector2f windowSize) {
@@ -131,6 +140,7 @@ namespace LowEngine {
     }
 
     void Scene::Destroy() {
+        _log->info("Destroying scene '{}'", Name);
         _memory.Destroy();
     }
 }

@@ -50,6 +50,7 @@
 
 #include <imgui.h>
 #include <imgui-SFML.h>
+#include <ImGuiFileDialog.h>
 
 #include "Game.h"
 
@@ -73,9 +74,14 @@ namespace LowEngine {
         static inline void* _selectedComponent = nullptr;
         static inline std::type_index _selectedComponentType = typeid(void);
 
+        static inline bool _isAssetBrowserVisible = false;
+        static inline bool _isNewProjectWizardVisible = false;
+
         static void DisplayLog(size_t posX, size_t posY, size_t sizeX, size_t sizeY);
 
         static void DisplayMenuBar(LowEngine::Game& game);
+
+        static void DisplayProjectWizard();
 
         static void DisplayToolbar(Game& game, const sf::Vector2u& displaySize, float YOffset);
 
@@ -88,6 +94,8 @@ namespace LowEngine {
         static void DisplayAnimatedSpriteComponentProperties(Scene& scene);
 
         static void DisplayCameraComponentProperties(Scene& scene);
+
+        static void DisplayAssetBrowser(Game& game);
 
         static std::string InsertSpaces(const std::string& str);
 

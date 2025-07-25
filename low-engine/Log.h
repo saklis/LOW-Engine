@@ -25,6 +25,13 @@ namespace LowEngine {
     extern LOWENGINE_API std::shared_ptr<spdlog::logger> _log;
 
     /**
+     * @brief Memory buffer for log content. Holds the log messages in memory for display in the UI.
+     *
+     * Don't modify this buffer directly, use the logger to write messages!
+     */
+    extern LOWENGINE_API fmt::memory_buffer _logContent;
+
+    /**
      * @brief Helper function to make type names readable.
      * @param type The type index of the type to demangle.
      */

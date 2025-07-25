@@ -1,65 +1,63 @@
 #include "AStar.h"
 
-#include <bits/stl_algo.h>
+#include <algorithm>
+#include <unordered_set>
 
 namespace LowEngine::Terrain::Navigation {
     std::vector<NavigationCell> AStar::FindPath(const sf::Vector2u& start, const sf::Vector2u& end, MovementType movementType) const {
-        std::vector<NavigationCell*> openList; // Cells to be evaluated
-        std::vector<NavigationCell*> closedList; // Cells already evaluated
+        // Reset all nodes before starting pathfinding
+        for (auto& cell : *_navGrid) {
+            cell.Parent = nullptr;
+            cell.DistanceFromStartNode = 0;
+            cell.HeuristicDistanceToEndNode = 0;
+            cell.TotalEstimatedCost = 0;
+        }
+
+        std::priority_queue<NavigationCell*, std::vector<NavigationCell*>, NodeComparator> openList; // Cells to be evaluated
+        std::pmr::unordered_set<NavigationCell*> closedList; // Cells already evaluated
 
         NavigationCell* firstNode = &_navGrid->at(start.x + start.y * _width);
         firstNode->Parent = nullptr;
 
-        openList.push_back(firstNode);
+        openList.push(firstNode);
 
         while (!openList.empty()) {
-            NavigationCell* currentNode = GetNodeWithLowestCost(openList);
+            NavigationCell* currentNode = openList.top();
+            openList.pop();
+
+            if (closedList.contains(currentNode)) {
+                continue; // already evaluated
+            }
 
             if (currentNode->Position == end) {
                 return ReconstructPath(currentNode);
             }
 
-            // remove current node from open list
-            auto it = std::find(openList.begin(), openList.end(), currentNode);
-            openList.erase(it);
-            closedList.push_back(currentNode);
+            // add node to closed list
+            closedList.insert(currentNode);
 
+            // process neighbors
             std::vector<NavigationCell*> neighbors = GetNeighbors(currentNode, _navGrid, _width, _height, movementType);
             for (auto neighbor: neighbors) {
-                if (std::find(closedList.begin(), closedList.end(), neighbor) != closedList.end()) {
+                if (closedList.contains(neighbor)) {
                     continue; // already evaluated
                 }
 
                 float tentativeDistance = currentNode->DistanceFromStartNode + neighbor->MoveCost;
 
-                // if not in open list, add
-                if (std::find(openList.begin(), openList.end(), neighbor) == openList.end()) {
-                    openList.push_back(neighbor);
-                } else if (tentativeDistance >= neighbor->DistanceFromStartNode) {
-                    continue; // not a better path
-                }
+                if (tentativeDistance < neighbor->DistanceFromStartNode || neighbor->DistanceFromStartNode == 0) {
+                    // best path so far
+                    neighbor->Parent = currentNode;
+                    neighbor->DistanceFromStartNode = tentativeDistance;
+                    neighbor->HeuristicDistanceToEndNode = GetHeuristicCost(currentNode, neighbor);
+                    neighbor->TotalEstimatedCost = neighbor->DistanceFromStartNode + neighbor->HeuristicDistanceToEndNode;
 
-                // best path so far
-                neighbor->Parent = currentNode;
-                neighbor->DistanceFromStartNode = tentativeDistance;
-                neighbor->HeuristicDistanceToEndNode = GetHeuristicCost(currentNode, neighbor);
-                neighbor->TotalEstimatedCost = neighbor->DistanceFromStartNode + neighbor->HeuristicDistanceToEndNode;
+                    openList.push(neighbor);
+                }
             }
         }
 
         return {}; // No path found. Return an empty path.
-    }
-
-    NavigationCell* AStar::GetNodeWithLowestCost(std::vector<NavigationCell*> list) {
-        NavigationCell* smallestCost = list.front();
-
-        for (auto node: list) {
-            if (smallestCost->MoveCost > node->MoveCost) {
-                smallestCost = node;
-            }
-        }
-
-        return smallestCost;
     }
 
     std::vector<NavigationCell*> AStar::GetNeighbors(NavigationCell* node, std::vector<NavigationCell>* navGrid, size_t width,
@@ -102,7 +100,7 @@ namespace LowEngine::Terrain::Navigation {
             path.push_back(*currentNode);
             currentNode = currentNode->Parent;
         }
-        std::reverse(path.begin(), path.end());
+        std::ranges::reverse(path);
         return path;
     }
 }

@@ -3,6 +3,7 @@
 namespace LowEngine {
     // Define the static shared pointer. Instance created in Game's constructor
     std::shared_ptr<spdlog::logger> _log = nullptr;
+    fmt::memory_buffer _logContent;
 
     std::string DemangledTypeName(const std::type_index& type) {
         const char* typeName = type.name(); // MSVC name is demangled by default

@@ -108,6 +108,12 @@ if (TARGET ImGui-SFML)
     )
 endif ()
 
+# ImGui File Dialog
+set(IMGUIFILEDIALOG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/ImGuiFileDialog")
+file(GLOB IMGUIFILEDIALOG_SRC "${IMGUIFILEDIALOG_DIR}/ImGuiFileDialog.cpp")
+add_library(ImGuiFileDialog STATIC ${IMGUIFILEDIALOG_SRC})
+target_include_directories(ImGuiFileDialog PUBLIC ${IMGUIFILEDIALOG_DIR})
+
 # TGUI (Texus’ GUI for SFML)
 set(TGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/TGUI")
 set(TGUI_BUILD_GUI_BUILDER OFF CACHE BOOL "TRUE to build the GUI Builder" FORCE)
@@ -231,6 +237,7 @@ if (BUILD_LOW_EDITOR)
             LowEngine
             # ImGui <- linked by ImGui-SFML
             ImGui-SFML
+            ImGuiFileDialog
     )
 
     target_include_directories(${LOW_EDITOR_NAME}

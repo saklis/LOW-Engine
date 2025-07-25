@@ -1,9 +1,20 @@
 #pragma once
 
 #include <vector>
+#include <queue>
 #include "NavigationCell.h"
 
 namespace LowEngine::Terrain::Navigation {
+
+    /**
+     * @brief Comparator for NavigationCell pointers based on TotalEstimatedCost.
+     */
+    struct NodeComparator {
+        bool operator()(const NavigationCell* a, const NavigationCell* b) const {
+            return a->TotalEstimatedCost > b->TotalEstimatedCost;
+        }
+    };
+
     /**
      * @brief A* Pathfinding algorithm implementation.
      *
@@ -43,14 +54,6 @@ namespace LowEngine::Terrain::Navigation {
          * @brief Collection of cells in this NavGrid.
          */
         std::vector<NavigationCell>* _navGrid;
-
-        /**
-         * @brief Get the node with the lowest cost from a list of nodes.
-         *
-         * @param list List of NavigationCell pointers to evaluate.
-         * @return Pointer to the NavigationCell with the lowest cost.
-         */
-        [[nodiscard]] static NavigationCell* GetNodeWithLowestCost(std::vector<NavigationCell*> list);
 
         /**
          * @brief Get the neighbors of a given node in the navigation grid.

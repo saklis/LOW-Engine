@@ -19,3 +19,6 @@
 [submodule "3rd_party/TGUI"]
 	path = 3rd_party/TGUI
 	url = https://github.com/texus/TGUI.git
+[submodule "3rd_party/ImGuiFileDialog"]
+	path = 3rd_party/ImGuiFileDialog
+	url = https://github.com/aiekick/ImGuiFileDialog.git
