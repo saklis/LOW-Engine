@@ -60,7 +60,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/$<CONFIG>)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/$<CONFIG>)
 
 ###############################################################################
-# 3-rd PARTY
+# 3-rd PARTY for LOW ENGINE
 ###############################################################################
 
 # MinGW-libs
@@ -93,26 +93,6 @@ foreach (sfmlTarget IN ITEMS sfml-system sfml-window sfml-graphics sfml-network 
         )
     endif ()
 endforeach ()
-
-# ImGui-SFML + Dear ImGui
-set(IMGUI_SFML_FIND_SFML OFF)
-set(IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/DearImGui")
-set(IMGUI_SFML_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/imgui-sfml")
-set(IMGUI_SFML_DEPS sfml-system sfml-window sfml-graphics)
-add_subdirectory(${IMGUI_SFML_DIR})
-target_link_libraries(ImGui-SFML PRIVATE ${IMGUI_SFML_DEPS})
-if (TARGET ImGui-SFML)
-    set_target_properties(ImGui-SFML PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BUILD_OUTPUT_DEBUG}
-            RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
-    )
-endif ()
-
-# ImGui File Dialog
-set(IMGUIFILEDIALOG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/ImGuiFileDialog")
-file(GLOB IMGUIFILEDIALOG_SRC "${IMGUIFILEDIALOG_DIR}/ImGuiFileDialog.cpp")
-add_library(ImGuiFileDialog STATIC ${IMGUIFILEDIALOG_SRC})
-target_include_directories(ImGuiFileDialog PUBLIC ${IMGUIFILEDIALOG_DIR})
 
 # TGUI (Texus’ GUI for SFML)
 set(TGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/TGUI")
@@ -219,6 +199,66 @@ set_target_properties(${LOW_ENGINE_NAME}
 )
 
 ###############################################################################
+# 3-rd PARTY for LOW EDITOR
+###############################################################################
+
+# ImGui Pack
+set(IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/DearImGui")
+set(IMGUI_SFML_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/imgui-sfml")
+set(IMGUIFILEDIALOG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/ImGuiFileDialog")
+
+set(IMGUI_SRC
+    "${IMGUI_DIR}/imgui.cpp"
+    "${IMGUI_DIR}/imgui_draw.cpp"
+    "${IMGUI_DIR}/imgui_tables.cpp"
+    "${IMGUI_DIR}/imgui_widgets.cpp"
+)
+
+set(IMGUI_SFML_SRC
+    "${IMGUI_SFML_DIR}/imgui-SFML.cpp"
+)
+
+set(IMGUIFILEDIALOG_SRC
+    "${IMGUIFILEDIALOG_DIR}/ImGuiFileDialog.cpp"
+)
+
+add_library(ImGuiPack SHARED
+        ${IMGUI_SRC}
+        ${IMGUI_SFML_SRC}
+        ${IMGUIFILEDIALOG_SRC}
+)
+
+if (MSVC)
+    # While MinGW exports all by default, MSVC needs to be told to do so.
+    set_target_properties(ImGuiPack
+            PROPERTIES
+            OUTPUT_NAME "ImGuiPack"
+            PREFIX ""
+            WINDOWS_EXPORT_ALL_SYMBOLS ON
+    )
+else ()
+    set_target_properties(ImGuiPack
+            PROPERTIES
+            OUTPUT_NAME "ImGuiPack"
+            PREFIX ""
+    )
+endif ()
+
+target_include_directories(ImGuiPack PUBLIC
+        ${IMGUI_DIR}
+        ${IMGUI_SFML_DIR}
+        ${IMGUIFILEDIALOG_DIR}
+        "${SFML_DIR}/include"
+)
+
+target_link_libraries(ImGuiPack PUBLIC
+        sfml-system
+        sfml-window
+        sfml-graphics
+        opengl32
+)
+
+###############################################################################
 # LOW EDITOR
 ###############################################################################
 
@@ -235,15 +275,16 @@ if (BUILD_LOW_EDITOR)
     target_link_libraries(${LOW_EDITOR_NAME}
             PRIVATE
             LowEngine
-            # ImGui <- linked by ImGui-SFML
-            ImGui-SFML
-            ImGuiFileDialog
+            ImGuiPack # <- ImGui Pack with ImGui, ImGui-SFML and ImGuiFileDialog
     )
 
     target_include_directories(${LOW_EDITOR_NAME}
             PRIVATE
             "${CMAKE_CURRENT_SOURCE_DIR}/low-editor"
-            "${SFGUI_DIR}/include"
+            "${IMGUI_DIR}"
+            "${IMGUI_SFML_DIR}"
+            "${IMGUIFILEDIALOG_DIR}"
+            "${SFML_DIR}/include"
     )
 
     # output

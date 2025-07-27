@@ -4,7 +4,7 @@
 
 namespace LowEngine {
     void Game::StartLog() {
-        auto fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("engine.log", true);
+        auto fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("lowengine.log", true);
         auto memorySink = std::make_shared<LogMemoryBufferSink>(_logContent);
         std::vector<spdlog::sink_ptr> sinks{fileSink, memorySink};
 
