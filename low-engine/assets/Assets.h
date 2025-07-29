@@ -9,11 +9,12 @@
 
 #include "SFML/Graphics/Color.hpp"
 #include "SFML/Graphics/Image.hpp"
-#include "SFML/Graphics/Texture.hpp"
 #include "SFML/System/Exception.hpp"
 #include "nlohmann/json.hpp"
 
 #include "Log.h"
+
+#include "assets/files/Texture.h"
 
 #include "animation/SpriteSheet.h"
 #include "terrain/TileMap.h"
@@ -206,14 +207,14 @@ namespace LowEngine {
          * @param textureId The unique ID of the texture to retrieve.
          * @return Reference to the requested `sf::Texture`.
          */
-        static sf::Texture& GetTexture(size_t textureId);
+        static Files::Texture& GetTexture(size_t textureId);
 
         /**
          * @brief Retrieve a texture by its alias.
          * @param textureAlias The alias of the texture to retrieve.
          * @return Reference to the requested `sf::Texture`.
          */
-        static sf::Texture& GetTexture(const std::string& textureAlias);
+        static Files::Texture& GetTexture(const std::string& textureAlias);
 
         /**
          * @brief Retrieve the ID of a texture by its alias.
@@ -307,7 +308,7 @@ namespace LowEngine {
         std::vector<Terrain::TileMap> _maps;
         std::unordered_map<std::string, size_t> _mapAliases;
 
-        std::vector<sf::Texture> _textures;
+        std::vector<Files::Texture> _textures;
         std::unordered_map<std::string, size_t> _textureAliases;
         std::unordered_map<size_t, Animation::SpriteSheet> _animationSheets;
 

@@ -229,7 +229,6 @@ add_library(ImGuiPack SHARED
 )
 
 if (MSVC)
-    # While MinGW exports all by default, MSVC needs to be told to do so.
     set_target_properties(ImGuiPack
             PROPERTIES
             OUTPUT_NAME "ImGuiPack"

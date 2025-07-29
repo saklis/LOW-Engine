@@ -17,6 +17,13 @@ namespace LowEngine {
     class Game {
     public:
         /**
+         * @brief The title of the game.
+         *
+         * This is used to set the title of the window when it is created.
+		 */
+        std::string Title;
+
+        /**
          * @brief The main window of the game.
          *
          * This is the window where the game will be rendered.
@@ -57,6 +64,10 @@ namespace LowEngine {
             StartLog();
         }
 
+        explicit Game(const std::string& gameTitle) : Title(gameTitle), DeltaTime(sf::Time::Zero) {
+            StartLog();
+        }
+
         ~Game() {
             StopLog();
         }
@@ -66,13 +77,12 @@ namespace LowEngine {
          *
          * This function creates and opens the window.
          *
-         * @param title The title of the window.
          * @param width The width of the window.
          * @param height The height of the window.
          * @param framerateLimit Limit the framerate to a maximum fixed frequency. 0 means no limit.
          * @return true if the game's window was initialized successfully, false otherwise.
          */
-        bool OpenWindow(const sf::String& title, unsigned int width, unsigned int height, unsigned int framerateLimit = 0);
+        bool OpenWindow(unsigned int width, unsigned int height, unsigned int framerateLimit = 0);
 
         /**
          * @brief Main game loop.
@@ -101,6 +111,15 @@ namespace LowEngine {
             (std::forward<Extras>(callbackChain)(Window), ...);
             Window.display();
         }
+
+        /**
+		 * @brief Serializes and retrieves the project properties formated as JSON.
+		 *
+		 * This includes project properties, as well as the list of all loaded assets.
+		 * 
+		 * @return JSON string representing the project properties.
+         */
+        std::string GetProjectJsonString();
 
     protected:
         sf::Clock _clock;

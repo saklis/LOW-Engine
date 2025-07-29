@@ -1,149 +1,3 @@
-// #include "DevTools.h"
-//
-// namespace LowEngine {
-//     void DevTools::Initialize(sf::RenderWindow& window) {
-//         GetInstance()->setWindow(window);
-//         tgui::Theme::setDefault("assets/themes/BabyBlue/BabyBlue.txt");;
-//     }
-//
-//     void DevTools::ReadInput(const std::optional<sf::Event>& event) {
-//         if (event.has_value()) {
-//             GetInstance()->handleEvent(event.value());
-//         }
-//     }
-//
-//     void DevTools::Draw(sf::RenderWindow& window) {
-//         GetInstance()->draw();
-//     }
-//
-//     void DevTools::Free() {
-//         GetInstance()->removeAllWidgets();
-//     }
-//
-//     void DevTools::Build(Game& game) {
-//         BuildMainMenuBar();
-//         BuildMainToolbar();
-//         BuildSceneOutliner(game);
-//     }
-//
-//     void DevTools::Update(Game& game) {
-//         UpdateSceneOutliner(game);
-//     }
-//
-//     void DevTools::BuildMainMenuBar() {
-//         auto gui = GetInstance();
-//
-//         auto mainMenu = tgui::MenuBar::create();
-//
-//         mainMenu->addMenu("File");
-//         mainMenu->addMenuItem("New");
-//         mainMenu->addMenuItem("Open");
-//         mainMenu->addMenuItem("Save");
-//
-//         mainMenu->addMenu("Assets");
-//         mainMenu->addMenuItem("Add...");
-//         mainMenu->addMenuItem({"Assets", "Add...", "Texture"});
-//         mainMenu->addMenuItem({"Assets", "Add...", "Sprite Sheet"});
-//         mainMenu->addMenuItem({"Assets", "Add...", "Animation Clip"});
-//         mainMenu->addMenuItem({"Assets", "Add...", "Tile Map"});
-//         mainMenu->addMenuItem({"Assets", "Add...", "Font"});
-//         mainMenu->addMenuItem("Browser");
-//
-//         gui->add(mainMenu);
-//     }
-//
-//     void DevTools::BuildMainToolbar() {
-//         auto gui = GetInstance();
-//         auto windowSize = gui->getWindow()->getSize();
-//
-//         int toolbarWidth = 110;
-//         int toolbarHeight = 40;
-//
-//         int buttonSize = 30;
-//
-//         auto toolbarPanel = tgui::Panel::create();
-//         toolbarPanel->setSize(toolbarWidth, toolbarHeight);
-//         toolbarPanel->setPosition(windowSize.x / 2 - toolbarWidth / 2, 20);
-//
-//         auto playButton = tgui::BitmapButton::create();
-//         playButton->setImage("assets/editor/icons/forward.png");
-//         playButton->setSize(buttonSize, buttonSize);
-//         playButton->setPosition(5, 5);
-//         toolbarPanel->add(playButton);
-//
-//         auto pauseButton = tgui::BitmapButton::create();
-//         pauseButton->setImage("assets/editor/icons/pause.png");
-//         pauseButton->setSize(buttonSize, buttonSize);;
-//         pauseButton->setPosition(10+buttonSize, 5);
-//         toolbarPanel->add(pauseButton);
-//
-//         auto stopButton = tgui::BitmapButton::create();
-//         stopButton->setImage("assets/editor/icons/stop.png");
-//         stopButton->setSize(buttonSize, buttonSize);
-//         stopButton->setPosition(15+buttonSize*2, 5);
-//         toolbarPanel->add(stopButton);
-//
-//         gui->add(toolbarPanel);
-//     }
-//
-//     void DevTools::BuildSceneOutliner(Game& game) {
-//         // build
-//         auto gui = GetInstance();
-//         auto windowSize = gui->getWindow()->getSize();
-//
-//         int outlinerWidth = 200;
-//         int outlinerHeight = windowSize.y - 35;
-//
-//         auto sceneOutliner = tgui::ChildWindow::create();
-//         sceneOutliner->setTitle("Scene");
-//         sceneOutliner->setTitleButtons(tgui::ChildWindow::TitleButton::None);
-//         sceneOutliner->setResizable(true);
-//         sceneOutliner->setKeepInParent(true);
-//
-//         // outlinerWindow->setSize(outlinerWidth, outlinerHeight);
-//         // outlinerWindow->setPosition(5, 30);
-//
-//         sceneOutliner->setWidth(outlinerWidth);
-//         sceneOutliner->setAutoLayout(tgui::AutoLayout::Left);
-//
-//         auto entitiesList = tgui::ListBox::create();
-//         entitiesList->setAutoLayout(tgui::AutoLayout::Fill);
-//         sceneOutliner->add(entitiesList, SCENEOUTLINER_ENTITIESLISTBOX);
-//
-//         gui->add(sceneOutliner, SCENEOUTLINER);
-//
-//         // set default values
-//         auto scene = game.Scenes.GetCurrentScene();
-//         sceneOutliner->setTitle("Scene: " + scene->Name);
-//
-//         auto entities = scene->GetEntities();
-//         for (auto& entity: *entities) {
-//             std::string label = std::format("[{}] {}", entity.get()->Id, entity.get()->Name);
-//             entitiesList->addItem(label, std::to_string(entity.get()->Id));
-//         }
-//     }
-//
-//     void DevTools::UpdateSceneOutliner(Game& game) {
-//         // auto gui = GetInstance();
-//         // auto sceneOutliner = gui->get<tgui::ChildWindow>(SCENEOUTLINER);
-//         //
-//         // auto scene = game.Scenes.GetCurrentScene();
-//         // sceneOutliner->setTitle("Scene: " + scene->Name);
-//         //
-//         // auto entitiesList = sceneOutliner->get<tgui::ListBox>(SCENEOUTLINER_ENTITIESLISTBOX);
-//         // if (entitiesList->getItemCount() > 0) {
-//         //     entitiesList->removeAllItems();
-//         // }
-//         //
-//         // auto entities = scene->GetEntities();
-//         // for (auto& entity: *entities) {
-//         //     std::string label = std::format("[{}] {}", entity.get()->Id, entity.get()->Name);
-//         //     entitiesList->addItem(label, std::to_string(entity.get()->Id));
-//         // }
-//     }
-// }
-
-
 #include "DevTools.h"
 
 namespace LowEngine {
@@ -184,7 +38,7 @@ namespace LowEngine {
     void DevTools::Build(Game& game) {
         auto displaySize = game.Window.getSize();
 
-        DisplayMenuBar(game);
+        DisplayMainMenu(game);
         DisplayToolbar(game, displaySize, 25);
 
         auto scene = game.Scenes.GetCurrentScene();
@@ -225,11 +79,37 @@ namespace LowEngine {
         ImGui::End();
     }
 
-    void DevTools::DisplayMenuBar(LowEngine::Game& game) {
+    void DevTools::DisplayMainMenu(LowEngine::Game& game) {
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("Project")) {
                 if (ImGui::MenuItem("New Project")) {
                     _isNewProjectWizardVisible = true;
+                }
+
+                if (ImGui::MenuItem("Save Project"))
+                {
+					std::string projectDirectory = "projects\\" + game.Title;
+
+                    try {
+                        std::filesystem::create_directories(projectDirectory);
+
+						std::string projectFilePath = projectDirectory + "\\" + game.Title + ".lowproj";
+
+                        std::ofstream projectFile(projectFilePath);
+                        if (projectFile.is_open()) {
+                            projectFile << game.GetProjectJsonString();
+                            projectFile.close();
+							_log->info("Project saved to: {}", projectFilePath);
+                        }
+                    	else
+                        {
+                            _log->error("Could not open project file: {}", projectFilePath);
+                        }
+					}
+                    catch (const std::filesystem::filesystem_error& e) {
+                        _log->error("Failed to create project directory '{}': {} (Error code: {})",
+                            projectDirectory, e.what(), e.code().value());
+                    }
                 }
 
                 ImGui::Separator();

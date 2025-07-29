@@ -7,13 +7,13 @@ namespace LowEngine {
         // create default texture
         sf::Image defaultImage;
         defaultImage.resize(sf::Vector2u(32, 32), sf::Color::Magenta);
-        sf::Texture defaultTexture;
+        Files::Texture defaultTexture;
         if (!defaultTexture.loadFromImage(defaultImage)) {
             _log->error("Failed to load default texture!");
             throw std::runtime_error("Failed to load default texture!");
         }
         _textures.emplace_back(std::move(defaultTexture));
-        _textureAliases["default"] = 0;
+        _textureAliases[Config::DEFAULT_TEXTURE_ALIAS] = 0;
 
         _log->debug("Generated default texture with id {}", 0);
 
@@ -57,7 +57,7 @@ namespace LowEngine {
 
     size_t Assets::LoadTexture(const std::string& path) {
         try {
-            sf::Texture texture(path);
+			Files::Texture texture(path);
             GetInstance()->_textures.emplace_back(std::move(texture));
             size_t index = static_cast<int>(GetInstance()->_textures.size() - 1);
 
@@ -264,7 +264,7 @@ namespace LowEngine {
         return GetInstance()->_textures[0];
     }
 
-    sf::Texture& Assets::GetTexture(size_t textureId) {
+    Files::Texture& Assets::GetTexture(size_t textureId) {
         if (GetInstance()->_textures.size() <= textureId) {
             _log->error("Texture with id {} does not exist", textureId);
             throw std::runtime_error("Texture with id does not exist");
@@ -272,7 +272,7 @@ namespace LowEngine {
         return GetInstance()->_textures[textureId];
     }
 
-    sf::Texture& Assets::GetTexture(const std::string& textureAlias) {
+    Files::Texture& Assets::GetTexture(const std::string& textureAlias) {
         if (GetInstance()->_textureAliases.find(textureAlias) == GetInstance()->_textureAliases.end()) {
             _log->error("Texture alias {} does not exist", textureAlias);
             throw std::runtime_error("Texture alias does not exist");

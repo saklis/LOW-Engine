@@ -13,11 +13,13 @@ namespace LowEngine {
         _log->set_level(spdlog::level::debug);
         _log->set_pattern("[%Y-%m-%d %H:%M:%S] [%l] %v");
         _log->flush_on(spdlog::level::trace);
-        _log->info("LowEngine started");
+
+    	_log->info("##### {} #####", Title);
+        _log->info("LOWEngine started");
     }
 
     void Game::StopLog() {
-        _log->info("LowEngine stopped");
+        _log->info("LOWEngine stopped");
         spdlog::drop(Config::LOGGER_NAME);
     }
 
@@ -27,8 +29,8 @@ namespace LowEngine {
         Window.close();
     }
 
-    bool Game::OpenWindow(const sf::String& title, unsigned int width, unsigned int height, unsigned int framerateLimit) {
-        Window.create(sf::VideoMode({width, height}), title);
+    bool Game::OpenWindow(unsigned int width, unsigned int height, unsigned int framerateLimit) {
+        Window.create(sf::VideoMode({width, height}), Title);
         Window.setFramerateLimit(framerateLimit);
         Window.setKeyRepeatEnabled(false); // leave Input system to trace state of Actions
 
@@ -64,6 +66,35 @@ namespace LowEngine {
         Update(DeltaTime.asSeconds());
 
         return Window.isOpen();
+    }
+
+    std::string Game::GetProjectJsonString()
+    {
+		// create JSON structure for assets
+        nlohmann::ordered_json assetsJson;
+		nlohmann::ordered_json texturesJson;
+
+        auto textureAliases = Assets::GetTextureAliases();
+        for (const auto& alias : textureAliases) {
+			if (alias == Config::DEFAULT_TEXTURE_ALIAS) continue; // skip default texture
+
+            auto texture = Assets::GetTexture(alias);
+
+			nlohmann::ordered_json textureJson;
+			textureJson["alias"] = alias;
+            textureJson["path"] = texture.Path;
+
+            texturesJson.emplace_back(std::move(textureJson));
+        }
+
+		assetsJson["textures"] = texturesJson;
+
+		// final project JSON
+        nlohmann::ordered_json projectJson;
+        projectJson["title"] = Title;
+		projectJson["assets"] = assetsJson;
+
+		return projectJson.dump(4); // pretty print with 4 spaces
     }
 
     void Game::Update(float deltaTime) {

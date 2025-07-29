@@ -46,7 +46,7 @@ void FindPathBetweenPositions(LowEngine::Game& game) {
 
 int main() {
     // initialize the game engine
-    LowEngine::Game game;
+    LowEngine::Game game("LOWEditor");
 
     // load assets
     LowEngine::Assets::LoadTextureWithSpriteSheet("assets/textures/terrain/green_terrain.png", "green_terrain", 16, 16, 3, 2);
@@ -110,27 +110,24 @@ int main() {
     mainScene->Update(0.0f);
 
     // open window
-    bool success = game.OpenWindow("LOW Editor", 1664, 936);
+    bool success = game.OpenWindow(1664, 936);
     if (!success)return 1;
 
     game.Input.AddAction("FindPath", sf::Keyboard::Key::Space);
     game.Input.AddAction("SetStartPosition", sf::Mouse::Button::Left);
     game.Input.AddAction("SetEndPosition", sf::Mouse::Button::Right);
 
-    LowEngine::DevTools::Initialize(game.Window); // ImGUI
-    // LowEngine::DevTools::Build(game); //TGUI
+    LowEngine::DevTools::Initialize(game.Window);
 
     // main loop
     while (game.IsWindowOpen()) {
         // build dev tools
         for (auto windowEvent: game.WindowEvents) {
-            LowEngine::DevTools::ReadInput(game.Window, windowEvent); // ImGUI
-            // LowEngine::DevTools::ReadInput(windowEvent); // TGUI
+            LowEngine::DevTools::ReadInput(game.Window, windowEvent);
         }
 
-        LowEngine::DevTools::Update(game.Window, game.DeltaTime); // ImGUI
-        LowEngine::DevTools::Build(game); // ImGUI
-        // LowEngine::DevTools::Update(game); // TGUI
+        LowEngine::DevTools::Update(game.Window, game.DeltaTime);
+        LowEngine::DevTools::Build(game);
 
         // update
         if (game.Input.GetAction("SetStartPosition")->Started) {
@@ -160,8 +157,7 @@ int main() {
         }
 
         // draw
-        game.Draw(DebugDraw, LowEngine::DevTools::Render); // ImGUI
-        // game.Draw(LowEngine::DevTools::Draw); // TGUI
+        game.Draw(DebugDraw, LowEngine::DevTools::Render);
     }
 
     LowEngine::DevTools::Free();

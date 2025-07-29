@@ -1,6 +1,8 @@
 #pragma once
 
 #include <limits>
+#include <vector>
+#include <xstring>
 
 namespace LowEngine {
     /* * Config class
@@ -27,5 +29,13 @@ namespace LowEngine {
          * This value is used as "null" value for size_t.
          */
         inline static const unsigned int MAX_SIZE = std::numeric_limits<std::size_t>::max();
+
+        /**
+         * @brief Default alias for the texture that is used when no texture is specified.
+         *
+         * This alias is used to refer to a default texture that can be used in various components
+         * when no specific texture is provided.
+		 */
+    	inline static const std::string DEFAULT_TEXTURE_ALIAS = "default";
     };
 }
