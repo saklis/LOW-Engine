@@ -1,7 +1,10 @@
 
 #include "TileMap.h"
 
+#include <fstream>
+
 #include "Config.h"
+#include "Log.h"
 
 void LowEngine::Terrain::TileMap::Update(float deltaTime) {
     for (auto& state: TerrainLayer.AnimatedTiles | std::views::values) {
@@ -27,7 +30,19 @@ void LowEngine::Terrain::TileMap::Update(float deltaTime) {
     }
 }
 
-void LowEngine::Terrain::TileMap::LoadFromLDTkJson(nlohmann::json::const_reference jsonData) {
+void LowEngine::Terrain::TileMap::LoadFromLDTkJson(std::string path) {
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        _log->error("Failed to load terrain file: {}", path);
+        throw std::runtime_error("Failed to load terrain");
+    }
+
+    nlohmann::json jsonData;
+    file >> jsonData;
+	file.close();
+
+	Path = path;
+
     Name = jsonData["identifier"].get<std::string>();
     Size.x = jsonData["pxWid"].get<size_t>();
     Size.y = jsonData["pxHei"].get<size_t>();

@@ -49,39 +49,39 @@ int main() {
     LowEngine::Game game("LOWEditor");
 
     // load assets
-    LowEngine::Assets::LoadTextureWithSpriteSheet("assets/textures/terrain/green_terrain.png", "green_terrain", 16, 16, 3, 2);
-    LowEngine::Assets::AddAnimationClip("green_terrain", "water", 3, 3, 0.5f);
+    LowEngine::Assets::LoadTextureWithSpriteSheet("green_terrain", "assets/textures/terrain/green_terrain.png", 16, 16, 3, 2);
+    LowEngine::Assets::AddAnimationClip("water", "green_terrain", 3, 3, 0.5f);
 
-    LowEngine::Assets::LoadTextureWithSpriteSheet("assets/textures/terrain/green_features.png", "green_features", 16, 16, 4, 2);
-    LowEngine::Assets::AddAnimationClip("green_features", "forest1", 0, 2, 0.20f);
-    LowEngine::Assets::AddAnimationClip("green_features", "forest2", 2, 2, 0.20f);
+    LowEngine::Assets::LoadTextureWithSpriteSheet("green_features", "assets/textures/terrain/green_features.png", 16, 16, 4, 2);
+    LowEngine::Assets::AddAnimationClip("forest1", "green_features", 0, 2, 0.20f);
+    LowEngine::Assets::AddAnimationClip("forest2", "green_features", 2, 2, 0.20f);
 
-    LowEngine::Assets::LoadTileMap("assets/maps/terrain_map_01/BasicMap.ldtkl", "BasicMap", std::vector<LowEngine::Terrain::LayerDefinition>{
-                                       {
-                                           LowEngine::Terrain::LayerType::Terrain,
-                                           LowEngine::Assets::GetTextureId("green_terrain"),
-                                           std::unordered_map<unsigned, LowEngine::Terrain::CellDefinition>{
-                                               {0, {true, false, true, 1.0f, {}}},
-                                               {1, {false, true, true, 1.0f, {"water"}}},
-                                           }
-                                       },
-                                       {
-                                           LowEngine::Terrain::LayerType::Features,
-                                           LowEngine::Assets::GetTextureId("green_features"),
-                                           std::unordered_map<unsigned, LowEngine::Terrain::CellDefinition>{
-                                               {0, {true, false, true, 1.0f, {"forest1", "forest2"}}},
-                                               {1, {false, false, true, 1.0f, {}}}
-                                           }
-                                       }
+    LowEngine::Assets::LoadTileMap("BasicMap", "assets/maps/terrain_map_01/BasicMap.ldtkl", std::vector<LowEngine::Terrain::LayerDefinition>{
+	                                   {
+		                                   LowEngine::Terrain::LayerType::Terrain,
+		                                   LowEngine::Assets::GetTextureId("green_terrain"),
+		                                   std::unordered_map<unsigned, LowEngine::Terrain::CellDefinition>{
+			                                   {0, {true, false, true, 1.0f, {}}},
+			                                   {1, {false, true, true, 1.0f, {"water"}}},
+		                                   }
+	                                   },
+	                                   {
+		                                   LowEngine::Terrain::LayerType::Features,
+		                                   LowEngine::Assets::GetTextureId("green_features"),
+		                                   std::unordered_map<unsigned, LowEngine::Terrain::CellDefinition>{
+			                                   {0, {true, false, true, 1.0f, {"forest1", "forest2"}}},
+			                                   {1, {false, false, true, 1.0f, {}}}
+		                                   }
+	                                   }
                                    });
 
-    LowEngine::Assets::LoadTextureWithSpriteSheet("assets/textures/units/rogue.png", "rogue", 32, 32, 10, 10);
-    LowEngine::Assets::AddAnimationClip("rogue", "idle", 0, 10, 0.2f);
-    LowEngine::Assets::AddAnimationClip("rogue", "walk", 20, 10, 0.15f);
-    LowEngine::Assets::AddAnimationClip("rogue", "attack", 30, 10, 0.05f);
-    LowEngine::Assets::AddAnimationClip("rogue", "die", 40, 10, 0.15f);
+    LowEngine::Assets::LoadTextureWithSpriteSheet("rogue", "assets/textures/units/rogue.png", 32, 32, 10, 10);
+    LowEngine::Assets::AddAnimationClip("idle", "rogue", 0, 10, 0.2f);
+    LowEngine::Assets::AddAnimationClip("walk", "rogue", 20, 10, 0.15f);
+    LowEngine::Assets::AddAnimationClip("attack", "rogue", 30, 10, 0.05f);
+    LowEngine::Assets::AddAnimationClip("die", "rogue", 40, 10, 0.15f);
 
-    LowEngine::Assets::LoadSound("assets/sounds/positive.wav", "positive");
+    LowEngine::Assets::LoadSound("positive", "assets/sounds/positive.wav");
 
     // create scene
     auto mainScene = game.Scenes.CreateScene("new scene");

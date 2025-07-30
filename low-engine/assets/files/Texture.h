@@ -7,6 +7,11 @@ namespace LowEngine::Files
 	class Texture : public sf::Texture
 	{
 	public:
+		/**
+		 * @brief Path to the texture file.
+		 *
+		 * This is used to store the path from which the texture was loaded.
+		 */
 		std::string Path;
 
 		Texture() = default;

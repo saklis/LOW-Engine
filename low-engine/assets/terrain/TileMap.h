@@ -16,6 +16,13 @@ namespace LowEngine::Terrain {
         std::string Name;
 
         /**
+         * @brief Path to the Tile Map file.
+         *
+         * This is the path from which the Tile Map was loaded, or where it should be saved.
+		 */
+        std::string Path;
+
+        /**
          * @brief Size of the tile map, in cells.
          */
         sf::Vector2<size_t> Size;
@@ -47,8 +54,8 @@ namespace LowEngine::Terrain {
          * @return An instance of the TileMap class with initialized layers.
          */
         explicit TileMap(const sf::Texture& defaultTexture) : TerrainLayer(defaultTexture), FeaturesLayer(defaultTexture) {
-            TerrainLayer.Type = Terrain;
-            FeaturesLayer.Type = Features;
+            TerrainLayer.Type = LayerType::Terrain;
+            FeaturesLayer.Type = LayerType::Features;
         }
 
         void Update(float deltaTime);
@@ -59,8 +66,8 @@ namespace LowEngine::Terrain {
          *
          * Layer name in the JSON must be the same as LowEngine::Terrain::LayerType
          * @see LowEngine::Terrain::LayerType
-         * @param jsonData JSON content of LDTk file.
+         * @param path
          */
-        void LoadFromLDTkJson(nlohmann::json::const_reference jsonData);
+        void LoadFromLDTkJson(std::string path);
     };
 }

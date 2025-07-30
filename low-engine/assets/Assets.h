@@ -10,20 +10,20 @@
 #include "SFML/Graphics/Color.hpp"
 #include "SFML/Graphics/Image.hpp"
 #include "SFML/System/Exception.hpp"
+#include "SFML/Graphics/Font.hpp"
+#include "SFML/Graphics/Sprite.hpp"
+#include "SFML/Audio/SoundBuffer.hpp"
 #include "nlohmann/json.hpp"
 
 #include "Log.h"
 
 #include "assets/files/Texture.h"
+#include "assets/files/SoundBuffer.h"
 
 #include "animation/SpriteSheet.h"
 #include "terrain/TileMap.h"
 
-#include "SFML/Graphics/Font.hpp"
-#include "SFML/Graphics/Sprite.hpp"
-
 #include "defaults/unitblock.hpp"
-#include "SFML/Audio/SoundBuffer.hpp"
 #include "terrain/LayerDefinition.h"
 
 namespace LowEngine {
@@ -43,11 +43,11 @@ namespace LowEngine {
 
         /**
          * @brief Load texture from file with alias
-         * @param path Path to texture file
          * @param alias Alias that will be used to access the texture
+         * @param path Path to texture file
          * @return Unique ID of loaded texture
          */
-        static size_t LoadTexture(const std::string& path, const std::string& alias);
+        static size_t LoadTexture(const std::string& alias, const std::string& path);
 
         /**
          * @brief Load texture from file and create animation sheet for it.
@@ -64,17 +64,17 @@ namespace LowEngine {
 
         /**
          * @brief Load texture from file with alias and create animation sheet for it.
-         * @param path Path to the texture file
          * @param alias Alias that will be used to access the texture
+         * @param path Path to the texture file
          * @param frameWidth Width of a single frame in pixels
          * @param frameHeight Height of a single frame in pixels
          * @param frameCountX Number of frames in X direction
          * @param frameCountY Number of frames in Y direction
          * @return Unique ID of loaded texture
          */
-        static size_t LoadTextureWithSpriteSheet(const std::string& path, const std::string& alias,
-                                                    size_t frameWidth, size_t frameHeight,
-                                                    size_t frameCountX, size_t frameCountY);
+        static size_t LoadTextureWithSpriteSheet(const std::string& alias, const std::string& path,
+                                                 size_t frameWidth, size_t frameHeight,
+                                                 size_t frameCountX, size_t frameCountY);
 
         /**
          * @brief Add animation sheet for texture
@@ -102,26 +102,26 @@ namespace LowEngine {
          * @brief Define Animation Clip for a texture.
          *
          * Texture need to have an animation sheet defined before.
-         * @param textureId ID of the texture
          * @param name Name of the animation clip
+         * @param textureId ID of the texture
          * @param firstFrameIndex Index of the first frame in the animation
          * @param frameCount Number of frames in the animation
          * @param frameDuration Duration of a single frame in seconds
          */
-        static void AddAnimationClip(size_t textureId, const std::string& name, size_t firstFrameIndex,
+        static void AddAnimationClip(const std::string& name, size_t textureId, size_t firstFrameIndex,
                                      size_t frameCount, float frameDuration);
 
         /**
          * @brief Define Animation Clip for a texture with alias.
          *
          * Texture need to have an animation sheet defined before.
-         * @param textureAlias Texture alias
          * @param name Name of the animation clip
+         * @param textureAlias Texture alias
          * @param firstFrameIndex Index of the first frame in the animation
          * @param frameCount Number of frames in the animation
          * @param frameDuration Duration of a single frame in seconds
          */
-        static void AddAnimationClip(const std::string& textureAlias, const std::string& name,
+        static void AddAnimationClip(const std::string& name, const std::string& textureAlias,
                                      size_t firstFrameIndex, size_t frameCount, float frameDuration);
 
         /**
@@ -154,12 +154,12 @@ namespace LowEngine {
          * For animated tiles, Animation Clips with aliases must be defined before loading map.
          * Aliases for Clips must be provided on appropriate indexes of LayerToTextureMapping::AnimationClipNames vector.
          * Multiple clips can be defined for a single tile - in that case particular tile with have Clip assigned randomly.
-         * @param path Path to the map file (*.ldtkl)
          * @param alias Alias that will be used to access the map
+         * @param path Path to the map file (*.ldtkl)
          * @param definitions Vector for each layer to map texture and Animations Clips.
          * @return Map ID
          */
-        static size_t LoadTileMap(const std::string& path, const std::string& alias, const std::vector<Terrain::LayerDefinition>& definitions);
+        static size_t LoadTileMap(const std::string& alias, const std::string& path, const std::vector<Terrain::LayerDefinition>& definitions);
 
         /**
          * @brief Retrieve a tile map by its ID.
@@ -181,6 +181,12 @@ namespace LowEngine {
          * @return Id of the map.
          */
         static size_t GetTileMapId(const std::string& mapAlias);
+
+        /**
+         * @brief Retrieve all tile map aliases.
+         * @return Vector of strings containing all tile map aliases.
+		 */
+		static std::vector<std::string> GetTileMapAliases();
 
         /**
          * @brief Retrieve the animation sheet associated with a texture ID.
@@ -237,10 +243,16 @@ namespace LowEngine {
         static std::vector<std::string> GetTextureAliases();
 
         /**
-         * @brief Retrive the default font.
+         * @brief Retrieve the default font.
          * @return Reference to the default font.
          */
         static sf::Font& GetDefaultFont();
+
+        /**
+		 * @brief Retrieve all loaded fonts aliases.
+		 * @return Vector of strings containing all font aliases.
+         */
+        static std::vector<std::string> GetFontAliases();
 
         /**
          * @brief Load sound from file.
@@ -251,31 +263,47 @@ namespace LowEngine {
 
         /**
          * @brief Load sound from file.
-         * @param path Path to the sound file
          * @param alias Alias that will be used to access the sound
+         * @param path Path to the sound file
          * @return Unique ID of loaded sound
          */
-        static size_t LoadSound(const std::string& path, const std::string& alias);
+        static size_t LoadSound(const std::string& alias, const std::string& path);
 
         /**
          * @brief Retrieve the default sound.
          * @return Reference to the default `sf::SoundBuffer`.
          */
-        static sf::SoundBuffer& GetDefaultSound();
+        static Files::SoundBuffer& GetDefaultSound();
 
         /**
          * @brief Retrieve a sound buffer by its ID.
          * @param soundId The unique ID of the sound buffer to retrieve.
          * @return Reference to the requested `sf::SoundBuffer`.
          */
-        static sf::SoundBuffer& GetSound(size_t soundId);
+        static Files::SoundBuffer& GetSound(size_t soundId);
 
         /**
          * @brief Retrieve a sound buffer by its alias.
-         * @param soundAlias The alias of the sound buffer to retrieve.
+         * @param alias The alias of the sound buffer to retrieve.
          * @return Reference to the requested `sf::SoundBuffer`.
          */
-        static sf::SoundBuffer& GetSound(const std::string& soundAlias);
+        static Files::SoundBuffer& GetSound(const std::string& alias);
+
+        /**
+         * @brief Retrieve all sound aliases.
+         * @return Vector of strings containing all sound aliases.
+         */
+        static std::vector<std::string> GetSoundAliases();
+
+        /**
+         * @brief Serialize all loaded assets to JSON format.
+         *
+         * This method generates a JSON representation of all loaded assets, including textures, sounds, fonts, and tile maps.
+         * The resulting JSON can be used for saving or transferring asset data.
+         *
+         * @return A string containing the serialized JSON representation of the assets.
+		 */
+        static nlohmann::ordered_json SerializeToJSON();
 
         /**
          * @brief Unload all loaded assets, including textures, sounds, fonts, and tile maps and others.
@@ -313,9 +341,9 @@ namespace LowEngine {
         std::unordered_map<size_t, Animation::SpriteSheet> _animationSheets;
 
         std::vector<sf::Font> _fonts;
-        std::unordered_map<std::string, sf::Font> _fontAliases;
+        std::unordered_map<std::string, size_t> _fontAliases;
 
-        std::vector<sf::SoundBuffer> _sounds;
+        std::vector<Files::SoundBuffer> _sounds;
         std::unordered_map<std::string, size_t> _soundAliases;
     };
 }

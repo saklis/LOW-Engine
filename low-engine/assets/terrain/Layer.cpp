@@ -6,9 +6,9 @@
 
 namespace LowEngine::Terrain {
     void Layer::LoadTexture(size_t textureId) {
-        _textureId = textureId;
+        TextureId = textureId;
 
-        _sourceImage = Assets::GetTexture(_textureId).copyToImage();
+        _sourceImage = Assets::GetTexture(TextureId).copyToImage();
     }
 
     void Layer::SetSize(const sf::Vector2<size_t>& cellCount, const size_t& cellSize) {

@@ -37,5 +37,21 @@ namespace LowEngine {
          * when no specific texture is provided.
 		 */
     	inline static const std::string DEFAULT_TEXTURE_ALIAS = "default";
+
+        /**
+         * @brief Default alias for the sound that is used when no sound is specified.
+         *
+         * This alias is used to refer to a default sound that can be used in various components
+         * when no specific sound is provided.
+		 */
+		inline static const std::string DEFAULT_SOUND_ALIAS = "default";
+
+        /**
+         * @brief Default alias for the font that is used when no font is specified.
+         *
+         * This alias is used to refer to a default font that can be used in various components
+         * when no specific font is provided.
+		 */
+		inline static const std::string DEFAULT_FONT_ALIAS = "default";
     };
 }

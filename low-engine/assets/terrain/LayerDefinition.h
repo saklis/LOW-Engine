@@ -1,9 +1,10 @@
 #pragma once
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <utility>
 
-#include "Layer.h"
+#include "LayerType.h"
 
 namespace LowEngine::Terrain {
     /**
@@ -44,7 +45,7 @@ namespace LowEngine::Terrain {
         /**
          * @brief Type of this layer.
          */
-        LayerType Type;
+        LayerType Type = LayerType::Empty;
 
         /**
          * @brief ID of the texture that should be used.
@@ -55,6 +56,13 @@ namespace LowEngine::Terrain {
          * @brief Structure holding properties for particular cell types, recognised by index.
          */
         std::unordered_map<unsigned, CellDefinition> CellDefinitions;
+
+        /**
+         * @brief Default constructor for LayerDefinition.
+         *
+         * Initializes the layer type to Empty and texture ID to 0.
+		 */
+		LayerDefinition() = default;
 
         /**
          * @brief Constructs a LayerToTextureMapping object with layer type, texture ID, and optional animation clip names.

@@ -10,28 +10,9 @@
 #include "SFML/Graphics/Texture.hpp"
 #include "SFML/System/Vector2.hpp"
 
+#include "LayerDefinition.h"
+
 namespace LowEngine::Terrain {
-    /**
-     * @brief Specifies the type of layer in the terrain system.
-     *
-     * This enumeration is used to define the purpose or category of a terrain layer,
-     * which can either be for static terrain or additional features such as decorations.
-     */
-    enum LayerType {
-        Terrain,
-        Features,
-    };
-
-    inline std::string LayerTypeToString(LayerType type) {
-        switch (type) {
-            case LayerType::Terrain: return "Terrain";
-            case LayerType::Features: return "Features";
-            // Add other enum values here
-            default: return "Unknown";
-        }
-    }
-
-
     /**
      * @brief Represents the state of an animated tile.
      *
@@ -72,6 +53,20 @@ namespace LowEngine::Terrain {
          * @brief Type of this Layer.
          */
         LayerType Type = LayerType::Terrain;
+
+        /**
+         * @brief Definition of this Layer.
+         *
+         * Contains information about texture, cell size, cell count and other properties.
+		 */
+		LayerDefinition Definition;
+
+        /**
+         * @brief ID of the texture that is used for this layer.
+         *
+         * This ID is used to retrieve the texture from the Assets manager.
+		 */
+        size_t TextureId = -1;
 
         /**
          * @brief Size of single cell, in pixels.
@@ -144,7 +139,6 @@ namespace LowEngine::Terrain {
         sf::Sprite* GetDrawable();
 
     protected:
-        size_t _textureId = -1;
         sf::Image _sourceImage;
         sf::Image _image;
         sf::Texture _texture;
