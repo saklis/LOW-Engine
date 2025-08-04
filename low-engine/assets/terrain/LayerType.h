@@ -32,7 +32,7 @@ namespace LowEngine::Terrain {
 	 * @param str The string to convert to LayerType.
 	 * @return LayerType enum value. Returns LayerType::Empty for unknown strings.
 	 */
-	inline LayerType Parse(const std::string& str) {
+	inline LayerType FromString(const std::string& str) {
 		if (str == "Empty") return LayerType::Empty;
 		if (str == "Terrain") return LayerType::Terrain;
 		if (str == "Features") return LayerType::Features;

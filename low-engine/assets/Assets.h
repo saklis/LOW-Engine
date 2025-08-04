@@ -306,6 +306,16 @@ namespace LowEngine {
         static nlohmann::ordered_json SerializeToJSON();
 
         /**
+         * @brief Load assets from a JSON object.
+         *
+         * This method populates the asset manager with assets defined in the provided JSON object.
+         *
+         * @param assetsJson The JSON object containing asset definitions.
+         * @return true if assets were loaded successfully, false otherwise.
+		 */
+        static bool LoadFromJSON(const nlohmann::basic_json<nlohmann::ordered_map>& assetsJson);
+
+        /**
          * @brief Unload all loaded assets, including textures, sounds, fonts, and tile maps and others.
          *
          * This method clears all internal storage and resets the asset manager to its initial state.

@@ -2,9 +2,6 @@
 
 namespace LowEngine {
     SceneManager::SceneManager(): _scenes(), _currentSceneIndex(0) {
-        _scenes.resize(1);
-        _scenes[0] = std::move(std::make_unique<Scene>());
-        _scenes[0]->InitAsDefault();
     }
 
     Scene* SceneManager::CreateEmptyScene(const std::string& name) {
@@ -40,6 +37,16 @@ namespace LowEngine {
         return newScene;
     }
 
+    Scene* SceneManager::CreateDefaultScene() {
+	    if (!IsDefaultSceneExists()) {
+            CreateScene("default");
+	    }else {
+            _log->warn("Cannot create new default scene because it already exists. Current default scene returned.");
+	    }
+
+        return GetScene(0);
+    }
+
     size_t SceneManager::CreateCopySceneFromCurrent(const std::string& nameSufix) {
         if (_scenes.empty()) {
             _log->warn("No scene to copy");
@@ -48,7 +55,7 @@ namespace LowEngine {
 
         // Copy‐construct from the current scene:
         Scene* current = _scenes[_currentSceneIndex].get();
-        auto clone = std::make_unique<Scene>(*current);
+        auto clone = std::make_unique<Scene>(*current, nameSufix);
 
         clone->Initialized = true;
         clone->IsTemporary = true;
@@ -77,17 +84,35 @@ namespace LowEngine {
         return false;
     }
 
-    bool SceneManager::SelectScene(const Scene& scene) {
+    bool SceneManager::SelectScene(const Scene* scene) {
+        if (scene == nullptr) {
+			_log->error("Cannot select scene: pointer is null");
+            return false;
+        }
+
         for (unsigned int i = 0; i < _scenes.size(); i++) {
-            if (_scenes[i].get() == &scene && _scenes[i]->Initialized) {
+            if (_scenes[i].get() == scene && _scenes[i]->Initialized) {
                 _currentSceneIndex = i;
 
-                _log->info("Scene selected: '{}'", scene.Name);
+                _log->info("Scene selected: '{}'", scene->Name);
 
                 return true;
             }
         }
         return false;
+    }
+
+    Scene* SceneManager::GetScene(size_t index) {
+        if (index >= _scenes.size()) {
+            _log->error("Scene index {} is out of bounds", index);
+            return nullptr;
+        }
+        if (!_scenes[index]->Initialized) {
+            _log->error("Scene at index {} is not initialized", index);
+            return nullptr;
+        }
+
+		return _scenes[index].get();
     }
 
     Scene* SceneManager::GetCurrentScene() {
@@ -96,6 +121,10 @@ namespace LowEngine {
 
     const Scene& SceneManager::GetCurrentScene() const {
         return *_scenes[_currentSceneIndex];
+    }
+
+    bool SceneManager::IsDefaultSceneExists() const {
+        return !_scenes.empty() && _scenes[0]->Initialized;
     }
 
     void SceneManager::DestroyCurrentScene() {

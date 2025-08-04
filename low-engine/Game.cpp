@@ -25,8 +25,7 @@ namespace LowEngine {
 	}
 
 	void Game::OnWindowClosed() {
-		Scenes.DestroyAll();
-		Assets::UnloadAll();
+		CloseProject();
 		Window.close();
 	}
 
@@ -69,12 +68,95 @@ namespace LowEngine {
 		return Window.isOpen();
 	}
 
-	std::string Game::GetProjectJsonString() {
+	bool Game::SaveProject(const std::string& filePath) {
+		std::ofstream file(filePath);
+		if (!file.is_open()) {
+			_log->error("Failed to open file for saving project: {}", filePath);
+			return false;
+		}
+
+		_log->debug("Saving project to file: {}", filePath);
+
 		nlohmann::ordered_json projectJson;
 		projectJson["title"] = Title;
 		projectJson["assets"] = Assets::SerializeToJSON();
+		projectJson["inputActions"] = Input.SerializeActionsToJSON();
 
-		return projectJson.dump(4); // pretty print with 4 spaces
+		file << projectJson.dump(4); // pretty print with 4 spaces
+
+		file.close();
+		if (file.fail()) {
+			_log->error("Failed to write project data to file: {}", filePath);
+			return false;
+		}
+		_log->info("Project saved successfully to: {}", filePath);
+		return true;
+	}
+
+	bool Game::LoadProject(const std::string& filePath) {
+		_log->info("Loading project from file: {}", filePath);
+
+		std::ifstream file(filePath);
+		if (!file.is_open()) {
+			_log->error("Failed to open file for loading project: {}", filePath);
+			return false;
+		}
+		nlohmann::ordered_json projectJson;
+		file >> projectJson;
+
+		if (projectJson.contains("title")) {
+			Title = projectJson["title"].get<std::string>();
+			_log->info("Project title loaded: {}", Title);
+		} else {
+			_log->error("Project JSON does not contain 'title' field");
+			return false;
+		}
+
+		if (projectJson.contains("assets")) {
+			auto assetsJson = projectJson["assets"];
+			if (!Assets::LoadFromJSON(assetsJson)) {
+				_log->error("Failed to load assets from project JSON");
+				return false;
+			}
+			_log->info("Assets loaded successfully from project");
+		} else {
+			_log->error("Project JSON does not contain 'assets' field");
+			return false;
+		}
+
+		if (projectJson.contains("inputActions")) {
+			auto actionsJson = projectJson["inputActions"];
+			if (!Input.LoadActionsFromJSON(actionsJson)) {
+				_log->error("Failed to load input actions from project JSON");
+				return false;
+			}
+			_log->info("Input actions loaded successfully from project");
+		} else {
+			_log->error("Project JSON does not contain 'inputActions' field");
+			return false;
+		}
+
+		// TODO: Load scenes
+
+		if (!Scenes.IsDefaultSceneExists()) {
+			if (const auto defaultScene = Scenes.CreateDefaultScene()) {
+				Scenes.SelectScene(defaultScene);
+			}
+		}
+
+		file.close();
+		if (file.fail()) {
+			_log->error("Failed to read project data from file: {}", filePath);
+			return false;
+		}
+		return true;
+	}
+
+	void Game::CloseProject() {
+		Scenes.DestroyAll();
+		Input.RemoveAllActions();
+		Assets::UnloadAll();
+		_log->info("Project closed successfully");
 	}
 
 	void Game::Update(float deltaTime) {

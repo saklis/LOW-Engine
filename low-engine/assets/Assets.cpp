@@ -512,6 +512,107 @@ namespace LowEngine {
 		return assetsJson;
     }
 
+    bool Assets::LoadFromJSON(const nlohmann::basic_json<nlohmann::ordered_map>& assetsJson) {
+		// Load textures
+        if (assetsJson.contains("textures")) {
+            for (const auto& textureJson : assetsJson["textures"]) {
+                if (textureJson.contains("alias") && textureJson.contains("path")) {
+                    LoadTexture(textureJson["alias"].get<std::string>(), textureJson["path"].get<std::string>());
+                } else {
+                    _log->error("Invalid texture JSON format");
+                    return false;
+                }
+            }
+		}
+
+		// Load sprite sheets
+        if (assetsJson.contains("spriteSheets")) {
+            for (const auto& spriteSheetJson : assetsJson["spriteSheets"]) {
+                if (spriteSheetJson.contains("textureAlias") && spriteSheetJson.contains("frameWidth") &&
+                    spriteSheetJson.contains("frameHeight") && spriteSheetJson.contains("frameCountX") &&
+                    spriteSheetJson.contains("frameCountY")) {
+                    AddSpriteSheet(spriteSheetJson["textureAlias"].get<std::string>(),
+                                   spriteSheetJson["frameWidth"].get<size_t>(),
+                                   spriteSheetJson["frameHeight"].get<size_t>(),
+                                   spriteSheetJson["frameCountX"].get<size_t>(),
+                                   spriteSheetJson["frameCountY"].get<size_t>());
+                } else {
+                    _log->error("Invalid sprite sheet JSON format");
+                    return false;
+                }
+            }
+		}
+
+		// Load animation clips
+        if (assetsJson.contains("animationClips")) {
+            for (const auto& animationClipJson : assetsJson["animationClips"]) {
+                if (animationClipJson.contains("textureAlias") && animationClipJson.contains("name") &&
+                    animationClipJson.contains("firstFrameIndex") && animationClipJson.contains("frameCount") &&
+                    animationClipJson.contains("frameDuration")) {
+                    AddAnimationClip(animationClipJson["name"].get<std::string>(),
+                        animationClipJson["textureAlias"].get<std::string>(),
+                        animationClipJson["firstFrameIndex"].get<size_t>(),
+                        animationClipJson["frameCount"].get<size_t>(),
+                        animationClipJson["frameDuration"].get<float>());
+                } else {
+                    _log->error("Invalid animation clip JSON format");
+                    return false;
+                }
+            }
+        }
+
+		// Load sounds
+        if (assetsJson.contains("sounds")) {
+            for (const auto& soundJson : assetsJson["sounds"]) {
+                if (soundJson.contains("alias") && soundJson.contains("path")) {
+                    LoadSound(soundJson["alias"].get<std::string>(), soundJson["path"].get<std::string>());
+                } else {
+                    _log->error("Invalid sound JSON format");
+                    return false;
+                }
+            }
+		}
+
+		// Load fonts
+		// TODO: Implement font loading from JSON
+
+		// Load tile maps
+        if (assetsJson.contains("tileMaps")) {
+            for (const auto& tileMapJson : assetsJson["tileMaps"]) {
+                if (tileMapJson.contains("alias") && tileMapJson.contains("path") &&
+                    tileMapJson.contains("layerDefinitions")) {
+                    std::vector<Terrain::LayerDefinition> layerDefinitions;
+                    for (const auto& layerDefJson : tileMapJson["layerDefinitions"]) {
+                        Terrain::LayerDefinition layerDef;
+                        layerDef.Type = Terrain::FromString(layerDefJson["type"].get<std::string>());
+                        layerDef.TextureId = GetTextureId(layerDefJson["textureAlias"].get<std::string>());
+                        for (const auto& cellDefJson : layerDefJson["cellDefinitions"].items()) {
+                            Terrain::CellDefinition cellDef;
+                            cellDef.IsWalkable = cellDefJson.value().at("isWalkable").get<bool>();
+                            cellDef.IsSwimmable = cellDefJson.value().at("isSwimmable").get<bool>();
+                            cellDef.IsFlyable = cellDefJson.value().at("isFlyable").get<bool>();
+                            cellDef.MoveCost = cellDefJson.value().at("moveCost").get<float>();
+                            if (cellDefJson.value().contains("animationClipNames")) {
+                                for (const auto& clipName : cellDefJson.value().at("animationClipNames")) {
+                                    cellDef.AnimationClipNames.push_back(clipName.get<std::string>());
+                                }
+                            }
+                            layerDef.CellDefinitions[cellDefJson.value().at("id").get<unsigned>()] = std::move(cellDef);
+                        }
+                        layerDefinitions.push_back(std::move(layerDef));
+                    }
+                    LoadTileMap(tileMapJson["alias"].get<std::string>(), tileMapJson["path"].get<std::string>(),
+                                layerDefinitions);
+                } else {
+                    _log->error("Invalid tile map JSON format");
+                    return false;
+                }
+            }
+		}
+
+        return true;
+    }
+
     void Assets::UnloadAll() {
         GetInstance()->_maps.clear();
         GetInstance()->_mapAliases.clear();

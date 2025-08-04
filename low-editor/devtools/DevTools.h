@@ -29,8 +29,12 @@ namespace LowEngine {
         static inline void* _selectedComponent = nullptr;
         static inline std::type_index _selectedComponentType = typeid(void);
 
+        static inline bool _isInputEditorVisible = false;
         static inline bool _isAssetBrowserVisible = false;
         static inline bool _isNewProjectWizardVisible = false;
+
+        static inline std::string _actionBeingBound = "";
+        static inline bool _isWaitingForInput = false;
 
         static void DisplayLog(size_t posX, size_t posY, size_t sizeX, size_t sizeY);
 
@@ -50,6 +54,8 @@ namespace LowEngine {
 
         static void DisplayCameraComponentProperties(Scene& scene);
 
+        static void DisplayInputEditor(Game& game);
+
         static void DisplayAssetBrowser(Game& game);
 
         static std::string InsertSpaces(const std::string& str);
@@ -57,6 +63,7 @@ namespace LowEngine {
         static sf::Texture playTexture;
         static sf::Texture pauseTexture;
         static sf::Texture stopTexture;
+        static sf::Texture trashTexture;
 
         static bool LoadIcons();
     };

@@ -28,6 +28,8 @@ namespace LowEngine::Terrain {
          */
         std::vector<std::string> AnimationClipNames;
 
+		CellDefinition() = default;
+
         CellDefinition(bool isWalkable, bool isSwimmable, bool isFlyable, float moveCost, const std::vector<std::string>& animationClipNames)
             : IsWalkable(isWalkable),
               IsSwimmable(isSwimmable),

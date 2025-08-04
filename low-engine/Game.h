@@ -62,6 +62,7 @@ namespace LowEngine {
 
         Game() : DeltaTime(sf::Time::Zero) {
             StartLog();
+            Scenes.CreateScene("default");
         }
 
         explicit Game(const std::string& gameTitle) : Title(gameTitle), DeltaTime(sf::Time::Zero) {
@@ -113,13 +114,35 @@ namespace LowEngine {
         }
 
         /**
-		 * @brief Serializes and retrieves the project properties formated as JSON.
-		 *
-		 * This includes project properties, as well as the list of all loaded assets.
-		 * 
-		 * @return JSON string representing the project properties.
-         */
-        std::string GetProjectJsonString();
+         * @brief Saves the current project to a file.
+         *
+         * This function serializes the current project properties and assets to a JSON file.
+         * The path should point to a valid location where the project can be saved.
+         *
+         * @param filePath The path to save the project file.
+         * @return true if the project was saved successfully, false otherwise.
+		 */
+		bool SaveProject(const std::string& filePath);
+
+        /**
+         * @brief Loads a project from a file.
+         *
+         * This function loads the project properties and assets from a JSON file.
+         * The path should point to a valid project file.
+         *
+         * @param filePath The path to the project file.
+         * @return true if the project was loaded successfully, false otherwise.
+		 */
+        bool LoadProject(const std::string& filePath);
+
+        /**
+         * @brief Closes the current project.
+         *
+         * This function closes the current project, clearing all scenes and assets.
+         *
+		 * @return true if the project was closed successfully, false otherwise.
+		 */
+        void CloseProject();
 
     protected:
         sf::Clock _clock;

@@ -37,6 +37,14 @@ namespace LowEngine {
         Scene* CreateScene(const std::string& name);
 
         /**
+         * @brief Create default scene.
+         *
+         * Default scene is created during engine initialization and is used as a fallback scene.
+         * @return Pointer to the default scene. Returns nullptr in case of error.
+		 */
+        Scene* CreateDefaultScene();
+
+        /**
          * @brief Create a deep copy of current scene.
          * @param nameSufix Suffix that will be added to the scene's Name.
          * @return Id of the new scene.
@@ -58,11 +66,18 @@ namespace LowEngine {
         bool SelectScene(const std::string& name);
 
         /**
-         * @brief Set refered scene as 'current'.
-         * @param scene Reference to the scene.
+         * @brief Set scene with provided pointer as 'current'.
+         * @param scene Pointer to the scene.
          * @return True if current scene was changed. Returns false in case of error.
-         */
-        bool SelectScene(const LowEngine::Scene& scene);
+		 */
+        bool SelectScene(const Scene* scene);
+
+        /**
+         * @brief Retrieve pointer to scene by its index.
+         * @param index Index of the scene.
+         * @return Pointer to scene. Returns nullptr in case of error.
+		 */
+		Scene* GetScene(size_t index);
 
         /**
          * @brief Retrieve pointer to scene that is marked as 'current'.
@@ -77,6 +92,14 @@ namespace LowEngine {
          * @return
          */
         const Scene& GetCurrentScene() const;
+
+        /**
+         * @brief Check if default scene exists.
+         *
+         * Default scene is created during engine initialization and is used as a fallback scene.
+         * @return True if default scene exists, false otherwise.
+		 */
+        bool IsDefaultSceneExists() const;
 
         /**
          * @brief Destroy current scene.

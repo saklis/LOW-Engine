@@ -46,47 +46,13 @@ void FindPathBetweenPositions(LowEngine::Game& game) {
 
 int main() {
     // initialize the game engine
-    LowEngine::Game game("LOWEditor");
-
-    // load assets
-    LowEngine::Assets::LoadTextureWithSpriteSheet("green_terrain", "assets/textures/terrain/green_terrain.png", 16, 16, 3, 2);
-    LowEngine::Assets::AddAnimationClip("water", "green_terrain", 3, 3, 0.5f);
-
-    LowEngine::Assets::LoadTextureWithSpriteSheet("green_features", "assets/textures/terrain/green_features.png", 16, 16, 4, 2);
-    LowEngine::Assets::AddAnimationClip("forest1", "green_features", 0, 2, 0.20f);
-    LowEngine::Assets::AddAnimationClip("forest2", "green_features", 2, 2, 0.20f);
-
-    LowEngine::Assets::LoadTileMap("BasicMap", "assets/maps/terrain_map_01/BasicMap.ldtkl", std::vector<LowEngine::Terrain::LayerDefinition>{
-	                                   {
-		                                   LowEngine::Terrain::LayerType::Terrain,
-		                                   LowEngine::Assets::GetTextureId("green_terrain"),
-		                                   std::unordered_map<unsigned, LowEngine::Terrain::CellDefinition>{
-			                                   {0, {true, false, true, 1.0f, {}}},
-			                                   {1, {false, true, true, 1.0f, {"water"}}},
-		                                   }
-	                                   },
-	                                   {
-		                                   LowEngine::Terrain::LayerType::Features,
-		                                   LowEngine::Assets::GetTextureId("green_features"),
-		                                   std::unordered_map<unsigned, LowEngine::Terrain::CellDefinition>{
-			                                   {0, {true, false, true, 1.0f, {"forest1", "forest2"}}},
-			                                   {1, {false, false, true, 1.0f, {}}}
-		                                   }
-	                                   }
-                                   });
-
-    LowEngine::Assets::LoadTextureWithSpriteSheet("rogue", "assets/textures/units/rogue.png", 32, 32, 10, 10);
-    LowEngine::Assets::AddAnimationClip("idle", "rogue", 0, 10, 0.2f);
-    LowEngine::Assets::AddAnimationClip("walk", "rogue", 20, 10, 0.15f);
-    LowEngine::Assets::AddAnimationClip("attack", "rogue", 30, 10, 0.05f);
-    LowEngine::Assets::AddAnimationClip("die", "rogue", 40, 10, 0.15f);
-
-    LowEngine::Assets::LoadSound("positive", "assets/sounds/positive.wav");
+    LowEngine::Game game;
+    game.LoadProject("projects\\LOWEditor\\LOWEditor.lowproj");
 
     // create scene
     auto mainScene = game.Scenes.CreateScene("new scene");
     mainScene->IsPaused = true;
-    game.Scenes.SelectScene(*mainScene);
+    game.Scenes.SelectScene(mainScene);
 
     // camera entity
     if (const auto cameraEntity = mainScene->GetCurrentCamera()) {
@@ -113,10 +79,6 @@ int main() {
     bool success = game.OpenWindow(1664, 936);
     if (!success)return 1;
 
-    game.Input.AddAction("FindPath", sf::Keyboard::Key::Space);
-    game.Input.AddAction("SetStartPosition", sf::Mouse::Button::Left);
-    game.Input.AddAction("SetEndPosition", sf::Mouse::Button::Right);
-
     LowEngine::DevTools::Initialize(game.Window);
 
     // main loop
@@ -130,7 +92,8 @@ int main() {
         LowEngine::DevTools::Build(game);
 
         // update
-        if (game.Input.GetAction("SetStartPosition")->Started) {
+        auto setStartPosition = game.Input.GetAction("SetStartPosition");
+        if (setStartPosition && setStartPosition->Started) {
             auto mouseWorldPosition = game.Window.mapPixelToCoords(game.Input.GetMousePosition());
 
             int cellX = static_cast<int>(std::floor(mouseWorldPosition.x / 16));
@@ -141,7 +104,9 @@ int main() {
 
             FindPathBetweenPositions(game);
         }
-        if (game.Input.GetAction("SetEndPosition")->Started) {
+
+		auto setEndPosition = game.Input.GetAction("SetEndPosition");
+        if (setEndPosition && setEndPosition->Started) {
             auto mouseWorldPosition = game.Window.mapPixelToCoords(game.Input.GetMousePosition());
 
             int cellX = static_cast<int>(std::floor(mouseWorldPosition.x / 16));
@@ -152,7 +117,9 @@ int main() {
 
             FindPathBetweenPositions(game);
         }
-        if (game.Input.GetAction("FindPath")->Started) {
+
+		auto findPath = game.Input.GetAction("FindPath");
+        if (findPath && findPath->Started) {
             FindPathBetweenPositions(game);
         }
 
