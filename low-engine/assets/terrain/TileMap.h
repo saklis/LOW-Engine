@@ -20,7 +20,7 @@ namespace LowEngine::Terrain {
          *
          * This is the path from which the Tile Map was loaded, or where it should be saved.
 		 */
-        std::string Path;
+        std::filesystem::path Path;
 
         /**
          * @brief Size of the tile map, in cells.

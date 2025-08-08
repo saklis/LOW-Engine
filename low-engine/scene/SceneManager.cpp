@@ -17,6 +17,7 @@ namespace LowEngine {
     Scene* SceneManager::CreateScene(const std::string& name) {
         auto newScene = CreateEmptyScene(name);
 
+		// add default camera
         if (newScene) {
             // camera entity
             auto cameraEntity = newScene->AddEntity("Default camera");
@@ -38,7 +39,7 @@ namespace LowEngine {
     }
 
     Scene* SceneManager::CreateDefaultScene() {
-	    if (!IsDefaultSceneExists()) {
+	    if (!DefaultSceneExists()) {
             CreateScene("default");
 	    }else {
             _log->warn("Cannot create new default scene because it already exists. Current default scene returned.");
@@ -123,7 +124,7 @@ namespace LowEngine {
         return *_scenes[_currentSceneIndex];
     }
 
-    bool SceneManager::IsDefaultSceneExists() const {
+    bool SceneManager::DefaultSceneExists() const {
         return !_scenes.empty() && _scenes[0]->Initialized;
     }
 

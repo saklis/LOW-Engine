@@ -1,8 +1,7 @@
 #pragma once
 
 #include <limits>
-#include <vector>
-#include <xstring>
+#include <string>
 
 namespace LowEngine {
     /* * Config class
@@ -53,5 +52,25 @@ namespace LowEngine {
          * when no specific font is provided.
 		 */
 		inline static const std::string DEFAULT_FONT_ALIAS = "default";
+
+        /**
+         * @brief Default file extension for project file.
+         */
+        inline static const std::string PROJECT_FILE_EXTENSION = ".lowproj";
+
+        /**
+         * @brief Default name for the assets folder.
+         */
+        inline static const std::string ASSETS_FOLDER_NAME = "assets";
+
+        /**
+         * @brief Default name for the texture assets directory.
+         */
+        inline static const std::string TEXTURES_FOLDER_NAME = "textures";
+
+    	/**
+		 * @brief Default name for the sound assets directory.
+		 */
+		inline static const std::string SOUNDS_FOLDER_NAME = "sounds";
     };
 }

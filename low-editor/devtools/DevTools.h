@@ -29,9 +29,9 @@ namespace LowEngine {
         static inline void* _selectedComponent = nullptr;
         static inline std::type_index _selectedComponentType = typeid(void);
 
+        static inline bool _isNewProjectWizardVisible = true;
         static inline bool _isInputEditorVisible = false;
         static inline bool _isAssetBrowserVisible = false;
-        static inline bool _isNewProjectWizardVisible = false;
 
         static inline std::string _actionBeingBound = "";
         static inline bool _isWaitingForInput = false;
@@ -40,7 +40,7 @@ namespace LowEngine {
 
         static void DisplayMainMenu(LowEngine::Game& game);
 
-        static void DisplayProjectWizard();
+        static void DisplayProjectWizard(Game& game);
 
         static void DisplayToolbar(Game& game, const sf::Vector2u& displaySize, float YOffset);
 
@@ -58,12 +58,18 @@ namespace LowEngine {
 
         static void DisplayAssetBrowser(Game& game);
 
+        static void DisplayTextureBrowser(Game& game, ImVec2 size);
+
+        static void CreateNewProject(Game& game, const std::string& projectName, const std::string& projectPath);
+
         static std::string InsertSpaces(const std::string& str);
+        static void InitStaticCharArray(char* arr, size_t length, const std::string& value);
 
         static sf::Texture playTexture;
         static sf::Texture pauseTexture;
         static sf::Texture stopTexture;
         static sf::Texture trashTexture;
+        static sf::Texture projectIconTexture;
 
         static bool LoadIcons();
     };

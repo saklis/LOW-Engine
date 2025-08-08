@@ -99,7 +99,7 @@ namespace LowEngine {
          * Default scene is created during engine initialization and is used as a fallback scene.
          * @return True if default scene exists, false otherwise.
 		 */
-        bool IsDefaultSceneExists() const;
+        bool DefaultSceneExists() const;
 
         /**
          * @brief Destroy current scene.

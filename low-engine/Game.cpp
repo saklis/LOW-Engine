@@ -79,7 +79,7 @@ namespace LowEngine {
 
 		nlohmann::ordered_json projectJson;
 		projectJson["title"] = Title;
-		projectJson["assets"] = Assets::SerializeToJSON();
+		projectJson["assets"] = Assets::SerializeToJSON(ProjectDirectory);
 		projectJson["inputActions"] = Input.SerializeActionsToJSON();
 
 		file << projectJson.dump(4); // pretty print with 4 spaces
@@ -106,22 +106,25 @@ namespace LowEngine {
 
 		if (projectJson.contains("title")) {
 			Title = projectJson["title"].get<std::string>();
+			ProjectDirectory = std::filesystem::path(filePath).parent_path();
+
+			Window.setTitle(Title);
 			_log->info("Project title loaded: {}", Title);
 		} else {
 			_log->error("Project JSON does not contain 'title' field");
 			return false;
 		}
 
+		Assets::LoadDefaultAssets();
 		if (projectJson.contains("assets")) {
 			auto assetsJson = projectJson["assets"];
-			if (!Assets::LoadFromJSON(assetsJson)) {
+			if (!Assets::LoadFromJSON(assetsJson, ProjectDirectory)) {
 				_log->error("Failed to load assets from project JSON");
 				return false;
 			}
 			_log->info("Assets loaded successfully from project");
 		} else {
-			_log->error("Project JSON does not contain 'assets' field");
-			return false;
+			_log->warn("Project JSON does not contain 'assets' field");
 		}
 
 		if (projectJson.contains("inputActions")) {
@@ -132,13 +135,12 @@ namespace LowEngine {
 			}
 			_log->info("Input actions loaded successfully from project");
 		} else {
-			_log->error("Project JSON does not contain 'inputActions' field");
-			return false;
+			_log->warn("Project JSON does not contain 'inputActions' field");
 		}
 
 		// TODO: Load scenes
 
-		if (!Scenes.IsDefaultSceneExists()) {
+		if (!Scenes.DefaultSceneExists()) {
 			if (const auto defaultScene = Scenes.CreateDefaultScene()) {
 				Scenes.SelectScene(defaultScene);
 			}
@@ -149,6 +151,7 @@ namespace LowEngine {
 			_log->error("Failed to read project data from file: {}", filePath);
 			return false;
 		}
+
 		return true;
 	}
 

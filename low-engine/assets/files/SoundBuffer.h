@@ -10,11 +10,11 @@ namespace LowEngine::Files {
 		 *
 		 * This is used to store the path from which the sound was loaded.
 		 */
-		std::string Path;
+		std::filesystem::path Path;
 
 		SoundBuffer() = default;
 		SoundBuffer(const std::string& path)
-			: Path(path) {
+			: Path(std::filesystem::path(path).lexically_normal()) {
 			if (!loadFromFile(path)) {
 				throw std::runtime_error("Failed to load sound from file: " + path);
 			}

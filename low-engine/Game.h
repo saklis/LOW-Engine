@@ -1,5 +1,7 @@
 #pragma once
 
+#include <filesystem>
+
 #include "Config.h"
 #include "Log.h"
 #include "assets/Assets.h"
@@ -22,6 +24,14 @@ namespace LowEngine {
          * This is used to set the title of the window when it is created.
 		 */
         std::string Title;
+
+        /**
+         * @brief The path to the project directory.
+         *
+         * This is used to store and load project files, assets and other resources.
+         * It should point to a valid directory where the project can be saved or loaded from.
+         */
+        std::filesystem::path ProjectDirectory;
 
         /**
          * @brief The main window of the game.

@@ -34,6 +34,11 @@ namespace LowEngine {
      */
     class Assets {
     public:
+	    /**
+		 * @brief Load engine's default assets.
+	     */
+	    static void LoadDefaultAssets();
+
         /**
          * @brief Load texture from file
          * @param path Path to the texture file
@@ -59,8 +64,8 @@ namespace LowEngine {
          * @return Unique ID of loaded texture
          */
         static size_t LoadTextureWithSpriteSheet(const std::string& path, size_t frameWidth,
-                                                    size_t frameHeight, size_t frameCountX,
-                                                    size_t frameCountY);
+                                                 size_t frameHeight, size_t frameCountX,
+                                                 size_t frameCountY);
 
         /**
          * @brief Load texture from file with alias and create animation sheet for it.
@@ -76,6 +81,18 @@ namespace LowEngine {
                                                  size_t frameWidth, size_t frameHeight,
                                                  size_t frameCountX, size_t frameCountY);
 
+	    /**
+	     * @brief Unload texture by its ID.
+	     * @param textureId ID of the texture to unload
+	     */
+	    static void UnloadTexture(size_t textureId);
+
+    	/**
+		 * @brief Unload texture by its alias.
+		 * @param textureAlias Alias of the texture to unload
+		 */
+    	static void UnloadTexture(const std::string& textureAlias);
+
         /**
          * @brief Add animation sheet for texture
          * @param textureId ID of the texture
@@ -85,7 +102,7 @@ namespace LowEngine {
          * @param frameCountY Number of frames in Y direction
          */
         static void AddSpriteSheet(size_t textureId, size_t frameWidth, size_t frameHeight,
-                                      size_t frameCountX, size_t frameCountY);
+                                   size_t frameCountX, size_t frameCountY);
 
         /**
          * @brief Add animation sheet for texture with alias
@@ -96,7 +113,7 @@ namespace LowEngine {
          * @param frameCountY Number of frames in Y direction
          */
         static void AddSpriteSheet(const std::string& textureAlias, size_t frameWidth,
-                                      size_t frameHeight, size_t frameCountX, size_t frameCountY);
+                                   size_t frameHeight, size_t frameCountX, size_t frameCountY);
 
         /**
          * @brief Define Animation Clip for a texture.
@@ -186,7 +203,7 @@ namespace LowEngine {
          * @brief Retrieve all tile map aliases.
          * @return Vector of strings containing all tile map aliases.
 		 */
-		static std::vector<std::string> GetTileMapAliases();
+        static std::vector<std::string> GetTileMapAliases();
 
         /**
          * @brief Retrieve the animation sheet associated with a texture ID.
@@ -201,6 +218,13 @@ namespace LowEngine {
          * @return Pointer to the `Animation::AnimationSheet` if it exists, otherwise throws an exception.
          */
         static Animation::SpriteSheet* GetSpriteSheet(const std::string& textureAlias);
+
+        /**
+         * @brief Check if a texture exists by its alias.
+         * @param textureAlias The unique alias of the texture.
+         * @return `true` if the texture exists, `false` otherwise.
+         */
+        static bool TextureExists(const std::string& textureAlias);
 
         /**
          * @brief Retrieve the default texture.
@@ -303,7 +327,7 @@ namespace LowEngine {
          *
          * @return A string containing the serialized JSON representation of the assets.
 		 */
-        static nlohmann::ordered_json SerializeToJSON();
+        static nlohmann::ordered_json SerializeToJSON(const std::filesystem::path& rootDirectory);
 
         /**
          * @brief Load assets from a JSON object.
@@ -311,9 +335,10 @@ namespace LowEngine {
          * This method populates the asset manager with assets defined in the provided JSON object.
          *
          * @param assetsJson The JSON object containing asset definitions.
+         * @param assetDirectory
          * @return true if assets were loaded successfully, false otherwise.
 		 */
-        static bool LoadFromJSON(const nlohmann::basic_json<nlohmann::ordered_map>& assetsJson);
+        static bool LoadFromJSON(const nlohmann::basic_json<nlohmann::ordered_map>& assetsJson, const std::filesystem::path& assetDirectory);
 
         /**
          * @brief Unload all loaded assets, including textures, sounds, fonts, and tile maps and others.
@@ -330,6 +355,11 @@ namespace LowEngine {
         Assets& operator=(const Assets&) = delete;
 
         /**
+         * @brief Programmatically create default assets.
+         */
+        void CreateDefaultAssets();
+
+        /**
          * @brief Retrieve static instance of Asset Manager.
          * @return Reference to the static instance.
          */
@@ -339,6 +369,7 @@ namespace LowEngine {
         }
 
         static void LoadTerrainLayerData(const Terrain::LayerDefinition* terrainLayerDefinition, Terrain::TileMap& map);
+
         static void LoadFeatureLayerData(const Terrain::LayerDefinition* featuresLayerDefinition, Terrain::TileMap& map);
 
         static void ReadNavDataForLayer(Terrain::TileMap& map, Terrain::Layer& layer, const Terrain::LayerDefinition* layerDefinition);
@@ -346,7 +377,7 @@ namespace LowEngine {
         std::vector<Terrain::TileMap> _maps;
         std::unordered_map<std::string, size_t> _mapAliases;
 
-        std::vector<Files::Texture> _textures;
+        std::vector<std::unique_ptr<Files::Texture>> _textures;
         std::unordered_map<std::string, size_t> _textureAliases;
         std::unordered_map<size_t, Animation::SpriteSheet> _animationSheets;
 

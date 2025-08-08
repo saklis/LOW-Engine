@@ -3,62 +3,76 @@
 #include "Config.h"
 
 namespace LowEngine {
-    Assets::Assets() {
+    void Assets::CreateDefaultAssets() {
         // create default texture
-        sf::Image defaultImage;
-        defaultImage.resize(sf::Vector2u(32, 32), sf::Color::Magenta);
-        Files::Texture defaultTexture;
-        if (!defaultTexture.loadFromImage(defaultImage)) {
-            _log->error("Failed to load default texture!");
-            throw std::runtime_error("Failed to load default texture!");
-        }
-        _textures.emplace_back(std::move(defaultTexture));
-        _textureAliases[Config::DEFAULT_TEXTURE_ALIAS] = 0;
+        if (!_textureAliases.contains(Config::DEFAULT_TEXTURE_ALIAS)) {
+            sf::Image defaultImage;
+            defaultImage.resize(sf::Vector2u(32, 32), sf::Color::Magenta);
+            auto defaultTexture = std::make_unique<Files::Texture>();
+            if (!defaultTexture->loadFromImage(defaultImage)) {
+                _log->error("Failed to load default texture!");
+                throw std::runtime_error("Failed to load default texture!");
+            }
+            _textures.emplace_back(std::move(defaultTexture));
+            _textureAliases[Config::DEFAULT_TEXTURE_ALIAS] = 0;
 
-        _log->debug("Generated default texture with id {}", 0);
+            _log->debug("Generated default texture with id {}", 0);
+        }
 
         // create default sound
-        Files::SoundBuffer defaultSound;
-        const unsigned int sampleRate = 44100;
-        const float duration = 1.f;
-        const auto sampleCount = static_cast<size_t>(sampleRate * duration);
-        std::vector<short> samples(sampleCount);
+        if (!_soundAliases.contains(Config::DEFAULT_SOUND_ALIAS)) {
+            Files::SoundBuffer defaultSound;
+            const unsigned int sampleRate = 44100;
+            const float duration = 1.f;
+            const auto sampleCount = static_cast<size_t>(sampleRate * duration);
+            std::vector<short> samples(sampleCount);
 
-        // Generate a 440 Hz sine wave tone
-        const double amplitude = 30000;
-        const double frequency = 440.0;
-        const double twoPiF = 2 * 3.14159 * frequency;
+            // Generate a 440 Hz sine wave tone
+            const double amplitude = 30000;
+            const double frequency = 440.0;
+            const double twoPiF = 2 * 3.14159 * frequency;
 
-        for (size_t i = 0; i < sampleCount; ++i) {
-            samples[i] = static_cast<short>(amplitude * std::sin(twoPiF * i / sampleRate));
+            for (size_t i = 0; i < sampleCount; ++i) {
+                samples[i] = static_cast<short>(amplitude * std::sin(twoPiF * i / sampleRate));
+            }
+
+            std::vector<sf::SoundChannel> channelMap{sf::SoundChannel::Mono};
+
+            if (!defaultSound.loadFromSamples(samples.data(), samples.size(), 1, sampleRate, channelMap)) {
+                _log->error("Failed to load default sound!");
+                throw std::runtime_error("Failed to load default sound!");
+            }
+            _sounds.emplace_back(std::move(defaultSound));
+            _soundAliases[Config::DEFAULT_SOUND_ALIAS] = 0;
+
+            _log->debug("Generated default sound with id {}", 0);
         }
-
-        std::vector<sf::SoundChannel> channelMap{sf::SoundChannel::Mono};
-
-        if (!defaultSound.loadFromSamples(samples.data(), samples.size(), 1, sampleRate, channelMap)) {
-            _log->error("Failed to load default sound!");
-            throw std::runtime_error("Failed to load default sound!");
-        }
-        _sounds.emplace_back(std::move(defaultSound));
-        _soundAliases[Config::DEFAULT_SOUND_ALIAS] = 0;
-
-        _log->debug("Generated default sound with id {}", 0);
 
         // create default font
-        sf::Font defaultFont;
-        if (!defaultFont.openFromMemory(unitblock_ttf, unitblock_ttf_len)) {
-            _log->error("Failed to load default font!");
-            throw std::runtime_error("Failed to load default font!");
-        }
-        _fonts.emplace_back(std::move(defaultFont));
-		_fontAliases[Config::DEFAULT_FONT_ALIAS] = 0;
+        if (!_fontAliases.contains(Config::DEFAULT_FONT_ALIAS)) {
+            sf::Font defaultFont;
+            if (!defaultFont.openFromMemory(unitblock_ttf, unitblock_ttf_len)) {
+                _log->error("Failed to load default font!");
+                throw std::runtime_error("Failed to load default font!");
+            }
+            _fonts.emplace_back(std::move(defaultFont));
+            _fontAliases[Config::DEFAULT_FONT_ALIAS] = 0;
 
-        _log->debug("Generated default font with id {}", _fonts.size() - 1);
+            _log->debug("Generated default font with id {}", _fonts.size() - 1);
+        }
+    }
+
+    Assets::Assets() {
+        CreateDefaultAssets();
+    }
+
+    void Assets::LoadDefaultAssets() {
+        GetInstance()->CreateDefaultAssets();
     }
 
     size_t Assets::LoadTexture(const std::string& path) {
         try {
-			Files::Texture texture(path);
+            auto texture = std::make_unique<Files::Texture>(path);
             GetInstance()->_textures.emplace_back(std::move(texture));
             size_t index = static_cast<int>(GetInstance()->_textures.size() - 1);
 
@@ -104,6 +118,22 @@ namespace LowEngine {
         }
 
         return textureId;
+    }
+
+    void Assets::UnloadTexture(size_t textureId) {
+        std::string textureAlias = GetTextureAlias(textureId);
+
+        if (!textureAlias.empty()) {
+            GetInstance()->_textureAliases.erase(textureAlias);
+        }
+
+        GetInstance()->_textures[textureId].reset();
+        _log->debug("Texture with id {} and alias '{}' unloaded", textureId, textureAlias);
+    }
+
+    void Assets::UnloadTexture(const std::string& textureAlias) {
+        auto textureId = GetTextureId(textureAlias);
+        UnloadTexture(textureId);
     }
 
     void Assets::AddSpriteSheet(size_t textureId, size_t frameWidth, size_t frameHeight,
@@ -166,17 +196,17 @@ namespace LowEngine {
         const Terrain::LayerDefinition* terrainLayerDefinition = nullptr;
         const Terrain::LayerDefinition* featuresLayerDefinition = nullptr;
 
-        for (auto& definition : definitions) {
+        for (auto& definition: definitions) {
             switch (definition.Type) {
-            case Terrain::LayerType::Terrain:
-                terrainLayerDefinition = &definition;
-                break;
-            case Terrain::LayerType::Features:
-                featuresLayerDefinition = &definition;
-                break;
-            default:
-                _log->error("Invalid layer definition type: '{}'", ToString(definition.Type));
-                throw std::runtime_error("Invalid layer definition type");
+                case Terrain::LayerType::Terrain:
+                    terrainLayerDefinition = &definition;
+                    break;
+                case Terrain::LayerType::Features:
+                    featuresLayerDefinition = &definition;
+                    break;
+                default:
+                    _log->error("Invalid layer definition type: '{}'", ToString(definition.Type));
+                    throw std::runtime_error("Invalid layer definition type");
             }
         }
 
@@ -238,7 +268,7 @@ namespace LowEngine {
 
     std::vector<std::string> Assets::GetTileMapAliases() {
         std::vector<std::string> aliases;
-        for (const auto& pair : GetInstance()->_mapAliases) {
+        for (const auto& pair: GetInstance()->_mapAliases) {
             aliases.push_back(pair.first);
         }
         return aliases;
@@ -260,8 +290,12 @@ namespace LowEngine {
         return GetSpriteSheet(GetInstance()->_textureAliases[textureAlias]);
     }
 
+    bool Assets::TextureExists(const std::string& textureAlias) {
+        return GetInstance()->_textureAliases.contains(textureAlias);
+    }
+
     sf::Texture& Assets::GetDefaultTexture() {
-        return GetInstance()->_textures[0];
+        return *GetInstance()->_textures[0];
     }
 
     Files::Texture& Assets::GetTexture(size_t textureId) {
@@ -269,7 +303,7 @@ namespace LowEngine {
             _log->error("Texture with id {} does not exist", textureId);
             throw std::runtime_error("Texture with id does not exist");
         }
-        return GetInstance()->_textures[textureId];
+        return *GetInstance()->_textures[textureId];
     }
 
     Files::Texture& Assets::GetTexture(const std::string& textureAlias) {
@@ -313,7 +347,7 @@ namespace LowEngine {
 
     std::vector<std::string> Assets::GetFontAliases() {
         std::vector<std::string> aliases;
-        for (const auto& pair : GetInstance()->_fontAliases) {
+        for (const auto& pair: GetInstance()->_fontAliases) {
             aliases.push_back(pair.first);
         }
         return aliases;
@@ -370,13 +404,13 @@ namespace LowEngine {
 
     std::vector<std::string> Assets::GetSoundAliases() {
         std::vector<std::string> aliases;
-        for (const auto& pair : GetInstance()->_soundAliases) {
+        for (const auto& pair: GetInstance()->_soundAliases) {
             aliases.push_back(pair.first);
         }
         return aliases;
     }
 
-    nlohmann::ordered_json Assets::SerializeToJSON() {
+    nlohmann::ordered_json Assets::SerializeToJSON(const std::filesystem::path& rootDirectory) {
         nlohmann::ordered_json assetsJson;
         nlohmann::ordered_json texturesJson;
         nlohmann::ordered_json spriteSheetsJson;
@@ -386,7 +420,7 @@ namespace LowEngine {
         nlohmann::ordered_json tileMapsJson;
 
         auto textureAliases = Assets::GetTextureAliases();
-        for (const auto& alias : textureAliases) {
+        for (const auto& alias: textureAliases) {
             if (alias == Config::DEFAULT_TEXTURE_ALIAS) continue; // skip default texture
 
             // textures
@@ -396,56 +430,58 @@ namespace LowEngine {
 
             nlohmann::ordered_json textureJson;
             textureJson["alias"] = alias;
-            textureJson["path"] = texture.Path;
+            textureJson["path"] = texture.Path.lexically_relative(rootDirectory).generic_string();
 
             texturesJson.emplace_back(std::move(textureJson));
 
             // sprite sheets
 
             auto spriteSheet = Assets::GetSpriteSheet(textureId);
+            if (spriteSheet) {
+                nlohmann::ordered_json spriteSheetJson;
+                spriteSheetJson["textureAlias"] = alias;
+                spriteSheetJson["frameWidth"] = spriteSheet->FrameSize.x;
+                spriteSheetJson["frameHeight"] = spriteSheet->FrameSize.y;
+                spriteSheetJson["frameCountX"] = spriteSheet->FrameCount.x;
+                spriteSheetJson["frameCountY"] = spriteSheet->FrameCount.y;
 
-            nlohmann::ordered_json spriteSheetJson;
-            spriteSheetJson["textureAlias"] = alias;
-            spriteSheetJson["frameWidth"] = spriteSheet->FrameSize.x;
-            spriteSheetJson["frameHeight"] = spriteSheet->FrameSize.y;
-            spriteSheetJson["frameCountX"] = spriteSheet->FrameCount.x;
-            spriteSheetJson["frameCountY"] = spriteSheet->FrameCount.y;
+                spriteSheetsJson.emplace_back(std::move(spriteSheetJson));
 
-            spriteSheetsJson.emplace_back(std::move(spriteSheetJson));
 
-            // animation clips
+                // animation clips
 
-            std::vector<std::string> clipNames = spriteSheet->GetAnimationClipNames();
+                std::vector<std::string> clipNames = spriteSheet->GetAnimationClipNames();
 
-            for (auto& name : clipNames) {
-                auto animClip = spriteSheet->GetAnimationClip(name);
+                for (auto& name: clipNames) {
+                    auto animClip = spriteSheet->GetAnimationClip(name);
 
-                nlohmann::ordered_json animationClipJson;
-                animationClipJson["textureAlias"] = alias;
-                animationClipJson["name"] = name;
-                animationClipJson["firstFrameIndex"] = animClip->StartFrame;
-                animationClipJson["frameCount"] = animClip->FrameCount;
-                animationClipJson["frameDuration"] = animClip->FrameDuration;
+                    nlohmann::ordered_json animationClipJson;
+                    animationClipJson["textureAlias"] = alias;
+                    animationClipJson["name"] = name;
+                    animationClipJson["firstFrameIndex"] = animClip->StartFrame;
+                    animationClipJson["frameCount"] = animClip->FrameCount;
+                    animationClipJson["frameDuration"] = animClip->FrameDuration;
 
-                animationClipsJson.emplace_back(std::move(animationClipJson));
+                    animationClipsJson.emplace_back(std::move(animationClipJson));
+                }
             }
         }
 
         // sounds
         auto soundAliases = Assets::GetSoundAliases();
-        for (const auto& alias : soundAliases) {
+        for (const auto& alias: soundAliases) {
             if (alias == Config::DEFAULT_SOUND_ALIAS) continue; // skip default sound
 
             auto sound = Assets::GetSound(alias);
             nlohmann::ordered_json soundJson;
             soundJson["alias"] = alias;
-            soundJson["path"] = sound.Path;
+            soundJson["path"] = sound.Path.lexically_relative(rootDirectory).generic_string();;
             soundsJson.emplace_back(std::move(soundJson));
         }
 
         // fonts
         auto fontAliases = Assets::GetFontAliases();
-        for (const auto& alias : fontAliases) {
+        for (const auto& alias: fontAliases) {
             if (alias == Config::DEFAULT_FONT_ALIAS) continue; // skip default font
 
             // TODO: implement font loading first :P
@@ -454,12 +490,12 @@ namespace LowEngine {
         // tile maps
         std::vector<std::string> tileMapAliases = Assets::GetTileMapAliases();
 
-        for (std::string tileMapAlias : tileMapAliases) {
+        for (std::string tileMapAlias: tileMapAliases) {
             auto tileMap = Assets::GetTileMap(tileMapAlias);
 
             nlohmann::ordered_json tileMapJson;
             tileMapJson["alias"] = tileMapAlias;
-            tileMapJson["path"] = tileMap.Path;
+            tileMapJson["path"] = tileMap.Path.lexically_relative(rootDirectory).generic_string();;
 
             nlohmann::ordered_json layerDefinitionsJson;
 
@@ -467,7 +503,7 @@ namespace LowEngine {
             terrainLayerJson["type"] = Terrain::ToString(Terrain::LayerType::Terrain);
             terrainLayerJson["textureAlias"] = Assets::GetTextureAlias(tileMap.TerrainLayer.TextureId);
             nlohmann::ordered_json terrainCellDefinitionsJson;
-            for (const auto& cellDef : tileMap.TerrainLayer.Definition.CellDefinitions) {
+            for (const auto& cellDef: tileMap.TerrainLayer.Definition.CellDefinitions) {
                 nlohmann::ordered_json cellDefJson;
                 cellDefJson["id"] = cellDef.first;
                 cellDefJson["isWalkable"] = cellDef.second.IsWalkable;
@@ -484,7 +520,7 @@ namespace LowEngine {
             featuresLayerJson["type"] = Terrain::ToString(Terrain::LayerType::Features);
             featuresLayerJson["textureAlias"] = Assets::GetTextureAlias(tileMap.FeaturesLayer.TextureId);
             nlohmann::ordered_json featureCellDefinitionsJson;
-            for (const auto& cellDef : tileMap.FeaturesLayer.Definition.CellDefinitions) {
+            for (const auto& cellDef: tileMap.FeaturesLayer.Definition.CellDefinitions) {
                 nlohmann::ordered_json cellDefJson;
                 cellDefJson["id"] = cellDef.first;
                 cellDefJson["isWalkable"] = cellDef.second.IsWalkable;
@@ -509,25 +545,26 @@ namespace LowEngine {
         assetsJson["fonts"] = fontsJson;
         assetsJson["tileMaps"] = tileMapsJson;
 
-		return assetsJson;
+        return assetsJson;
     }
 
-    bool Assets::LoadFromJSON(const nlohmann::basic_json<nlohmann::ordered_map>& assetsJson) {
-		// Load textures
+    bool Assets::LoadFromJSON(const nlohmann::basic_json<nlohmann::ordered_map>& assetsJson, const std::filesystem::path& assetDirectory) {
+        // Load textures
         if (assetsJson.contains("textures")) {
-            for (const auto& textureJson : assetsJson["textures"]) {
+            for (const auto& textureJson: assetsJson["textures"]) {
                 if (textureJson.contains("alias") && textureJson.contains("path")) {
-                    LoadTexture(textureJson["alias"].get<std::string>(), textureJson["path"].get<std::string>());
+                    auto absolutePath = (assetDirectory / std::filesystem::path(textureJson["path"].get<std::string>()).lexically_normal());
+                    LoadTexture(textureJson["alias"].get<std::string>(), absolutePath.string());
                 } else {
                     _log->error("Invalid texture JSON format");
                     return false;
                 }
             }
-		}
+        }
 
-		// Load sprite sheets
+        // Load sprite sheets
         if (assetsJson.contains("spriteSheets")) {
-            for (const auto& spriteSheetJson : assetsJson["spriteSheets"]) {
+            for (const auto& spriteSheetJson: assetsJson["spriteSheets"]) {
                 if (spriteSheetJson.contains("textureAlias") && spriteSheetJson.contains("frameWidth") &&
                     spriteSheetJson.contains("frameHeight") && spriteSheetJson.contains("frameCountX") &&
                     spriteSheetJson.contains("frameCountY")) {
@@ -541,19 +578,19 @@ namespace LowEngine {
                     return false;
                 }
             }
-		}
+        }
 
-		// Load animation clips
+        // Load animation clips
         if (assetsJson.contains("animationClips")) {
-            for (const auto& animationClipJson : assetsJson["animationClips"]) {
+            for (const auto& animationClipJson: assetsJson["animationClips"]) {
                 if (animationClipJson.contains("textureAlias") && animationClipJson.contains("name") &&
                     animationClipJson.contains("firstFrameIndex") && animationClipJson.contains("frameCount") &&
                     animationClipJson.contains("frameDuration")) {
                     AddAnimationClip(animationClipJson["name"].get<std::string>(),
-                        animationClipJson["textureAlias"].get<std::string>(),
-                        animationClipJson["firstFrameIndex"].get<size_t>(),
-                        animationClipJson["frameCount"].get<size_t>(),
-                        animationClipJson["frameDuration"].get<float>());
+                                     animationClipJson["textureAlias"].get<std::string>(),
+                                     animationClipJson["firstFrameIndex"].get<size_t>(),
+                                     animationClipJson["frameCount"].get<size_t>(),
+                                     animationClipJson["frameDuration"].get<float>());
                 } else {
                     _log->error("Invalid animation clip JSON format");
                     return false;
@@ -561,39 +598,40 @@ namespace LowEngine {
             }
         }
 
-		// Load sounds
+        // Load sounds
         if (assetsJson.contains("sounds")) {
-            for (const auto& soundJson : assetsJson["sounds"]) {
+            for (const auto& soundJson: assetsJson["sounds"]) {
                 if (soundJson.contains("alias") && soundJson.contains("path")) {
-                    LoadSound(soundJson["alias"].get<std::string>(), soundJson["path"].get<std::string>());
+                    auto absolutePath = (assetDirectory / std::filesystem::path(soundJson["path"].get<std::string>()).lexically_normal());
+                    LoadSound(soundJson["alias"].get<std::string>(), absolutePath.string());
                 } else {
                     _log->error("Invalid sound JSON format");
                     return false;
                 }
             }
-		}
+        }
 
-		// Load fonts
-		// TODO: Implement font loading from JSON
+        // Load fonts
+        // TODO: Implement font loading from JSON
 
-		// Load tile maps
+        // Load tile maps
         if (assetsJson.contains("tileMaps")) {
-            for (const auto& tileMapJson : assetsJson["tileMaps"]) {
+            for (const auto& tileMapJson: assetsJson["tileMaps"]) {
                 if (tileMapJson.contains("alias") && tileMapJson.contains("path") &&
                     tileMapJson.contains("layerDefinitions")) {
                     std::vector<Terrain::LayerDefinition> layerDefinitions;
-                    for (const auto& layerDefJson : tileMapJson["layerDefinitions"]) {
+                    for (const auto& layerDefJson: tileMapJson["layerDefinitions"]) {
                         Terrain::LayerDefinition layerDef;
                         layerDef.Type = Terrain::FromString(layerDefJson["type"].get<std::string>());
                         layerDef.TextureId = GetTextureId(layerDefJson["textureAlias"].get<std::string>());
-                        for (const auto& cellDefJson : layerDefJson["cellDefinitions"].items()) {
+                        for (const auto& cellDefJson: layerDefJson["cellDefinitions"].items()) {
                             Terrain::CellDefinition cellDef;
                             cellDef.IsWalkable = cellDefJson.value().at("isWalkable").get<bool>();
                             cellDef.IsSwimmable = cellDefJson.value().at("isSwimmable").get<bool>();
                             cellDef.IsFlyable = cellDefJson.value().at("isFlyable").get<bool>();
                             cellDef.MoveCost = cellDefJson.value().at("moveCost").get<float>();
                             if (cellDefJson.value().contains("animationClipNames")) {
-                                for (const auto& clipName : cellDefJson.value().at("animationClipNames")) {
+                                for (const auto& clipName: cellDefJson.value().at("animationClipNames")) {
                                     cellDef.AnimationClipNames.push_back(clipName.get<std::string>());
                                 }
                             }
@@ -601,14 +639,14 @@ namespace LowEngine {
                         }
                         layerDefinitions.push_back(std::move(layerDef));
                     }
-                    LoadTileMap(tileMapJson["alias"].get<std::string>(), tileMapJson["path"].get<std::string>(),
-                                layerDefinitions);
+                    auto absolutePath = (assetDirectory / std::filesystem::path(tileMapJson["path"].get<std::string>()).lexically_normal());
+                    LoadTileMap(tileMapJson["alias"].get<std::string>(), absolutePath.string(), layerDefinitions);
                 } else {
                     _log->error("Invalid tile map JSON format");
                     return false;
                 }
             }
-		}
+        }
 
         return true;
     }
@@ -675,7 +713,7 @@ namespace LowEngine {
         std::random_device rd;
         std::mt19937 gen(rd());
 
-		map.FeaturesLayer.Definition = *featuresLayerDefinition;
+        map.FeaturesLayer.Definition = *featuresLayerDefinition;
         size_t textureId = featuresLayerDefinition->TextureId;
 
         map.FeaturesLayer.LoadTexture(textureId);
