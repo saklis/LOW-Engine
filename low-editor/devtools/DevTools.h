@@ -59,6 +59,7 @@ namespace LowEngine {
         static void DisplayAssetBrowser(Game& game);
 
         static void DisplayTextureBrowser(Game& game, ImVec2 size);
+        static void DisplaySpriteSheetBrowser(Game& game, ImVec2 size);
 
         static void CreateNewProject(Game& game, const std::string& projectName, const std::string& projectPath);
 

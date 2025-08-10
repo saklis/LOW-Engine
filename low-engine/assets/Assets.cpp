@@ -102,7 +102,7 @@ namespace LowEngine {
                                               size_t frameCountX, size_t frameCountY) {
         size_t textureId = LoadTexture(path);
         if (textureId != Config::MAX_SIZE) {
-            AddSpriteSheet(textureId, frameWidth, frameHeight, frameCountX, frameCountY);
+            AddSpriteSheet(textureId, frameCountX, frameCountY);
         }
 
         return textureId;
@@ -114,7 +114,7 @@ namespace LowEngine {
                                               size_t frameCountY) {
         size_t textureId = LoadTexture(alias, path);
         if (textureId != Config::MAX_SIZE) {
-            AddSpriteSheet(textureId, frameWidth, frameHeight, frameCountX, frameCountY);
+            AddSpriteSheet(textureId, frameCountX, frameCountY);
         }
 
         return textureId;
@@ -136,31 +136,31 @@ namespace LowEngine {
         UnloadTexture(textureId);
     }
 
-    void Assets::AddSpriteSheet(size_t textureId, size_t frameWidth, size_t frameHeight,
+    void Assets::AddSpriteSheet(size_t textureId,
                                 size_t frameCountX,
                                 size_t frameCountY) {
         auto it = GetInstance()->_animationSheets.find(textureId);
         if (it == GetInstance()->_animationSheets.end()) {
+            auto& texture = GetTexture(textureId);
             Animation::SpriteSheet& sheet = GetInstance()->_animationSheets[textureId];
-            sheet.FrameSize = sf::Vector2(frameWidth, frameHeight);
             sheet.FrameCount = sf::Vector2(frameCountX, frameCountY);
+            sheet.FrameSize = sf::Vector2(texture.getSize().x / frameCountX, texture.getSize().y / frameCountY);
 
             _log->debug("Animation sheet added for texture id: {} with frame size: {}x{} and frame count: {}x{}",
-                        textureId, frameWidth, frameHeight, frameCountX, frameCountY);
+                        textureId, sheet.FrameSize.x, sheet.FrameSize.y, sheet.FrameCount.x, sheet.FrameCount.y);
         } else {
             _log->error("Texture with id: {} already has an animation sheet.", textureId);
         }
     }
 
-    void Assets::AddSpriteSheet(const std::string& textureAlias, size_t frameWidth, size_t frameHeight,
+    void Assets::AddSpriteSheet(const std::string& textureAlias,
                                 size_t frameCountX, size_t frameCountY) {
         if (GetInstance()->_textureAliases.find(textureAlias) == GetInstance()->_textureAliases.end()) {
             _log->error("Texture alias {} does not exist", textureAlias);
             throw std::runtime_error("Texture alias does not exist");
         }
 
-        AddSpriteSheet(GetInstance()->_textureAliases[textureAlias], frameWidth, frameHeight, frameCountX,
-                       frameCountY);
+        AddSpriteSheet(GetInstance()->_textureAliases[textureAlias], frameCountX, frameCountY);
     }
 
     void Assets::AddAnimationClip(const std::string& name, size_t textureId, size_t firstFrameIndex,
@@ -569,8 +569,6 @@ namespace LowEngine {
                     spriteSheetJson.contains("frameHeight") && spriteSheetJson.contains("frameCountX") &&
                     spriteSheetJson.contains("frameCountY")) {
                     AddSpriteSheet(spriteSheetJson["textureAlias"].get<std::string>(),
-                                   spriteSheetJson["frameWidth"].get<size_t>(),
-                                   spriteSheetJson["frameHeight"].get<size_t>(),
                                    spriteSheetJson["frameCountX"].get<size_t>(),
                                    spriteSheetJson["frameCountY"].get<size_t>());
                 } else {

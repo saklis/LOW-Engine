@@ -110,6 +110,11 @@ namespace LowEngine {
 
                 ImGui::Separator();
 
+                if (ImGui::MenuItem("Publish")) {
+                }
+
+                ImGui::Separator();
+
                 if (ImGui::MenuItem("Assets")) { _isAssetBrowserVisible = true; }
 
                 if (ImGui::MenuItem("Input")) { _isInputEditorVisible = true; }
@@ -790,8 +795,7 @@ namespace LowEngine {
                 }
 
                 if (ImGui::BeginTabItem("Sprite sheets")) {
-                    ImGui::Text("Manage Sprite sheets here");
-
+                    DisplaySpriteSheetBrowser(game, ImVec2(0.0f, 680.0f));
                     ImGui::EndTabItem();
                 }
 
@@ -885,12 +889,14 @@ namespace LowEngine {
                 ImGui::Separator();
                 ImGui::Image(texture.getNativeHandle(), previewSize);
 
-                if (ImGui::Button("Delete", ImVec2(512.0f, 0.0f))) {
-                    auto pathToTexture = texture.Path; // copy the path for logging purposes
-                    std::filesystem::remove(texture.Path);
-                    Assets::UnloadTexture(selectedTextureAlias);
-                    _log->info("Texture '{}' deleted successfully from file: {}", selectedTextureAlias, pathToTexture.string());
-                    showPreviewWindow = false;
+                if (selectedTextureAlias != LowEngine::Config::DEFAULT_TEXTURE_ALIAS) {
+                    if (ImGui::Button("Delete", ImVec2(512.0f, 0.0f))) {
+                        auto pathToTexture = texture.Path; // copy the path for logging purposes
+                        std::filesystem::remove(texture.Path);
+                        Assets::UnloadTexture(selectedTextureAlias);
+                        _log->info("Texture '{}' deleted successfully from file: {}", selectedTextureAlias, pathToTexture.string());
+                        showPreviewWindow = false;
+                    }
                 }
 
                 ImGui::End();
@@ -900,7 +906,8 @@ namespace LowEngine {
         if (showAddNewTextureDialog) {
             ImVec2 addNewTextureDialogCenter = ImGui::GetMainViewport()->GetCenter();
             ImVec2 addTextureDialogSize = ImVec2(750, 250);
-            ImGui::SetNextWindowPos(ImVec2(addNewTextureDialogCenter.x - addTextureSize.x / 2, addNewTextureDialogCenter.y - addTextureSize.y / 2), ImGuiCond_Appearing);
+            ImGui::SetNextWindowPos(ImVec2(addNewTextureDialogCenter.x - addTextureSize.x / 2, addNewTextureDialogCenter.y - addTextureSize.y / 2),
+                                    ImGuiCond_Appearing);
             ImGui::SetNextWindowSize(ImVec2(addTextureDialogSize.x, addTextureDialogSize.y), ImGuiCond_Appearing);
             if (ImGui::Begin("Add New Texture", &showAddNewTextureDialog, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
                 ImGui::Text("Selected file: %s", newTextureFile.string().c_str());
@@ -919,8 +926,9 @@ namespace LowEngine {
                 }
 
                 if (ImGui::Button("Add Texture")) {
-                    std::filesystem::path targetPath = std::filesystem::path(game.ProjectDirectory) / std::filesystem::path(LowEngine::Config::ASSETS_FOLDER_NAME) /
-                                                      std::filesystem::path(LowEngine::Config::TEXTURES_FOLDER_NAME) / newTextureFile.filename();
+                    std::filesystem::path targetPath = std::filesystem::path(game.ProjectDirectory) / std::filesystem::path(
+                                                           LowEngine::Config::ASSETS_FOLDER_NAME) /
+                                                       std::filesystem::path(LowEngine::Config::TEXTURES_FOLDER_NAME) / newTextureFile.filename();
                     std::filesystem::create_directories(targetPath.parent_path());
                     std::filesystem::copy(newTextureFile, targetPath, std::filesystem::copy_options::overwrite_existing);
                     _log->info("Texture '{}' copied to: {}", newTextureFile.filename().string(), targetPath.string());
@@ -940,6 +948,130 @@ namespace LowEngine {
                 ImGui::End();
             }
         }
+    }
+
+    void DevTools::DisplaySpriteSheetBrowser(Game& game, ImVec2 size) {
+        static bool showSpriteSheetEditor = false;
+        static std::string selectedSpriteSheetAlias = "";
+
+        ImGui::BeginChild("SpriteSheetBrowser", size);
+
+        if (ImGui::Button("Create Sprite Sheet")) {
+        }
+
+        if (ImGui::BeginTable("SpriteSheetTable", 4,
+                              ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+            ImGui::TableSetupColumn("Texture Alias", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Texture Id", ImGuiTableColumnFlags_WidthFixed, 75.0f);
+            ImGui::TableSetupColumn("Frame Count (XxY)", ImGuiTableColumnFlags_WidthFixed, 125.0f);
+            ImGui::TableSetupColumn("Frame Size (XxY)", ImGuiTableColumnFlags_WidthFixed, 125.0f);
+            ImGui::TableHeadersRow();
+
+            std::vector<std::string> textureAliases = Assets::GetTextureAliases();
+            std::ranges::sort(textureAliases);
+
+            for (const std::string& textureAlias: textureAliases) {
+                if (textureAlias == LowEngine::Config::DEFAULT_TEXTURE_ALIAS) continue;
+                size_t textureId = Assets::GetTextureId(textureAlias);
+                auto spriteSheet = Assets::GetSpriteSheet(textureId);
+                if (spriteSheet == nullptr) continue;
+
+                ImGui::TableNextRow();
+                bool isSelected = selectedSpriteSheetAlias == textureAlias;
+
+                // texture alias column
+                ImGui::TableNextColumn();
+                if (ImGui::Selectable(textureAlias.c_str(), isSelected, ImGuiTreeNodeFlags_SpanAllColumns)) {
+                    selectedSpriteSheetAlias = textureAlias;
+                    showSpriteSheetEditor = true;
+                }
+
+                // texture id column
+                ImGui::TableNextColumn();
+                ImGui::Text("%zu", textureId);
+
+                // frame count column
+                ImGui::TableNextColumn();
+                ImGui::Text("%dx%d", spriteSheet->FrameCount.x, spriteSheet->FrameCount.y);
+
+                // frame size column
+                ImGui::TableNextColumn();
+                ImGui::Text("%dx%d", spriteSheet->FrameSize.x, spriteSheet->FrameSize.y);
+            }
+
+            ImGui::EndTable();
+        }
+
+        if (showSpriteSheetEditor) {
+            ImVec2 size{1200.0f, 800.0f};
+            ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+            ImVec2 pos{center.x - size.x / 2, center.y - size.y / 2};
+
+            ImVec2 maxPreviewSize{760.0f, 760.0f};
+
+            ImGui::SetNextWindowPos(pos);
+            ImGui::SetNextWindowSize(size, ImGuiCond_Appearing);
+            if (ImGui::Begin("Sprite Sheet Editor", &showSpriteSheetEditor, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
+                auto& texture = Assets::GetTexture(selectedSpriteSheetAlias);
+                auto textureSize = texture.getSize();
+                auto spriteSheet = Assets::GetSpriteSheet(selectedSpriteSheetAlias);
+
+                float aspectRatio = static_cast<float>(textureSize.x) / static_cast<float>(textureSize.y);
+                ImVec2 previewSize;
+
+                if (aspectRatio > 1.0f) {
+                    previewSize = ImVec2(maxPreviewSize.x, maxPreviewSize.y / aspectRatio);
+                } else {
+                    previewSize = ImVec2(maxPreviewSize.x * aspectRatio, maxPreviewSize.y);
+                }
+
+                ImGui::Image(texture.getNativeHandle(), previewSize);
+
+                // Draw grid lines for sprite sheet frames
+                ImVec2 imagePos = ImGui::GetItemRectMin();
+                ImVec2 imageSize = ImGui::GetItemRectSize();
+
+                if (spriteSheet->FrameCount.x > 0 && spriteSheet->FrameCount.y > 0) {
+                    float cellWidth = imageSize.x / spriteSheet->FrameCount.x;
+                    float cellHeight = imageSize.y / spriteSheet->FrameCount.y;
+                    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+                    for (size_t i = 1; i < spriteSheet->FrameCount.x; ++i) {
+                        float x = imagePos.x + i * cellWidth;
+                        drawList->AddLine(ImVec2(x, imagePos.y), ImVec2(x, imagePos.y + imageSize.y), IM_COL32(0, 255, 255, 255), 1.0f);
+                    }
+                    for (size_t j = 1; j < spriteSheet->FrameCount.y; ++j) {
+                        float y = imagePos.y + j * cellHeight;
+                        drawList->AddLine(ImVec2(imagePos.x, y), ImVec2(imagePos.x + imageSize.x, y), IM_COL32(0, 255, 255, 255), 1.0f);
+                    }
+                }
+
+                ImGui::SameLine();
+
+                ImGui::BeginChild("SpriteSheetProperties", ImVec2(400.0f, 0.0f));
+                ImGui::Text("Sprite Sheet: %s", selectedSpriteSheetAlias.c_str());
+                ImGui::Separator();
+                ImGui::Text("Frame Count: ");
+                ImGui::SameLine();
+                static int spriteSheetEditorFrameCount[2] = {
+                    static_cast<int>(spriteSheet->FrameCount.x), static_cast<int>(spriteSheet->FrameCount.y)
+                };
+                if (ImGui::DragInt2("##FrameCount", spriteSheetEditorFrameCount, 0.1f, 1, 100)) {
+                    if (spriteSheetEditorFrameCount[0] > 0 && spriteSheetEditorFrameCount[1] > 0) {
+                        spriteSheet->FrameCount = {static_cast<size_t>(spriteSheetEditorFrameCount[0]), static_cast<size_t>(spriteSheetEditorFrameCount[1])};
+                        spriteSheet->FrameSize = {textureSize.x / spriteSheet->FrameCount.x, textureSize.y / spriteSheet->FrameCount.y};
+                        _log->debug("Sprite sheet '{}' frame count updated to {}x{}", selectedSpriteSheetAlias, spriteSheet->FrameCount.x,
+                                   spriteSheet->FrameCount.y);
+                    }
+                }
+                ImGui::Text("Frame Size: %dx%d", spriteSheet->FrameSize.x, spriteSheet->FrameSize.y);
+                ImGui::EndChild();
+
+                ImGui::End();
+            }
+        }
+
+        ImGui::EndChild();
     }
 
     void DevTools::CreateNewProject(Game& game, const std::string& projectName, const std::string& projectPath) {

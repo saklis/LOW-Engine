@@ -96,24 +96,20 @@ namespace LowEngine {
         /**
          * @brief Add animation sheet for texture
          * @param textureId ID of the texture
-         * @param frameWidth Width of a single frame in pixels
-         * @param frameHeight Height of a single frame in pixels
          * @param frameCountX Number of frames in X direction
          * @param frameCountY Number of frames in Y direction
          */
-        static void AddSpriteSheet(size_t textureId, size_t frameWidth, size_t frameHeight,
+        static void AddSpriteSheet(size_t textureId,
                                    size_t frameCountX, size_t frameCountY);
 
         /**
          * @brief Add animation sheet for texture with alias
          * @param textureAlias Texture alias
-         * @param frameWidth Width of a single frame in pixels
-         * @param frameHeight Height of a single frame in pixels
          * @param frameCountX Number of frames in X direction
          * @param frameCountY Number of frames in Y direction
          */
-        static void AddSpriteSheet(const std::string& textureAlias, size_t frameWidth,
-                                   size_t frameHeight, size_t frameCountX, size_t frameCountY);
+        static void AddSpriteSheet(const std::string& textureAlias,
+                                   size_t frameCountX, size_t frameCountY);
 
         /**
          * @brief Define Animation Clip for a texture.
