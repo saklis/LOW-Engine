@@ -21,15 +21,15 @@ namespace LowEngine::Terrain {
     class AnimatedTileState {
     public:
         /**
-         * @brief Pointer to current Clip.
+         * @brief Names of Animation Clips
          */
-        std::vector<Animation::AnimationClip*> Clips;
+        std::vector<std::string> ClipNames;
 
         /**
          * @brief Index of current clip.
          *
-         * Used when particular cell has more than one Clip assigned to it.
-         * This is assigned on load to esure that Clips don't switch randomly during gameplay.
+         * Used when a particular cell has more than one Clip assigned to it.
+         * This is assigned on load to ensure that Clips don't switch randomly during gameplay.
          */
         size_t ClipIndex = 0;
 
@@ -42,6 +42,14 @@ namespace LowEngine::Terrain {
          * @brief Timer for current frame.
          */
         float FrameTime = 0;
+
+        /**
+         * @brief Get current clip name.
+         * @return Clip name
+         *
+         * Returns clip name that ClipIndex is pointing at.
+         */
+        std::string GetClipName();
     };
 
     /**
@@ -124,6 +132,8 @@ namespace LowEngine::Terrain {
          * @param textureId ID of the texture.
          */
         void LoadTexture(size_t textureId);
+
+        void GenerateCellDefinitionsFromTexture();
 
         /**
          * @brief Set size for the layer.

@@ -121,6 +121,8 @@ namespace LowEngine::Memory {
             if (index >= Storage.capacity()) {
                 Storage.reserve(Storage.capacity() * 2);
                 _log->debug("Component pool: Reallocating memory for component type {}. Current size: {}", typeid(T).name(), Storage.capacity());
+				// note: this memcopy data to new location, which will cause problems if components are not trivially copyable
+				// make sure that component don't have any pointers or references to other objects
             }
 
             // placement-new to initialize memory

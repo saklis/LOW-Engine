@@ -164,5 +164,6 @@ namespace LowEngine {
 
 	void Game::Update(float deltaTime) {
 		if (!Scenes.GetCurrentScene()->IsPaused) { Scenes.GetCurrentScene()->Update(deltaTime); }
+		Music.Update(deltaTime);
 	}
 }

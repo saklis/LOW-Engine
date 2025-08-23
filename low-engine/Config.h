@@ -72,5 +72,10 @@ namespace LowEngine {
 		 * @brief Default name for the sound assets directory.
 		 */
 		inline static const std::string SOUNDS_FOLDER_NAME = "sounds";
+
+    	/**
+		 * @brief Default name for the music assets directory.
+		 */
+    	inline static const std::string MUSIC_FOLDER_NAME = "music";
     };
 }

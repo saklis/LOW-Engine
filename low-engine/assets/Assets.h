@@ -24,6 +24,8 @@
 #include "terrain/TileMap.h"
 
 #include "defaults/unitblock.hpp"
+#include "files/Music.h"
+#include "SFML/Audio/Music.hpp"
 #include "terrain/LayerDefinition.h"
 
 namespace LowEngine {
@@ -34,10 +36,10 @@ namespace LowEngine {
      */
     class Assets {
     public:
-	    /**
-		 * @brief Load engine's default assets.
-	     */
-	    static void LoadDefaultAssets();
+        /**
+         * @brief Load engine's default assets.
+         */
+        static void LoadDefaultAssets();
 
         /**
          * @brief Load texture from file
@@ -81,17 +83,17 @@ namespace LowEngine {
                                                  size_t frameWidth, size_t frameHeight,
                                                  size_t frameCountX, size_t frameCountY);
 
-	    /**
-	     * @brief Unload texture by its ID.
-	     * @param textureId ID of the texture to unload
-	     */
-	    static void UnloadTexture(size_t textureId);
+        /**
+         * @brief Unload texture by its ID.
+         * @param textureId ID of the texture to unload
+         */
+        static void UnloadTexture(size_t textureId);
 
-    	/**
-		 * @brief Unload texture by its alias.
-		 * @param textureAlias Alias of the texture to unload
-		 */
-    	static void UnloadTexture(const std::string& textureAlias);
+        /**
+         * @brief Unload texture by its alias.
+         * @param textureAlias Alias of the texture to unload
+         */
+        static void UnloadTexture(const std::string& textureAlias);
 
         /**
          * @brief Add animation sheet for texture
@@ -110,6 +112,10 @@ namespace LowEngine {
          */
         static void AddSpriteSheet(const std::string& textureAlias,
                                    size_t frameCountX, size_t frameCountY);
+
+        static void DeleteSpriteSheet(size_t textureId);
+
+        static void DeleteSpriteSheet(const std::string& textureAlias);
 
         /**
          * @brief Define Animation Clip for a texture.
@@ -202,18 +208,32 @@ namespace LowEngine {
         static std::vector<std::string> GetTileMapAliases();
 
         /**
+         * @brief Check if a sprite sheet exists for a given texture ID.
+         * @param textureId The unique ID of the texture.
+         * @return `true` if the sprite sheet exists, `false` otherwise.
+		 */
+        static bool HasSpriteSheet(size_t textureId);
+
+        /**
+         * @brief Check if a sprite sheet exists for a given texture alias.
+         * @param textureAlias The alias of the texture.
+         * @return `true` if the sprite sheet exists, `false` otherwise.
+		 */
+        static bool HasSpriteSheet(const std::string& textureAlias);
+
+        /**
          * @brief Retrieve the animation sheet associated with a texture ID.
          * @param textureId The unique ID of the texture.
          * @return Pointer to the `Animation::AnimationSheet` if it exists, otherwise `nullptr`.
          */
-        static Animation::SpriteSheet* GetSpriteSheet(size_t textureId);
+        static Animation::SpriteSheet& GetSpriteSheet(size_t textureId);
 
         /**
          * @brief Retrieve the animation sheet associated with a texture alias.
          * @param textureAlias The alias of the texture.
          * @return Pointer to the `Animation::AnimationSheet` if it exists, otherwise throws an exception.
          */
-        static Animation::SpriteSheet* GetSpriteSheet(const std::string& textureAlias);
+        static Animation::SpriteSheet& GetSpriteSheet(const std::string& textureAlias);
 
         /**
          * @brief Check if a texture exists by its alias.
@@ -226,7 +246,7 @@ namespace LowEngine {
          * @brief Retrieve the default texture.
          * @return Reference to the default `sf::Texture`.
          */
-        static sf::Texture& GetDefaultTexture();
+        static Files::Texture& GetDefaultTexture();
 
         /**
          * @brief Retrieve a texture by its ID.
@@ -290,6 +310,25 @@ namespace LowEngine {
         static size_t LoadSound(const std::string& alias, const std::string& path);
 
         /**
+         * @brief Unloads a previously loaded sound from memory.
+         * @param soundId ID of the sound that should be unloaded.
+         */
+        static void UnloadSound(size_t soundId);
+
+        /**
+         * @brief Unloads a previously loaded sound from memory.
+         * @param soundAlias Alias of the sound that should be unloaded.
+         */
+        static void UnloadSound(const std::string& soundAlias);
+
+        /**
+         * @brief Check if a sound exists by its alias.
+         * @param soundAlias The unique alias of the texture.
+         * @return `true` if the texture exists, `false` otherwise.
+         */
+        static bool SoundExists(const std::string& soundAlias);
+
+        /**
          * @brief Retrieve the default sound.
          * @return Reference to the default `sf::SoundBuffer`.
          */
@@ -310,10 +349,66 @@ namespace LowEngine {
         static Files::SoundBuffer& GetSound(const std::string& alias);
 
         /**
+         * @brief Retrieve a sound alias for provided ID.
+         * @param soundId The ID of the sound that to retrieve.
+         * @return Sound alias.
+         */
+        static std::string GetSoundAlias(size_t soundId);
+
+        /**
          * @brief Retrieve all sound aliases.
          * @return Vector of strings containing all sound aliases.
          */
         static std::vector<std::string> GetSoundAliases();
+
+        /**
+         * @brief Load a music track and register it under an alias.
+         *
+         * Loads a streamed music resource from the given file path and stores it internally,
+         * making it accessible via the provided alias. Music is streamed from disk (not fully
+         * loaded into memory), which is suitable for long background tracks.
+         *
+         * Notes:
+         * - The alias must be unique within the music collection. If an alias already exists,
+         *   it will be reassigned to the newly loaded track.
+         * - The file must be a format supported by the audio backend (for example: OGG, FLAC, WAV;
+         *   MP3 support may depend on your build/configuration).
+         * - On failure, the method logs an error and does not register an alias.
+         *
+         * @param alias A unique name used to reference the music track later.
+         * @param path Filesystem path to the music file.
+         */
+        static void LoadMusic(const std::string& alias, const std::string& path);
+
+        /**
+         * @brief Check if a music track exists by its alias.
+         * @param alias The unique alias of the music track.
+         * @return true if the music track exists, false otherwise.
+         */
+        static bool MusicExists(const std::string& alias);
+
+        /**
+         * @brief Retrieve a music track by its alias.
+         *
+         * Returns a reference to the sf::Music object previously loaded and registered
+         * with LoadMusic. The music is streamed from disk.
+         *
+         * Precondition: MusicExists(alias) should be true; otherwise this may throw or fail.
+         *
+         * @param alias The alias of the music track to retrieve.
+         * @return Reference to the requested sf::Music instance.
+         */
+        static Files::Music& GetMusic(const std::string& alias);
+
+        /**
+         * @brief Retrieve all music track aliases currently registered.
+         *
+         * Returns a list of alias strings for every music track that has been
+         * successfully loaded via LoadMusic and is available for retrieval.
+         *
+         * @return Vector of strings containing all music aliases.
+         */
+        static std::vector<std::string> GetMusicAliases();
 
         /**
          * @brief Serialize all loaded assets to JSON format.
@@ -364,23 +459,26 @@ namespace LowEngine {
             return &instance;
         }
 
-        static void LoadTerrainLayerData(const Terrain::LayerDefinition* terrainLayerDefinition, Terrain::TileMap& map);
+        static void LoadTerrainLayerData(const Terrain::LayerDefinition* terrainLayerDefinition, Terrain::TileMap* map);
 
-        static void LoadFeatureLayerData(const Terrain::LayerDefinition* featuresLayerDefinition, Terrain::TileMap& map);
+        static void LoadFeatureLayerData(const Terrain::LayerDefinition* featuresLayerDefinition, Terrain::TileMap* map);
 
-        static void ReadNavDataForLayer(Terrain::TileMap& map, Terrain::Layer& layer, const Terrain::LayerDefinition* layerDefinition);
+        static void ReadNavDataForLayer(Terrain::TileMap* map, Terrain::Layer* layer, const Terrain::LayerDefinition* layerDefinition);
 
-        std::vector<Terrain::TileMap> _maps;
+        std::vector<std::unique_ptr<Terrain::TileMap> > _maps;
         std::unordered_map<std::string, size_t> _mapAliases;
 
-        std::vector<std::unique_ptr<Files::Texture>> _textures;
+        std::vector<std::unique_ptr<Files::Texture> > _textures;
         std::unordered_map<std::string, size_t> _textureAliases;
-        std::unordered_map<size_t, Animation::SpriteSheet> _animationSheets;
+        std::unordered_map<size_t, std::unique_ptr<Animation::SpriteSheet> > _spriteSheets;
 
-        std::vector<sf::Font> _fonts;
+        std::vector<std::unique_ptr<sf::Font> > _fonts;
         std::unordered_map<std::string, size_t> _fontAliases;
 
-        std::vector<Files::SoundBuffer> _sounds;
+        std::vector<std::unique_ptr<Files::SoundBuffer> > _sounds;
         std::unordered_map<std::string, size_t> _soundAliases;
+
+        std::vector<std::unique_ptr<Files::Music> > _music;
+        std::unordered_map<std::string, size_t> _musicAliases;
     };
 }

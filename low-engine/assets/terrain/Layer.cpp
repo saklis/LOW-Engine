@@ -5,10 +5,25 @@
 #include "SFML/System/Vector2.hpp"
 
 namespace LowEngine::Terrain {
+    std::string AnimatedTileState::GetClipName() {
+        return ClipNames[ClipIndex];
+    }
+
     void Layer::LoadTexture(size_t textureId) {
         TextureId = textureId;
 
         _sourceImage = Assets::GetTexture(TextureId).copyToImage();
+    }
+
+    void Layer::GenerateCellDefinitionsFromTexture() {
+        Definition.CellDefinitions.clear();
+        AnimatedTiles.clear();
+
+        auto& spriteSheet = Assets::GetSpriteSheet(TextureId);
+
+        for (size_t i = 0; i < spriteSheet.FrameCount.y; i++) {
+            Definition.CellDefinitions[i] = {};
+        }
     }
 
     void Layer::SetSize(const sf::Vector2<size_t>& cellCount, const size_t& cellSize) {
@@ -36,10 +51,11 @@ namespace LowEngine::Terrain {
                 // sourceFrame is a coordinate of origin point (upper-left corner) for a piece of texture that should be used to paint current cell.
                 sf::Vector2<size_t> sourceFrame;
 
-                // ceck if Cell under Index as animation assigned
+                // ceck if Cell under Index has animation assigned
                 if (AnimatedTiles.find(sourceIndex) != AnimatedTiles.end()) {
                     auto& animState = AnimatedTiles.at(sourceIndex);
-                    sourceFrame.x = animState.Clips[CellClipIndex[cellIndex]]->FirstFrameOrigin.x + animState.CurrentFrame * CellSize;
+                    auto& animClip = Assets::GetSpriteSheet(TextureId).GetAnimationClip(animState.GetClipName());
+                    sourceFrame.x = animClip.FirstFrameOrigin.x + animState.CurrentFrame * CellSize;
                     sourceFrame.y = sourceIndex * CellSize;
                 } else {
                     sourceFrame.x = 0;

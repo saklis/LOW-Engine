@@ -23,7 +23,7 @@ namespace LowEngine::Terrain {
         std::filesystem::path Path;
 
         /**
-         * @brief Size of the tile map, in cells.
+         * @brief Size of the tile map, in pixels.
          */
         sf::Vector2<size_t> Size;
 

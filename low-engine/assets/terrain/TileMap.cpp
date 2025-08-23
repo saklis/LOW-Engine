@@ -5,14 +5,16 @@
 
 #include "Config.h"
 #include "Log.h"
+#include "assets/Assets.h"
 
 void LowEngine::Terrain::TileMap::Update(float deltaTime) {
     for (auto& state: TerrainLayer.AnimatedTiles | std::views::values) {
         state.FrameTime += deltaTime;
-        if (state.FrameTime >= state.Clips[state.ClipIndex]->FrameDuration) {
+        auto& animClip = Assets::GetSpriteSheet(TerrainLayer.TextureId).GetAnimationClip(state.GetClipName());
+        if (state.FrameTime >= animClip.FrameDuration) {
             state.FrameTime = 0.0f;
             state.CurrentFrame++;
-            if (state.CurrentFrame >= state.Clips[state.ClipIndex]->FrameCount) {
+            if (state.CurrentFrame >= animClip.FrameCount) {
                 state.CurrentFrame = 0;
             }
         }
@@ -20,10 +22,11 @@ void LowEngine::Terrain::TileMap::Update(float deltaTime) {
 
     for (auto& state: FeaturesLayer.AnimatedTiles | std::views::values) {
         state.FrameTime += deltaTime;
-        if (state.FrameTime >= state.Clips[state.ClipIndex]->FrameDuration) {
+        auto& animClip = Assets::GetSpriteSheet(FeaturesLayer.TextureId).GetAnimationClip(state.GetClipName());
+        if (state.FrameTime >= animClip.FrameDuration) {
             state.FrameTime = 0.0f;
             state.CurrentFrame++;
-            if (state.CurrentFrame >= state.Clips[state.ClipIndex]->FrameCount) {
+            if (state.CurrentFrame >= animClip.FrameCount) {
                 state.CurrentFrame = 0;
             }
         }

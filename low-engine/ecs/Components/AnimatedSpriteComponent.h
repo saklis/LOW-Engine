@@ -12,14 +12,9 @@ namespace LowEngine::ECS {
     class AnimatedSpriteComponent : public SpriteComponent {
     public:
         /**
-         * @brief Pointer to Sprite Sheet that should be source of the animation frames.
+         * @brief Name of currently playing animation.
          */
-        Animation::SpriteSheet* Sheet = nullptr;
-
-        /**
-         * @brief Pointer to Animation Clip that describes currently selected animation.
-         */
-        Animation::AnimationClip* Clip = nullptr;
+        std::string CurrentClipName;
 
         /**
          * @brief Index of animation's current frame.
@@ -52,7 +47,7 @@ namespace LowEngine::ECS {
 
         AnimatedSpriteComponent(Memory::Memory* memory, AnimatedSpriteComponent const* other)
             : SpriteComponent(memory, other),
-              Sheet(other->Sheet), Clip(other->Clip),
+              CurrentClipName(other->CurrentClipName),
               CurrentFrame(other->CurrentFrame), FrameTime(other->FrameTime), Loop(other->Loop) {
         }
 

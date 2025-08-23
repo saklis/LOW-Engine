@@ -60,6 +60,12 @@ namespace LowEngine {
 
         static void DisplayTextureBrowser(Game& game, ImVec2 size);
         static void DisplaySpriteSheetBrowser(Game& game, ImVec2 size);
+        static void DisplayAnimationClipsBrowser(Game& game, ImVec2 size);
+        static void DisplayTileMapBrowser(const Game& game, ImVec2 size);
+        static void ShowTileMapEditor(const Game& game, std::string& tileMapAlias, const std::filesystem::path& newTileMapFile, bool& showEditor);
+        static void ShowTileMapLayerEditor(const Game& game, Terrain::Layer& layer);
+        static void DisplaySoundBrowser(const Game& game, ImVec2 size);
+        static void DisplayMusicBrowser(Game& game, ImVec2 size);
 
         static void CreateNewProject(Game& game, const std::string& projectName, const std::string& projectPath);
 
@@ -69,8 +75,11 @@ namespace LowEngine {
         static sf::Texture playTexture;
         static sf::Texture pauseTexture;
         static sf::Texture stopTexture;
+        static sf::Texture nextTexture;
         static sf::Texture trashTexture;
         static sf::Texture projectIconTexture;
+        static sf::Texture soundIconTexture;
+        static sf::Texture musicIconTexture;
 
         static bool LoadIcons();
     };

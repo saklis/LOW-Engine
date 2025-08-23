@@ -57,7 +57,7 @@ namespace LowEngine::Terrain {
         /**
          * @brief Structure holding properties for particular cell types, recognised by index.
          */
-        std::unordered_map<unsigned, CellDefinition> CellDefinitions;
+        std::unordered_map<size_t, CellDefinition> CellDefinitions;
 
         /**
          * @brief Default constructor for LayerDefinition.
@@ -73,7 +73,7 @@ namespace LowEngine::Terrain {
          * @param textureId The ID of the texture associated with this layer.
          * @param cellDefinitions Structure containing properties for particular cell, organized by cell's index.
          */
-        LayerDefinition(LayerType type, size_t textureId, std::unordered_map<unsigned, CellDefinition> cellDefinitions = {})
+        LayerDefinition(LayerType type, size_t textureId, std::unordered_map<size_t, CellDefinition> cellDefinitions = {})
             : Type(type),
               TextureId(textureId),
               CellDefinitions(std::move(cellDefinitions)) {

@@ -9,6 +9,7 @@
 #include "ecs/ECSHeaders.h"
 #include "scene/SceneManager.h"
 #include "input/InputManager.h"
+#include "music/MusicManager.h"
 
 namespace LowEngine {
     /**
@@ -69,6 +70,14 @@ namespace LowEngine {
          * Then Action can be retrieved and checked for state (started, ended, active).
          */
         Input::InputManager Input;
+
+        /**
+         * @brief Game's music manager.
+         *
+         * This is a wrapper around SFML's music system, which allows for more flexible and reusable music handling.
+         * It can be used to play, pause, stop and loop music. It also supports queueing and crossfade.
+         */
+        Music::MusicManager Music;
 
         Game() : DeltaTime(sf::Time::Zero) {
             StartLog();
