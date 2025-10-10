@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <optional>
 
-#include "Log.h"
+#include "../log/Log.h"
 #include "Action.h"
 #include "nlohmann/json.hpp"
 #include "SFML/Window/Event.hpp"

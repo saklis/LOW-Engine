@@ -4,7 +4,7 @@
 #include <fstream>
 
 #include "Config.h"
-#include "Log.h"
+#include "../../log/Log.h"
 #include "assets/Assets.h"
 
 void LowEngine::Terrain::TileMap::Update(float deltaTime) {

@@ -1,6 +1,6 @@
 #include "Game.h"
 
-#include "LogMemoryBufferSink.h"
+#include "log/LogMemoryBufferSink.h"
 
 namespace LowEngine {
 	void Game::StartLog() {

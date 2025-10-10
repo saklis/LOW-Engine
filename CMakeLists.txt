@@ -4,10 +4,16 @@
 
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
+# Policy CMP0072 - prefer GLVND libraries for OpenGL
+if (POLICY CMP0072)
+    cmake_policy(SET CMP0072 NEW)
+endif()
+
 # Policy CMP0079 for ImGUI-SFML when building under MSVC
 if (POLICY CMP0079)
     cmake_policy(SET CMP0079 NEW)
 endif ()
+
 project(LowEngine)
 
 if (CMAKE_GENERATOR MATCHES "Visual Studio.*")
@@ -202,6 +208,9 @@ set_target_properties(${LOW_ENGINE_NAME}
 # 3-rd PARTY for LOW EDITOR
 ###############################################################################
 
+# OpenGL
+find_package(OpenGL REQUIRED)
+
 # ImGui Pack
 set(IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/DearImGui")
 set(IMGUI_SFML_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/imgui-sfml")
@@ -254,7 +263,7 @@ target_link_libraries(ImGuiPack PUBLIC
         sfml-system
         sfml-window
         sfml-graphics
-        opengl32
+        OpenGL::GL
 )
 
 ###############################################################################

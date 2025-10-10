@@ -3,7 +3,7 @@
 #include <filesystem>
 
 #include "Config.h"
-#include "Log.h"
+#include "log/Log.h"
 #include "assets/Assets.h"
 
 #include "ecs/ECSHeaders.h"
@@ -79,15 +79,35 @@ namespace LowEngine {
          */
         Music::MusicManager Music;
 
+        /**
+         * @brief Default constructor for the Game class.
+         * 
+         * Initializes a new game instance with default settings.
+         * Creates a default scene and starts the logging system.
+         */
         Game() : DeltaTime(sf::Time::Zero) {
             StartLog();
             Scenes.CreateScene("default");
         }
 
+        /**
+         * @brief Constructs a Game instance with a specified title.
+         * 
+         * Initializes a new game instance with the provided title and starts the logging system.
+         * Creates a default scene.
+         * 
+         * @param gameTitle The title to be used for the game window.
+         */
         explicit Game(const std::string& gameTitle) : Title(gameTitle), DeltaTime(sf::Time::Zero) {
             StartLog();
+            Scenes.CreateScene("default");
         }
 
+        /**
+         * @brief Destructor for the Game class.
+         * 
+         * Ensures proper cleanup by stopping the logging system.
+         */
         ~Game() {
             StopLog();
         }
@@ -108,7 +128,7 @@ namespace LowEngine {
          * @brief Main game loop.
          *
          * This is the main loop of the game, which runs until the window is closed.
-         * It polls window events (including input) and updates the game state though Components in current scene.
+         * It polls window events (including input) and updates the state of the Components in current scene.
          *
          * @return true if the window is still open and the game loop is running, false otherwise.
          */
@@ -176,10 +196,28 @@ namespace LowEngine {
          */
         void Update(float deltaTime);
 
+        /**
+         * @brief Initializes the logging system.
+         *
+         * This function sets up the logging system with default configuration.
+         * It should be called when the game starts and before any logging operations.
+         */
         void StartLog();
 
+        /**
+         * @brief Shuts down the logging system.
+         *
+         * This function performs cleanup of the logging system.
+         * It should be called when the game is shutting down to ensure proper cleanup.
+         */
         void StopLog();
 
+        /**
+         * @brief Handles the window close event.
+         *
+         * This function is called when the window is being closed.
+         * It performs the necessary cleanup and state updates when the window is closed.
+         */
         void OnWindowClosed();
     };
 }

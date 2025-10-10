@@ -10,6 +10,7 @@ namespace LowEngine {
     sf::Texture DevTools::pauseTexture;
     sf::Texture DevTools::stopTexture;
     sf::Texture DevTools::nextTexture;
+    sf::Texture DevTools::loopTexture;
     sf::Texture DevTools::trashTexture;
     sf::Texture DevTools::projectIconTexture;
     sf::Texture DevTools::soundIconTexture;
@@ -249,22 +250,23 @@ namespace LowEngine {
             ImGui::Columns(8, "ProjectColumns", false);
 
             std::vector<std::filesystem::path> projects;
-            std::filesystem::path projectsDir = std::filesystem::path(projectPath);
-            for (const auto& entry: std::filesystem::directory_iterator(projectsDir)) {
-                if (entry.is_directory()) {
-                    for (const auto& file: std::filesystem::directory_iterator(entry.path())) {
-                        if (file.path().extension() == LowEngine::Config::PROJECT_FILE_EXTENSION) {
-                            projects.push_back(file.path());
+            if (auto projectsDir = std::filesystem::path(projectPath); std::filesystem::exists(projectsDir) && std::filesystem::is_directory(projectsDir)) {
+                for (const auto& entry: std::filesystem::directory_iterator(projectsDir)) {
+                    if (entry.is_directory()) {
+                        for (const auto& file: std::filesystem::directory_iterator(entry.path())) {
+                            if (file.path().extension() == LowEngine::Config::PROJECT_FILE_EXTENSION) {
+                                projects.push_back(file.path());
+                            }
                         }
                     }
                 }
             }
 
-            for (auto& project: projects) {
-                std::string projectName = project.filename().replace_extension("").string();
-                std::string projectPath = project.parent_path().string();
+            for (auto const& project: projects) {
+                std::string localProjectName = project.filename().replace_extension("").string();
+                std::string localProjectPath = project.parent_path().string();
 
-                if (ImGui::ImageButton(projectName.c_str(), projectIconTexture.getNativeHandle(), ImVec2(50, 50), ImVec2(0.0f, 0.0f),
+                if (ImGui::ImageButton(localProjectName.c_str(), projectIconTexture.getNativeHandle(), ImVec2(50, 50), ImVec2(0.0f, 0.0f),
                                        ImVec2(1.0f, 1.0f))) {
                     game.CloseProject();
                     game.LoadProject(project.string());
@@ -275,7 +277,7 @@ namespace LowEngine {
                     _isNewProjectWizardVisible = false;
                     ImGui::CloseCurrentPopup();
                 }
-                ImGui::TextWrapped("%s", projectName.c_str());
+                ImGui::TextWrapped("%s", localProjectName.c_str());
 
                 ImGui::NextColumn();
             }
@@ -2065,6 +2067,8 @@ namespace LowEngine {
                 ImGui::Image(musicIconTexture.getNativeHandle(), ImVec2(200.0f, 200.0f));
                 ImGui::Separator();
                 bool isPaused = music.getStatus() == sf::Music::Status::Paused;
+                bool isLooping = music.isLooping();
+
                 if (!isPaused) ImGui::BeginDisabled();
                 if (ImGui::ImageButton("playButton", playTexture.getNativeHandle(), ImVec2(40.0f, 40.0f))) {
                     music.play();
@@ -2087,12 +2091,21 @@ namespace LowEngine {
                     game.Music.PlayNextQueued();
                 }
                 if (queue.empty()) ImGui::EndDisabled();
+                ImGui::SameLine();
+                ImVec4 tint = isLooping
+                                  ? ImVec4(1.0f, 0.3f, 0.3f, 1.0f)
+                                  : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+                if (ImGui::ImageButton("loopButton", loopTexture.getNativeHandle(), ImVec2(40.0f, 40.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
+                                       ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tint)) {
+                    music.setLooping(!isLooping);
+                }
                 float currentSeek = music.getPlayingOffset().asSeconds();
                 ImGui::SetNextItemWidth(400.0f);
                 if (ImGui::SliderFloat("##MusicSeekerSlider", &currentSeek, 0, music.getDuration().asSeconds())) {
                     music.setPlayingOffset(sf::seconds(currentSeek));
                 }
-                ImGui::Text("Time: %s / %s", FormatHelpers::ToString(music.getPlayingOffset()).c_str(), FormatHelpers::ToString(music.getDuration()).c_str());
+                ImGui::Text("Time: %s / %s", FormatHelpers::ToString(music.getPlayingOffset()).c_str(),
+                            FormatHelpers::ToString(music.getDuration()).c_str());
                 ImGui::Separator();
                 ImGui::Text("Queue:");
 
@@ -2113,7 +2126,7 @@ namespace LowEngine {
                     }
                     ImGui::PopID();
                 }
-            }else {
+            } else {
                 ImGui::Text("No music is currently playing.");
             }
             ImGui::EndChild();
@@ -2244,6 +2257,8 @@ namespace LowEngine {
         if (!stopTexture.loadFromFile("assets/editor/icons/stop.png"))
             return false;
         if (!nextTexture.loadFromFile("assets/editor/icons/next.png"))
+            return false;
+        if (!loopTexture.loadFromFile("assets/editor/icons/return.png"))
             return false;
         if (!trashTexture.loadFromFile("assets/editor/icons/trashcan.png"))
             return false;

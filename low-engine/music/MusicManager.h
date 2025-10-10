@@ -141,6 +141,24 @@ namespace LowEngine::Music {
         bool IsMusicPaused();
 
         /**
+         * @brief Check if the current track is set to loop.
+         *
+         * @return true if the active track is set to loop playback, false otherwise.
+         */
+        bool IsMusicLooping();
+
+        /**
+         * @brief Set whether a music track should loop when it reaches the end.
+         *
+         * Controls the looping behavior of a specific music track. If the track exists,
+         * its looping state will be updated. Has no effect if the track does not exist.
+         *
+         * @param musicAlias Alias of the track to modify.
+         * @param looping If true, the track will loop continuously; if false, it will play once and stop.
+         */
+        void SetLooping(const std::string& musicAlias, bool looping);
+
+        /**
          * @brief Clear all tracks from the queue without affecting current playback.
          */
         void ClearQueuedMusic();

@@ -14,7 +14,7 @@
 
 #include <stack>
 
-#include "Log.h"
+#include "../log/Log.h"
 #include "ecs/IEntity.h"
 #include "memory/ComponentPool.h"
 #include "graphics/Sprite.h"
@@ -42,8 +42,19 @@ namespace LowEngine::Memory {
             std::vector<std::type_index> Dependencies;
         };
 
+        /**
+         * @brief Default constructor.
+         *
+         * Initializes a new Memory manager for the ECS system.
+         */
         Memory();
 
+        /**
+         * @brief Copy constructor.
+         *
+         * Creates a new Memory manager by copying the state of another one.
+         * @param other The Memory instance to copy from.
+         */
         Memory(Memory const& other);
 
         /**
@@ -182,6 +193,8 @@ namespace LowEngine::Memory {
                 component->Initialize();
             }
 
+            _log->debug("Component {} created for Entity with id {}", DemangledTypeName(typeid(T)), entityId);
+
             return component;
         }
 
@@ -200,6 +213,7 @@ namespace LowEngine::Memory {
                 const auto& typeInfo = _typeInfos[compType];
                 if (std::find(typeInfo.Dependencies.begin(), typeInfo.Dependencies.end(), std::type_index(typeid(T))) != typeInfo.Dependencies.
                     end()) {
+                    _log->debug("Component {} is a dependency for {}", DemangledTypeName(typeid(T)), DemangledTypeName(compType));
                     return false;
                 }
             }
@@ -284,12 +298,24 @@ namespace LowEngine::Memory {
         void Destroy();
 
     protected:
+        /** @brief Counter for generating unique type IDs. */
         static inline unsigned int _nextTypeId = 0;
 
+        /** @brief Collection of all entities in the system. */
         std::vector<std::unique_ptr<ECS::IEntity> > _entities;
+
+        /** @brief Map of component pools indexed by their type. */
         std::unordered_map<std::type_index, std::unique_ptr<IComponentPool> > _components;
+
+        /** @brief Map of type information for registered component types. */
         std::unordered_map<std::type_index, TypeInfo> _typeInfos;
 
+        /**
+         * @brief Get or create a component pool for a specific type.
+         *
+         * @tparam T The component type for the pool.
+         * @return Reference to the component pool for type T.
+         */
         template<typename T>
         ComponentPool<T>& GetOrCreatePool() {
             auto typeIdx = std::type_index(typeid(T));

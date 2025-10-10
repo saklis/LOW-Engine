@@ -90,6 +90,19 @@ namespace LowEngine::Music {
         return false;
     }
 
+    bool MusicManager::IsMusicLooping() {
+        if (Assets::MusicExists(_currentMusic)) {
+            return Assets::GetMusic(_currentMusic).isLooping();
+        }
+        return false;
+    }
+
+    void MusicManager::SetLooping(const std::string& musicAlias, bool looping) {
+        if (Assets::MusicExists(musicAlias)) {
+            Assets::GetMusic(musicAlias).setLooping(looping);
+        }
+    }
+
     void MusicManager::ClearQueuedMusic() {
         _musicQueue.clear();
     }

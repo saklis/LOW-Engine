@@ -1,6 +1,6 @@
 #include "SpriteSheet.h"
 
-#include "Log.h"
+#include "../../log/Log.h"
 
 namespace LowEngine::Animation {
     void AnimationClip::RecalculateFrames(const Animation::SpriteSheet& spriteSheet) {

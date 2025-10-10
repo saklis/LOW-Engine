@@ -76,6 +76,7 @@ namespace LowEngine {
         static sf::Texture pauseTexture;
         static sf::Texture stopTexture;
         static sf::Texture nextTexture;
+        static sf::Texture loopTexture;
         static sf::Texture trashTexture;
         static sf::Texture projectIconTexture;
         static sf::Texture soundIconTexture;

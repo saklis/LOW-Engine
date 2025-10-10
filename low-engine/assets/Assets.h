@@ -15,7 +15,7 @@
 #include "SFML/Audio/SoundBuffer.hpp"
 #include "nlohmann/json.hpp"
 
-#include "Log.h"
+#include "../log/Log.h"
 
 #include "assets/files/Texture.h"
 #include "assets/files/SoundBuffer.h"

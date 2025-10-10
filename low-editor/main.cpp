@@ -82,8 +82,7 @@ int main() {
     //mainScene->Update(0.0f);
 
     // open window
-    bool success = game.OpenWindow(1664, 936);
-    if (!success)return 1;
+    if (bool success = game.OpenWindow(1664, 936); !success) return 1;
 
     LowEngine::DevTools::Initialize(game.Window);
 

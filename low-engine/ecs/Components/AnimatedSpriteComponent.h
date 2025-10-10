@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Log.h"
+#include "../../log/Log.h"
 #include "SpriteComponent.h"
 
 namespace LowEngine::ECS {

@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 #include "Config.h"
-#include "Log.h"
+#include "../log/Log.h"
 #include "graphics/Sprite.h"
 
 namespace LowEngine::Memory {

@@ -59,6 +59,11 @@ namespace LowEngine {
         inline static const std::string PROJECT_FILE_EXTENSION = ".lowproj";
 
         /**
+         * @brief Default file extension for scene file.
+         */
+        inline static const std::string SCENE_FILE_EXTENSION = ".lowscene";
+
+        /**
          * @brief Default name for the assets folder.
          */
         inline static const std::string ASSETS_FOLDER_NAME = "assets";
@@ -77,5 +82,15 @@ namespace LowEngine {
 		 * @brief Default name for the music assets directory.
 		 */
     	inline static const std::string MUSIC_FOLDER_NAME = "music";
+
+        /**
+         * @brief Default name for the font assets directory.
+         */
+        inline static const std::string FONTS_FOLDER_NAME = "fonts";
+
+        /**
+         * @brief Default name for the scenes directory.
+         */
+        inline static const std::string SCENES_FOLDER_NAME = "scenes";
     };
 }
