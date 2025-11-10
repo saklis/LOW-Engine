@@ -7,7 +7,7 @@ namespace LowEngine::ECS {
             throw std::runtime_error("No sprite sheet with this alias exists");
         }
 
-        SpriteComponent::SetTexture(textureAlias);
+        SetTexture(Assets::GetTextureId(textureAlias));
         UpdateFrameSize();
     }
 
@@ -17,7 +17,8 @@ namespace LowEngine::ECS {
             throw std::runtime_error("No sprite sheet with this alias exists");
         }
 
-        SpriteComponent::SetTexture(textureId);
+        TextureId = textureId;
+        SetTexture(Assets::GetTexture(textureId));
         UpdateFrameSize();
     }
 
@@ -49,7 +50,11 @@ namespace LowEngine::ECS {
     }
 
     void AnimatedSpriteComponent::Update(float deltaTime) {
-        SpriteComponent::Update(deltaTime);
+        auto transformComponent = _memory->GetComponent<TransformComponent>(EntityId);
+        Sprite.setPosition(transformComponent->Position);
+        Sprite.setRotation(transformComponent->Rotation);
+        Sprite.setScale(transformComponent->Scale);
+        Sprite.Layer = Layer;
 
         if (CurrentClipName.empty()) return;
 
@@ -74,7 +79,11 @@ namespace LowEngine::ECS {
     }
 
     void AnimatedSpriteComponent::SetTexture(const sf::Texture& texture) {
-        SpriteComponent::SetTexture(texture);
+        Sprite.setTexture(texture);
+
+        auto size = static_cast<sf::Vector2<int>>(texture.getSize());
+        Sprite.setTextureRect(sf::IntRect({0, 0}, size));
+        Sprite.setOrigin({static_cast<float>(size.x) / 2, static_cast<float>(size.y) / 2});
     }
 
     void AnimatedSpriteComponent::UpdateFrameSize() {

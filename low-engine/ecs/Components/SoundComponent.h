@@ -8,7 +8,7 @@ namespace LowEngine::ECS {
     /**
      * @brief Represents a component that play a sound.
      */
-    class SoundComponent : public IComponent {
+    class SoundComponent : public IComponent<SoundComponent> {
     public:
         /**
          * @brief Instance of the Sound that manages the playback.
@@ -25,10 +25,6 @@ namespace LowEngine::ECS {
 
         ~SoundComponent() override = default;
 
-        void CloneInto(Memory::Memory* newMemory, void* rawStorage) const override {
-            new(rawStorage) SoundComponent(newMemory, this);
-        }
-
         /**
          * @brief Set sound to be played.
          * @param soundAlias Alias of the sound to play.
@@ -39,11 +35,6 @@ namespace LowEngine::ECS {
          * @brief Play currently set sound.
          */
         void Play();
-
-        static const std::vector<std::type_index>& Dependencies() {
-            static std::vector<std::type_index> dependencies = {};
-            return dependencies;
-        }
 
         void Initialize() override {
         }

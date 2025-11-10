@@ -9,7 +9,7 @@ namespace LowEngine::ECS {
      *
      * Depends on Transform Component
      */
-    class CameraComponent : public IComponent {
+    class CameraComponent : public IComponent<CameraComponent, TransformComponent> {
     public:
         /**
          * @brief A factor by which the viewport will be zoomed-in or -out.
@@ -29,17 +29,6 @@ namespace LowEngine::ECS {
         }
 
         ~CameraComponent() override = default;
-
-        void CloneInto(Memory::Memory* newMemory, void* rawStorage) const override {
-            new(rawStorage) CameraComponent(newMemory, this);
-        }
-
-        static const std::vector<std::type_index>& Dependencies() {
-            static std::vector<std::type_index> dependencies = {
-                std::type_index(typeid(TransformComponent))
-            };
-            return dependencies;
-        }
 
         void Initialize() override{};
 

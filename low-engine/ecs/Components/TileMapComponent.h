@@ -10,7 +10,7 @@ namespace LowEngine::ECS {
      *
      * Depends on Transform Component
      */
-    class TileMapComponent : public IComponent {
+    class TileMapComponent : public IComponent<TileMapComponent, TransformComponent> {
     public:
         /**
          * @brief Layer number.
@@ -32,17 +32,6 @@ namespace LowEngine::ECS {
         }
 
         ~TileMapComponent() override = default;
-
-        void CloneInto(Memory::Memory* newMemory, void* rawStorage) const override {
-            new(rawStorage) TileMapComponent(newMemory, this);
-        }
-
-        static const std::vector<std::type_index>& Dependencies() {
-            static std::vector dependencies = {
-                std::type_index(typeid(TransformComponent))
-            };
-            return dependencies;
-        }
 
         void Initialize() override {
         }

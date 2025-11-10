@@ -205,13 +205,13 @@ namespace LowEngine {
             if (ImGuiFileDialog::Instance()->Display("ChooseProjectPath")) {
                 if (ImGuiFileDialog::Instance()->IsOk()) {
                     std::string currentPath = ImGuiFileDialog::Instance()->GetCurrentPath();
-                    strncpy_s(projectPath, currentPath.c_str(), sizeof(projectPath) - 1);
+                    strncpy(projectPath, currentPath.c_str(), sizeof(projectPath) - 1);
                     projectPath[sizeof(projectPath) - 1] = '\0';
 
                     std::string currentFileName = ImGuiFileDialog::Instance()->GetCurrentFileName();
                     currentFileName.erase(currentFileName.size() - LowEngine::Config::PROJECT_FILE_EXTENSION.size());
                     // Remove file extension
-                    strncpy_s(projectName, currentFileName.c_str(), sizeof(projectName) - 1);
+                    strncpy(projectName, currentFileName.c_str(), sizeof(projectName) - 1);
                     projectName[sizeof(projectName) - 1] = '\0';
                 }
                 ImGuiFileDialog::Instance()->Close();

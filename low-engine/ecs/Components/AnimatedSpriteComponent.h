@@ -1,7 +1,12 @@
 #pragma once
 
+#include "SFML/Graphics/Texture.hpp"
+
 #include "../../log/Log.h"
-#include "SpriteComponent.h"
+#include "ecs/IComponent.h"
+#include "ecs/Components/TransformComponent.h"
+#include "graphics/Sprite.h"
+#include "assets/Assets.h"
 
 namespace LowEngine::ECS {
     /**
@@ -9,8 +14,26 @@ namespace LowEngine::ECS {
      *
      * Depends on Transform Component
      */
-    class AnimatedSpriteComponent : public SpriteComponent {
+    class AnimatedSpriteComponent : public IComponent<AnimatedSpriteComponent, TransformComponent> {
     public:
+        /**
+         * @brief Id of the texture used by the Sprite.
+         */
+        size_t TextureId = 0;
+
+        /**
+         * @brief This component's Sprite.
+         */
+        LowEngine::Sprite Sprite;
+
+        /**
+         * @brief Layer number.
+         *
+         * Sprite of this component will be drawn on this layer.
+         * This applies only if Scene's sorting mode is set to Layer.
+         */
+        int Layer = 0;
+
         /**
          * @brief Name of currently playing animation.
          */
@@ -34,25 +57,15 @@ namespace LowEngine::ECS {
          */
         bool Loop = true;
 
-        static const std::vector<std::type_index>& Dependencies() {
-            static std::vector dependencies = {
-                std::type_index(typeid(TransformComponent))
-            };
-            return dependencies;
-        }
-
         explicit AnimatedSpriteComponent(Memory::Memory* memory)
-            : SpriteComponent(memory) {
+            : IComponent(memory), Sprite(Assets::GetDefaultTexture()) {
         }
 
         AnimatedSpriteComponent(Memory::Memory* memory, AnimatedSpriteComponent const* other)
-            : SpriteComponent(memory, other),
+            : IComponent(memory, other),
+              TextureId(other->TextureId), Sprite(other->Sprite), Layer(other->Layer),
               CurrentClipName(other->CurrentClipName),
               CurrentFrame(other->CurrentFrame), FrameTime(other->FrameTime), Loop(other->Loop) {
-        }
-
-        void CloneInto(Memory::Memory* newMemory, void* rawStorage) const override {
-            new(rawStorage) AnimatedSpriteComponent(newMemory, this);
         }
 
         /**
@@ -61,7 +74,7 @@ namespace LowEngine::ECS {
          * Setting Texture will automatically load its Sprite Sheet
          * @param textureAlias Texture's alias.
          */
-        void SetTexture(const std::string& textureAlias) override;
+        void SetTexture(const std::string& textureAlias);
 
         /**
          * @brief Set texture that will be used as source for animation frames.
@@ -69,7 +82,7 @@ namespace LowEngine::ECS {
          * Setting Texture will automatically load its Sprite Sheet
          * @param textureId Texture's Id.
          */
-        void SetTexture(size_t textureId) override;
+        void SetTexture(size_t textureId);
 
         /**
          * @brief Play animation.
@@ -89,7 +102,6 @@ namespace LowEngine::ECS {
         void Stop();
 
         void Initialize() override {
-            SpriteComponent::Initialize();
         }
 
         void Update(float deltaTime) override;
@@ -99,7 +111,7 @@ namespace LowEngine::ECS {
         }
 
     protected:
-        void SetTexture(const sf::Texture& texture) override;
+        void SetTexture(const sf::Texture& texture);
 
         /**
          * @brief Updates Sprite properties to match selected Texture's properties.

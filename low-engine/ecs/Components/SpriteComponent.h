@@ -14,7 +14,7 @@ namespace LowEngine::ECS {
      *
      * Depends on Transform Component
      */
-    class SpriteComponent : public IComponent {
+    class SpriteComponent : public IComponent<SpriteComponent, TransformComponent> {
     public:
         /**
          * @brief Id of the texture used by the Sprite.
@@ -24,7 +24,7 @@ namespace LowEngine::ECS {
         /**
          * @brief This component's Sprite.
          */
-        Sprite Sprite;
+        LowEngine::Sprite Sprite;
 
         /**
          * @brief Layer number.
@@ -43,17 +43,6 @@ namespace LowEngine::ECS {
         }
 
         virtual ~SpriteComponent() = default;
-
-        void CloneInto(Memory::Memory* newMemory, void* rawStorage) const override {
-            new(rawStorage) SpriteComponent(newMemory, this);
-        }
-
-        static const std::vector<std::type_index>& Dependencies() {
-            static std::vector dependencies = {
-                std::type_index(typeid(TransformComponent))
-            };
-            return dependencies;
-        }
 
         void Initialize() override {
         }

@@ -162,7 +162,7 @@ namespace LowEngine::Memory {
                 ti.Id = _nextTypeId++;
                 ti.TypeIndex = std::type_index(typeid(T));
                 ti.Size = sizeof(T);
-                ti.Dependencies = T::Dependencies();
+                ti.Dependencies = T::GetDependencies();
             }
 
             if (entityId >= _entities.size()) {
