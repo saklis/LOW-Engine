@@ -2,7 +2,7 @@
 # SETUP
 ###############################################################################
 
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
 
 # Policy CMP0072 - prefer GLVND libraries for OpenGL
 if (POLICY CMP0072)
@@ -46,13 +46,21 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS ON)
 
 if (MSVC)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "" FORCE)
+    # Use dynamic CRT: /MD (Release) i /MDd (Debug)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" CACHE STRING "" FORCE)
 endif ()
 
 if (UNIX)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
     set(CMAKE_INSTALL_RPATH "$ORIGIN")
 endif ()
+
+# show folders in IDE
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+low_set_option(3RD_PARTY_FOLDER "Dependencies" STRING "Name of the folder for all 3rd party projects in IDE")
+
+# set starting project in VS
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "${LOW_EDITOR_NAME}")
 
 ###############################################################################
 # OUTPUT
@@ -90,10 +98,14 @@ set(SFML_BUILD_TESTS OFF CACHE BOOL "Build SFML tests/benchmarks" FORCE)
 if (CMAKE_GENERATOR MATCHES "Visual Studio")
     set(SFML_GENERATE_PDB ON CACHE BOOL "Include PDB files" FORCE)
 endif ()
+set(_old_cmake_folder "${CMAKE_FOLDER}")
+set(_SFML_FOLDER "${3RD_PARTY_FOLDER}/SFML")
 add_subdirectory(${SFML_DIR} EXCLUDE_FROM_ALL)
+set(CMAKE_FOLDER "${_old_cmake_folder}")
 foreach (sfmlTarget IN ITEMS sfml-system sfml-window sfml-graphics sfml-network sfml-audio)
     if (TARGET ${sfmlTarget})
         set_target_properties(${sfmlTarget} PROPERTIES
+                FOLDER "${_SFML_FOLDER}"
                 RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BUILD_OUTPUT_DEBUG}
                 RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
         )
@@ -109,7 +121,10 @@ set(TGUI_BACKEND SFML_GRAPHICS CACHE STRING "Sets the backend to use for renderi
 set(TGUI_SHARED_LIBS ON CACHE BOOL "Sets whether you want to build shared or static libraries." FORCE)
 set(TGUI_CXX_STANDARD "20" CACHE STRING "Sets which c++ standard should be used by TGUI." FORCE)
 set(TGUI_USE_STATIC_STD_LIBS OFF CACHE BOOL "Sets whether TGUI should link to the dynamic or static version of the std library." FORCE)
+set(_old_cmake_folder "${CMAKE_FOLDER}")
+set(CMAKE_FOLDER "${3RD_PARTY_FOLDER}/TGUI")
 add_subdirectory(${TGUI_DIR} EXCLUDE_FROM_ALL)
+set(CMAKE_FOLDER "${_old_cmake_folder}")
 if (TARGET tgui)
     set_target_properties(tgui PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BUILD_OUTPUT_DEBUG}
@@ -119,7 +134,10 @@ endif ()
 
 # SPDLOG
 set(SPDLOG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/spdlog")
+set(_old_cmake_folder "${CMAKE_FOLDER}")
+set(CMAKE_FOLDER "${3RD_PARTY_FOLDER}/spdlog")
 add_subdirectory(${SPDLOG_DIR} EXCLUDE_FROM_ALL)
+set(CMAKE_FOLDER "${_old_cmake_folder}")
 if (TARGET spdlog)
     set_target_properties(spdlog PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BUILD_OUTPUT_DEBUG}
@@ -129,7 +147,10 @@ endif ()
 
 # Nlohmann JSON
 set(NLOHMANN_JSON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/nlohmann_json")
+set(_old_cmake_folder "${CMAKE_FOLDER}")
+set(CMAKE_FOLDER "${3RD_PARTY_FOLDER}/nlohmann_json")
 add_subdirectory(${NLOHMANN_JSON_DIR} EXCLUDE_FROM_ALL)
+set(CMAKE_FOLDER "${_old_cmake_folder}")
 
 ###############################################################################
 # LOW ENGINE RUNTIME
@@ -138,19 +159,17 @@ add_subdirectory(${NLOHMANN_JSON_DIR} EXCLUDE_FROM_ALL)
 # engine source
 file(GLOB_RECURSE ENGINE_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/low-engine/*.cpp")
 file(GLOB_RECURSE ENGINE_HEADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/low-engine/*.h")
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/low-engine" FILES ${ENGINE_SOURCE_FILES} ${ENGINE_HEADER_FILES})
 
 # create the engine library (.dll/.so)
+set(_old_cmake_folder "${CMAKE_FOLDER}")
+set(CMAKE_FOLDER "Engine")
 if (BUILD_LOW_ENGINE_SHARED)
-    add_library(${LOW_ENGINE_NAME} SHARED
-            ${ENGINE_SOURCE_FILES}
-            ${ENGINE_HEADER_FILES}
-    )
+  add_library(${LOW_ENGINE_NAME} SHARED ${ENGINE_SOURCE_FILES} ${ENGINE_HEADER_FILES})
 else ()
-    add_library(${LOW_ENGINE_NAME} STATIC
-            ${ENGINE_SOURCE_FILES}
-            ${ENGINE_HEADER_FILES}
-    )
+  add_library(${LOW_ENGINE_NAME} STATIC ${ENGINE_SOURCE_FILES} ${ENGINE_HEADER_FILES})
 endif ()
+set(CMAKE_FOLDER "${_old_cmake_folder}")
 
 # export symbols for dynamic library API.
 if (MSVC)
@@ -231,11 +250,13 @@ set(IMGUIFILEDIALOG_SRC
     "${IMGUIFILEDIALOG_DIR}/ImGuiFileDialog.cpp"
 )
 
-add_library(ImGuiPack SHARED
-        ${IMGUI_SRC}
-        ${IMGUI_SFML_SRC}
-        ${IMGUIFILEDIALOG_SRC}
-)
+set(_old_cmake_folder "${CMAKE_FOLDER}")
+set(CMAKE_FOLDER "${3RD_PARTY_FOLDER}/ImGui")
+add_library(ImGuiPack SHARED 
+    ${IMGUI_SRC} 
+    ${IMGUI_SFML_SRC} 
+    ${IMGUIFILEDIALOG_SRC})
+set(CMAKE_FOLDER "${_old_cmake_folder}")
 
 if (MSVC)
     set_target_properties(ImGuiPack
@@ -274,9 +295,13 @@ if (BUILD_LOW_EDITOR)
 
     file(GLOB_RECURSE LOWEDITOR_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/low-editor/*.cpp")
     file(GLOB_RECURSE LOWEDITOR_HEADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/low-editor/*.h")
+    source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/low-editor" FILES ${LOWEDITOR_SOURCE_FILES} ${LOWEDITOR_HEADER_FILES})
 
     # executable
+    set(_old_cmake_folder "${CMAKE_FOLDER}")
+    set(CMAKE_FOLDER "Editor")
     add_executable(${LOW_EDITOR_NAME} ${LOWEDITOR_SOURCE_FILES} ${LOWEDITOR_HEADER_FILES})
+    set(CMAKE_FOLDER "${_old_cmake_folder}")
     set_target_properties(${LOW_EDITOR_NAME} PROPERTIES OUTPUT_NAME "LOW Editor")
 
     # Link the executable against our LowEngine library
@@ -296,11 +321,18 @@ if (BUILD_LOW_EDITOR)
     )
 
     # output
-
     set_target_properties(${LOW_EDITOR_NAME} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BUILD_OUTPUT_DEBUG}
             RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
     )
+
+    # set working directory
+    if (MSVC)
+        set_target_properties(${LOW_EDITOR_NAME} PROPERTIES
+            VS_DEBUGGER_WORKING_DIRECTORY
+            "$<IF:$<CONFIG:Debug>,${BUILD_OUTPUT_DEBUG},${BUILD_OUTPUT_RELEASE}>"
+        )
+    endif()
 
 endif ()
 
@@ -334,11 +366,11 @@ if (BUILD_LOW_EDITOR)
 
     set(OUTPUT_ASSETS_DIR "$<IF:$<CONFIG:Debug>,${BUILD_OUTPUT_DEBUG},${BUILD_OUTPUT_RELEASE}>/assets")
 
-    add_custom_target(copy_assets ALL
-            COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${ASSETS_DIR}" "${OUTPUT_ASSETS_DIR}"
-            COMMENT "Copying assets directory to output"
+    add_custom_command(
+        TARGET ${LOW_EDITOR_NAME}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${ASSETS_DIR}" "${OUTPUT_ASSETS_DIR}"
+        COMMENT "Copying assets directory to output"
     )
-
-    add_dependencies(${PROJECT_NAME} copy_assets)
 
 endif ()

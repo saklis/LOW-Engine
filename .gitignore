@@ -37,6 +37,7 @@
 .vs/
 
 # output dirs
+CMakeFiles/
 _deps
 bin/
 build/
@@ -45,4 +46,5 @@ cmake-build-debug/
 cmake-build-release/
 cmake-build-debug-32bit/
 cmake-build-release-32bit/
+vs2022-win32-sln/
 Folder.DotSettings.user
