@@ -18,10 +18,7 @@
 [submodule "3rd_party/box2d"]
 	path = 3rd_party/box2d
 	url = https://github.com/erincatto/box2d.git
-[submodule "3rd_party/DearImGui"]
-	path = 3rd_party/DearImGui
-	url = https://github.com/ocornut/imgui/tree/master
-[submodule "3rd-party/DearImGuiDocking"]
-	path = 3rd-party/DearImGuiDocking
+[submodule "3rd_party/DearImGuiDocking"]
+	path = 3rd_party/DearImGuiDocking
 	url = https://github.com/ocornut/imgui.git
 	branch = docking
