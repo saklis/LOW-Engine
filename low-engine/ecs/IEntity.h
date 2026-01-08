@@ -1,5 +1,7 @@
 #pragma once
 
+#include "nlohmann/json.hpp"
+
 namespace LowEngine::Memory {
     class Memory;
 }
@@ -42,6 +44,18 @@ namespace LowEngine::ECS {
          * @return True if this Entity has Component of queried type. False otherwise
          */
         virtual bool HasComponent(const std::type_index& typeIndex) = 0;
+
+        /**
+         * @brief Serialize Entity to JSON representation.
+         * @return JSON object representing this Entity.
+		 */
+		virtual nlohmann::ordered_json SerializeToJSON() = 0;
+
+        /**
+         * @brief Deserialize Entity from JSON representation.
+         * @param jsonData JSON object representing this Entity.
+		 */
+		virtual void DeserializeFromJSON(const nlohmann::ordered_json& jsonData) = 0;
     protected:
         IEntity() = default;
     };

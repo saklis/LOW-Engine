@@ -1,6 +1,10 @@
 #include "DevTools.h"
 
 #include <filesystem>
+#include <fstream>
+#include <sstream>
+
+#include <ImGuiFileDialog.h>
 
 #include "Config.h"
 #include "FormatHelpers.h"
@@ -93,19 +97,18 @@ namespace LowEngine {
                     IGFD::FileDialogConfig config;
                     config.path = "projects";
                     config.fileName = "";
-                    std::string projectFileExtension = ".lowproj";
                     ImGuiFileDialog::Instance()->OpenDialog("LoadProject", "Load project",
-                                                            projectFileExtension.c_str(), config);
+                        LowEngine::Config::PROJECT_FILE_EXTENSION.c_str(), config);
                 }
 
                 if (ImGui::MenuItem("Save Project")) {
-                    std::filesystem::path projectDirectory = std::filesystem::path("projects") / game.Title;
+                    std::filesystem::path projectDirectory = std::filesystem::path(LowEditor::Config::PROJECT_DIRECTORY) / game.Title;
 
                     try {
                         std::filesystem::create_directories(projectDirectory);
 
                         std::filesystem::path projectFilePath = projectDirectory / std::filesystem::path(
-                                                                    game.Title + ".lowproj");
+                                                                    game.Title + LowEngine::Config::PROJECT_FILE_EXTENSION);
 
                         bool success = game.SaveProject(projectFilePath.string());
                         if (!success) { _log->error("Failed to save project to: {}", projectFilePath.string()); }
@@ -134,10 +137,8 @@ namespace LowEngine {
             if (ImGui::BeginMenu("Scene")) {
                 if (ImGui::MenuItem("New Scene")) {
                 }
-                if (ImGui::MenuItem("Open Scene")) {
-                }
-                if (ImGui::MenuItem("Save Scene")) {
-                }
+                if (ImGui::MenuItem("Load Scene")) { game.LoadScene("default"); }
+                if (ImGui::MenuItem("Save Scene")) { game.SaveCurrentScene(); }
 
                 ImGui::EndMenu();
             }
@@ -447,6 +448,10 @@ namespace LowEngine {
                     scene->AddComponent<ECS::TransformComponent>(_selectedEntityId);
                     scene->Update(0.0f);
                 }
+                if (ImGui::MenuItem("Sprite")) {
+                    scene->AddComponent<ECS::SpriteComponent>(_selectedEntityId);
+                    scene->Update(0.0f);
+                }
                 if (ImGui::MenuItem("Animated Sprite")) {
                     scene->AddComponent<ECS::AnimatedSpriteComponent>(_selectedEntityId);
                     scene->Update(0.0f);
@@ -455,12 +460,17 @@ namespace LowEngine {
                     scene->AddComponent<ECS::CameraComponent>(_selectedEntityId);
                     scene->Update(0.0f);
                 }
+                if (ImGui::MenuItem("Collider")) {
+                    scene->AddComponent<ECS::ColliderComponent>(_selectedEntityId);
+                    scene->Update(0.0f);
+                }
                 ImGui::EndPopup();
             }
 
-            DisplayTransformComponentProperties(*scene);
+			DisplayTransformComponentProperties(*scene);
             DisplayAnimatedSpriteComponentProperties(*scene);
             DisplayCameraComponentProperties(*scene);
+            DisplayColliderComponentProperties(*scene);
         } else { ImGui::Begin("Properties:"); }
 
         ImGui::End();
@@ -521,13 +531,21 @@ namespace LowEngine {
         if (asc == nullptr) return;
 
         std::vector<std::string> clipNames;
-        auto& sheet = Assets::GetSpriteSheet(asc->TextureId);
-        const auto& definedClipNames = sheet.GetAnimationClipNames();
+        std::vector<std::string> definedClipNames;
+
+        if (Assets::HasSpriteSheet(asc->TextureId)) {
+            auto& sheet = Assets::GetSpriteSheet(asc->TextureId);
+            auto animClipNames = sheet.GetAnimationClipNames();
+            definedClipNames.insert(definedClipNames.end(), animClipNames.begin(), animClipNames.end());
+        }
+
         clipNames.insert(clipNames.end(), definedClipNames.begin(), definedClipNames.end());
 
         const auto& textureAliases = Assets::GetTextureAliases();
         std::vector<const char*> textureAliasesCStr;
-        for (const auto& alias: textureAliases) { textureAliasesCStr.push_back(alias.c_str()); }
+        for (const auto& alias: textureAliases) {
+            textureAliasesCStr.push_back(alias.c_str());
+        }
 
         int currentTextureId = -1;
         if (asc->TextureId > 0) {
@@ -584,12 +602,12 @@ namespace LowEngine {
             }
 
             if (!asc->CurrentClipName.empty()) {
-                auto& clip = sheet.GetAnimationClip(asc->CurrentClipName);
-                ImGui::Separator();
-                ImGui::Text("Start frame: %i", clip.StartFrame);
-                ImGui::Text("End frame: %i", clip.EndFrame);
-                ImGui::Text("Frame count: %i", clip.FrameCount);
-                ImGui::Text("Frame duration: %.3f", clip.FrameDuration);
+                // auto& clip = sheet.GetAnimationClip(asc->CurrentClipName);
+                // ImGui::Separator();
+                // ImGui::Text("Start frame: %i", clip.StartFrame);
+                // ImGui::Text("End frame: %i", clip.EndFrame);
+                // ImGui::Text("Frame count: %i", clip.FrameCount);
+                // ImGui::Text("Frame duration: %.3f", clip.FrameDuration);
             } else {
             }
         }
@@ -619,6 +637,37 @@ namespace LowEngine {
             if (ImGui::DragFloat("##Zoom", &zoomFactor, 0.01f, 0, 0, "%.3f")) {
                 cc->ZoomFactor = zoomFactor;
                 cc->Update(0.0f);
+            }
+        }
+    }
+
+    void DevTools::DisplayColliderComponentProperties(Scene& scene) {
+        auto entity = scene.GetEntity(_selectedEntityId);
+
+        auto cc = scene.GetComponent<ECS::ColliderComponent>(entity->Id);
+        if (cc == nullptr) return;
+
+        bool opened = ImGui::CollapsingHeader("Collider", ImGuiTreeNodeFlags_DefaultOpen);
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+            ImGui::OpenPopup("ColliderComponentContextMenu");
+        }
+
+        if (ImGui::BeginPopup("ColliderComponentContextMenu")) {
+            if (ImGui::MenuItem("Delete")) { entity->DestroyComponent<ECS::ColliderComponent>(); }
+            ImGui::EndPopup();
+        }
+
+        if (opened) {
+            if (ImGui::Button("Create box collider ")) {
+                cc->CreateBoxCollider(25.0f, 25.0f);
+            }
+
+            ImGui::Text("Show debug overlay:");
+            ImGui::SameLine();
+            bool showDebugOverlay = cc->DrawCollisionOverlay;
+            if (ImGui::Checkbox("##ShowDebugOverlay", &showDebugOverlay)) {
+                cc->DrawCollisionOverlay = showDebugOverlay;
             }
         }
     }

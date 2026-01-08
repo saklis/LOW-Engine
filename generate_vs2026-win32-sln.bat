@@ -2,17 +2,17 @@
 setlocal EnableDelayedExpansion
 
 echo ===========================================
-echo  LOW-Engine - Visual Studio 2022 (Win32)
+echo  LOW-Engine - Visual Studio 2026 (Win32)
 echo  Generate / Build / Shortcut script
 echo ===========================================
 
-set "BUILD_DIR=build-vs2022-win32"
-set "GENERATOR=Visual Studio 17 2022"
+set "BUILD_DIR=build-vs2026-win32"
+set "GENERATOR=Visual Studio 18 2026"
 set "ARCH=Win32"
 set "BUILD=0"
 
 echo.
-echo === Generating Visual Studio 2022 Win32 solution ===
+echo === Generating Visual Studio 2026 Win32 solution ===
 
 REM run CMake
 cmake -S . -B "%BUILD_DIR%" -G "%GENERATOR%" -A %ARCH%
@@ -69,7 +69,7 @@ REM create .lnk to solution file
 set "LINK_DIR=%~dp0"
 set "SLN_NAME="
 for %%~ in ("%SLN_PATH%") do set "SLN_NAME=%~n0"
-for %%A in ("%SLN_PATH%") do set "LINK_PATH=%LINK_DIR%%%~nA - VS2022 Win32.lnk"
+for %%A in ("%SLN_PATH%") do set "LINK_PATH=%LINK_DIR%%%~nA - VS2026 Win32.lnk"
 
 echo.
 echo === Creating shortcut ===

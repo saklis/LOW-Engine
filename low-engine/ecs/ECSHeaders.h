@@ -8,3 +8,4 @@
 #include "ecs/Components/CameraComponent.h"
 #include "ecs/Components/TileMapComponent.h"
 #include "ecs/Components/SoundComponent.h"
+#include "ecs/Components/ColliderComponent.h"

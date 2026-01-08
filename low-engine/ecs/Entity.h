@@ -85,6 +85,18 @@ namespace LowEngine::ECS {
         bool HasComponent(const std::type_index& typeIndex) override;
 
         /**
+         * @brief Serialize Entity to JSON representation.
+		 * @return JSON object representing this Entity.
+         */
+        nlohmann::ordered_json SerializeToJSON() override;
+
+        /**
+         * @brief Deserialize Entity from JSON representation.
+		 * @param jsonData JSON object representing this Entity.
+         */
+		void DeserializeFromJSON(const nlohmann::ordered_json& jsonData) override;
+
+        /**
          * @brief Create a deep-copy of the Entity.
          *
          * Entity's clone will be created in newMomery.

@@ -3,6 +3,7 @@
 #include <string>
 
 #include "SFML/Graphics/RenderWindow.hpp"
+#include "box2d/box2d.h"
 
 #include "memory/Memory.h"
 #include "ecs/ECSHeaders.h"
@@ -72,7 +73,7 @@ namespace LowEngine {
          */
         std::string Name;
 
-        Scene() = default;
+        Scene();
 
         Scene(Scene const& other, const std::string& nameSufix = " (COPY)");
 
@@ -86,10 +87,28 @@ namespace LowEngine {
         void InitAsDefault();
 
         /**
+		* @brief Serialize this scene to JSON.
+        */
+        nlohmann::ordered_json SerializeToJSON();
+
+        /**
+         * @brief Deserialize this scene from JSON.
+         * @param jsonData JSON data to deserialize from.
+         * @return True if successful. False otherwise.
+		 */
+        bool DeserializeFromJSON(const nlohmann::ordered_json& jsonData);
+
+        /**
          * @brief Update all Entities and Components.
          * @param deltaTime Time passed since last updae, in seconds.
          */
         void Update(float deltaTime);
+
+        /**
+         * @brief Fixed update for physics engine.
+         * @param fixedDeltaTime Fixed time step, in seconds.
+		 */
+        void FixedUpdate(float fixedDeltaTime);
 
         /**
          * @brief Draw all sprites for this scene.
@@ -232,8 +251,16 @@ namespace LowEngine {
         void Destroy();
 
     protected:
+		b2WorldId _box2dWorldId = b2_nullWorldId;
         size_t _cameraEntityId = Config::MAX_SIZE;
         SpriteSortingMethod _spriteSortingMethod = SpriteSortingMethod::None;
         Memory::Memory _memory;
+
+        /**
+         * @brief Register default component types in the memory manager.
+		 */
+		void RegisterDefaultComponentTypes();
+
+        b2WorldDef GetB2WorldDef();
     };
 }

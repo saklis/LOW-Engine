@@ -103,12 +103,16 @@ namespace LowEngine::ECS {
 
         void Initialize() override {
         }
+        
 
         void Update(float deltaTime) override;
 
         LowEngine::Sprite* Draw() override {
             return &Sprite;
         }
+
+        nlohmann::ordered_json SerializeToJSON() override;
+        bool DeserializeFromJSON(const nlohmann::ordered_json& jsonData) override;
 
     protected:
         void SetTexture(const sf::Texture& texture);

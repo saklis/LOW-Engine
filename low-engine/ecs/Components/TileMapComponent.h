@@ -40,6 +40,9 @@ namespace LowEngine::ECS {
 
         Sprite* Draw() override;
 
+        nlohmann::ordered_json SerializeToJSON() override;
+        bool DeserializeFromJSON(const nlohmann::ordered_json& jsonData) override;
+
         /**
          * @brief Set Id of the Tile Map to be used.
          * @param mapId Id of a Tile Map

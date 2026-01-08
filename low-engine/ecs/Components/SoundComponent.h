@@ -10,6 +10,8 @@ namespace LowEngine::ECS {
      */
     class SoundComponent : public IComponent<SoundComponent> {
     public:
+		size_t SoundId = 0;
+
         /**
          * @brief Instance of the Sound that manages the playback.
          */
@@ -43,6 +45,9 @@ namespace LowEngine::ECS {
         }
 
         Sprite* Draw() override { return nullptr; }
+
+        nlohmann::ordered_json SerializeToJSON() override;
+		bool DeserializeFromJSON(const nlohmann::ordered_json& jsonData) override;
 
     protected:
     };

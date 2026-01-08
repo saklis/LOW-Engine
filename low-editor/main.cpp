@@ -50,6 +50,7 @@ int main() {
 	game.Title = "LOWEditor";
 
     auto mainScene = game.Scenes.CreateScene("new scene");
+    game.DefaultSceneName = mainScene->Name;
     mainScene->IsPaused = true;
     game.Scenes.SelectScene(mainScene);
 

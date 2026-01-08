@@ -6,8 +6,11 @@
 #include <unordered_map>
 #include <vector>
 
+#include "nlohmann/json.hpp"
+
 #include "graphics/Sprite.h"
 #include "memory/Memory.h"
+#include "utils/TypeName.h"
 
 namespace LowEngine::ECS {
     class IComponentBase {
@@ -65,6 +68,8 @@ namespace LowEngine::ECS {
             return nullptr;
         };
 
+
+
     protected:
         /**
          * @brief Pointer to Memory manager that is responsible for this instance of Component. Will also contain Entity.
@@ -115,8 +120,42 @@ namespace LowEngine::ECS {
             return dependencies;
         };
 
+        /**
+		 * @brief Creates a copy of the Component in the provided Memory manager.
+		 * @param newMemory Pointer to Memory manager that should hold a copy of the component.
+		 * @param rawStorage Pointer to raw memory that a new instance should be placed in.
+         */
         void CloneInto(Memory::Memory* newMemory, void* rawStorage) const override {
             new(rawStorage) Derived(newMemory, static_cast<Derived const*>(this));
         }
+
+        /**
+         * @brief Serialize Component's data to JSON format.
+         * @return JSON object containing Component's data.
+         */
+        virtual nlohmann::ordered_json SerializeToJSON() {
+            nlohmann::ordered_json compJson;
+			compJson["Type"] = LowEngine::Utils::GetCleanTypeName<Derived>();
+            compJson["EntityId"] = EntityId;
+            compJson["Active"] = Active;
+            return compJson;
+        };
+
+        /**
+         * @brief Deserialize Component's data from JSON format.
+         * @param jsonData JSON object containing Component's data.
+         */
+        virtual bool DeserializeFromJSON(const nlohmann::ordered_json& jsonData) {
+            // EntityId should not be changed during deserialization
+            if (jsonData.contains("Active")) {
+                Active = jsonData["Active"].get<bool>();
+            }
+            else
+            {
+				return false;
+            }
+
+            return true;
+        };
     };
 }

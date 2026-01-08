@@ -22,3 +22,6 @@
 [submodule "3rd_party/ImGuiFileDialog"]
 	path = 3rd_party/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog.git
+[submodule "3rd_party/box2d"]
+	path = 3rd_party/box2d
+	url = https://github.com/erincatto/box2d.git

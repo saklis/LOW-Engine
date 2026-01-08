@@ -25,6 +25,25 @@ namespace LowEngine::ECS {
         return componentPtr != nullptr;
     }
 
+	nlohmann::ordered_json Entity::SerializeToJSON() {
+		nlohmann::ordered_json entityJson;
+
+		entityJson["id"] = Id;
+		entityJson["name"] = Name;
+		entityJson["active"] = Active;
+		
+        return entityJson;
+	}
+
+    void Entity::DeserializeFromJSON(const nlohmann::ordered_json& jsonData) {
+        if (jsonData.contains("name")) {
+            Name = jsonData["name"].get<std::string>();
+        }
+        if (jsonData.contains("active")) {
+            Active = jsonData["active"].get<bool>();
+		}
+    }
+
     IEntity* Entity::Clone(Memory::Memory* newMemory) const {
         return new Entity(newMemory, *this);
     }

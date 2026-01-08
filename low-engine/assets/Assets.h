@@ -349,6 +349,13 @@ namespace LowEngine {
         static Files::SoundBuffer& GetSound(const std::string& alias);
 
         /**
+         * @brief Retrieve the ID of a sound by its alias.
+         * @param soundAlias The alias of the sound.
+         * @return The unique ID of the requested sound.
+		 */
+		static rsize_t GetSoundId(const std::string& soundAlias);
+
+        /**
          * @brief Retrieve a sound alias for provided ID.
          * @param soundId The ID of the sound that to retrieve.
          * @return Sound alias.

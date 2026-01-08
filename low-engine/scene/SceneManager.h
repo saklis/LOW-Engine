@@ -112,7 +112,6 @@ namespace LowEngine {
          * @brief Destroy all scenes.
          */
         void DestroyAll();
-
     protected:
         std::vector<std::unique_ptr<Scene>> _scenes;
         size_t _currentSceneIndex;

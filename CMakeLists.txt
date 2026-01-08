@@ -63,6 +63,24 @@ low_set_option(3RD_PARTY_FOLDER "Dependencies" STRING "Name of the folder for al
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "${LOW_EDITOR_NAME}")
 
 ###############################################################################
+# FETCH CONTENT CONFIGURATION
+###############################################################################
+
+# default settings for first run
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "")
+set(EP_UPDATE_DISCONNECTED ON CACHE BOOL "")
+
+# disconnect if sources are already present
+set(_fc_all_present TRUE)
+foreach(_d freetype ogg flac vorbis)
+  if(NOT EXISTS "${FETCHCONTENT_BASE_DIR}/${_d}-src")
+    set(_fc_all_present FALSE)
+  endif()
+endforeach()
+set(FETCHCONTENT_FULLY_DISCONNECTED ${_fc_all_present} CACHE BOOL "" FORCE)
+
+
+###############################################################################
 # OUTPUT
 ###############################################################################
 
@@ -111,6 +129,20 @@ foreach (sfmlTarget IN ITEMS sfml-system sfml-window sfml-graphics sfml-network 
         )
     endif ()
 endforeach ()
+
+# Box2D
+set(BOX2D_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/box2d")
+set(_old_cmake_folder "${CMAKE_FOLDER}")
+set(CMAKE_FOLDER "${3RD_PARTY_FOLDER}/Box2D")
+set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries for third-party deps" FORCE)
+add_subdirectory(${BOX2D_DIR} EXCLUDE_FROM_ALL)
+set(CMAKE_FOLDER "${_old_cmake_folder}")
+if (TARGET box2d)
+    set_target_properties(box2d PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BUILD_OUTPUT_DEBUG}
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
+    )
+endif()
 
 # TGUI (Texus’ GUI for SFML)
 set(TGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/TGUI")
@@ -211,6 +243,7 @@ target_link_libraries(${LOW_ENGINE_NAME} PUBLIC
         sfml-window
         sfml-graphics
         sfml-audio
+        box2d
         TGUI::TGUI
         spdlog::spdlog
         nlohmann_json::nlohmann_json

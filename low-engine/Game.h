@@ -35,6 +35,13 @@ namespace LowEngine {
         std::filesystem::path ProjectDirectory;
 
         /**
+         * @brief The default name for the main scene.
+         *
+         * This is the name of the scene that will be loaded when project is opened.
+		 */
+		std::string DefaultSceneName;
+
+        /**
          * @brief The main window of the game.
          *
          * This is the window where the game will be rendered.
@@ -174,6 +181,8 @@ namespace LowEngine {
 		 */
         bool LoadProject(const std::string& filePath);
 
+        bool SaveCurrentScene();
+
         /**
          * @brief Closes the current project.
          *
@@ -182,9 +191,34 @@ namespace LowEngine {
 		 * @return true if the project was closed successfully, false otherwise.
 		 */
         void CloseProject();
+        
+    	/**
+         * @brief Loads a scene by its name.
+         *
+         * This function loads a scene with the specified name.
+         * If the scene does not exist, it logs an error message.
+         *
+		 * @param sceneName The name of the scene to load.
+		 */
+    	void LoadScene(const std::string& sceneName);
 
     protected:
         sf::Clock _clock;
+
+        /**
+		 * @brief The target delta time for fixed (physic) updates.
+         */
+    	float _fixedDeltaTime = 1 / 60.0f;
+
+        /**
+         * @brief Max delta time allowed for fixed update to avoid spiral of death
+         */
+        float _maxFixedDeltaTime = 0.25f;
+
+        /**
+         * @brief Accumulator for fixed update timing.
+		 */
+        float _fixedUpdateAccumulator = 0.0f;
 
         /**
          * @brief Updates the game state.

@@ -18,6 +18,13 @@ namespace LowEngine {
         inline static const std::size_t DEFAULT_COMPONENT_POOL_SIZE = 1000;
 
         /**
+         * @brief Layer ID used for drawing overlay elements.
+         *
+         * This layer ID is reserved for overlay elements that should be drawn above all other elements.
+		 */
+        inline static const int DRAW_OVERLAY_LAYER_ID = 1000;
+
+        /**
          * @brief Name of the logger used in the engine.
          */
         inline static const char* LOGGER_NAME = "low_engine_spdlog_logger_name";

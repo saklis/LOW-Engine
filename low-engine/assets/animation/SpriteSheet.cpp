@@ -1,5 +1,7 @@
 #include "SpriteSheet.h"
 
+#include <ranges>
+
 #include "../../log/Log.h"
 
 namespace LowEngine::Animation {
@@ -59,8 +61,8 @@ namespace LowEngine::Animation {
 
     std::vector<std::string> SpriteSheet::GetAnimationClipNames() {
         std::vector<std::string> names;
-        for (auto& animation: _animations) {
-            names.emplace_back(animation.first);
+        for (const auto& animName : _animations | std::views::keys) {
+            names.emplace_back(animName);
         }
         return names;
     }

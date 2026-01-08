@@ -5,328 +5,419 @@
 #include <typeindex>
 #include <vector>
 #include <unordered_map>
+#include <functional>
 
 #ifdef _MSC_VER
-       #include <cstdlib>
+#include <cstdlib>
 #else
 #include <cxxabi.h>
 #endif
 
 #include <stack>
 
+#include "nlohmann/json.hpp"
+#include "box2d/id.h"
+
 #include "../log/Log.h"
 #include "ecs/IEntity.h"
 #include "memory/ComponentPool.h"
 #include "graphics/Sprite.h"
+#include "utils/TypeName.h"
 
 namespace LowEngine::Memory {
-    /**
-     * @brief Manages entities and components within an entity-component system (ECS).
-     *
-     * The Memory class provides mechanisms to create, manage, and access entities and their components.
-     * It supports component pools, type information tracking, and dependency checks
-     * during component creation.
-     */
-    class Memory {
-    public:
-        /**
-         * @brief Provides metadata and type information for objects.
-         *
-         * Specificaly used to keep track of Component Types.
-         */
-        struct TypeInfo {
-            std::string Name = "";
-            unsigned int Id = 0;
-            std::type_index TypeIndex = std::type_index(typeid(void));
-            size_t Size = 0;
-            std::vector<std::type_index> Dependencies;
-        };
+	/**
+	 * @brief Manages entities and components within an entity-component system (ECS).
+	 *
+	 * The Memory class provides mechanisms to create, manage, and access entities and their components.
+	 * It supports component pools, type information tracking, and dependency checks
+	 * during component creation.
+	 */
+	class Memory {
+	public:
+		/**
+		 * @brief Provides metadata and type information for objects.
+		 *
+		 * Specifically used to keep track of Component Types.
+		 */
+		struct TypeInfo {
+			std::string Name = "";
+			unsigned int Id = 0;
+			std::type_index TypeIndex = std::type_index(typeid(void));
+			std::string TypeName = "";
+			size_t Size = 0;
+			std::vector<std::type_index> Dependencies;
+			std::function<bool(size_t, const nlohmann::ordered_json&)> DeserializeFromJSON = nullptr;
+		};
 
-        /**
-         * @brief Default constructor.
-         *
-         * Initializes a new Memory manager for the ECS system.
-         */
-        Memory();
+		/**
+		 * @brief Box2D World Id associated with this Memory instance.
+		 */
+		b2WorldId Box2dWorldId = b2_nullWorldId;
 
-        /**
-         * @brief Copy constructor.
-         *
-         * Creates a new Memory manager by copying the state of another one.
-         * @param other The Memory instance to copy from.
-         */
-        Memory(Memory const& other);
+		/**
+		 * @brief Default constructor.
+		 *
+		 * Initializes a new Memory manager for the ECS system.
+		 */
+		Memory();
 
-        /**
-         * @brief Creates new Entity object.
-         * @tparam T Type of Entity. Must extend IEntity
-         * @param name Name of thse new Entity
-         * @return Pointer to new Entity. Returns nullptr in case of error.
-         */
-        template<typename T>
-        T* CreateEntity(const std::string& name) {
-            std::unique_ptr<T> entity{new(std::nothrow) T(this)};
-            if (entity == nullptr) {
-                _log->error("Failed to create entity of type {}", typeid(T).name());
-                return nullptr;
-            }
-            entity->Activate(name);
-            _entities.push_back(std::move(entity));
-            _entities.back()->Id = _entities.size() - 1;
-            return static_cast<T*>(_entities.back().get());
-        }
+		/**
+		 * @brief Copy constructor.
+		 *
+		 * Creates a new Memory manager by copying the state of another one.
+		 * @param other The Memory instance to copy from.
+		 */
+		Memory(const Memory& other);
 
-        template<typename T>
-        void DestroyEntity(T* entity) {
-            if (entity == nullptr) {
-                _log->error("Cannot destroy a null entity");
-                return;
-            }
+		/**
+		 * @brief Creates new Entity object.
+		 * @tparam T Type of Entity. Must extend IEntity
+		 * @param name Name of this new Entity
+		 * @return Pointer to new Entity. Returns nullptr in case of error.
+		 */
+		template <typename T>
+		T* CreateEntity(const std::string& name) {
+			std::unique_ptr<T> entity{new(std::nothrow) T(this)};
+			if (entity == nullptr) {
+				_log->error("Failed to create entity of type {}", typeid(T).name());
+				return nullptr;
+			}
+			entity->Activate(name);
+			_entities.push_back(std::move(entity));
+			_entities.back()->Id = _entities.size() - 1;
+			return static_cast<T*>(_entities.back().get());
+		}
 
-            size_t entityId = entity->Id;
-            if (entityId >= _entities.size()) {
-                _log->error("Entity id is out of range");
-                return;
-            }
+		/**
+		 * @brief Destroy Entity and all its Components.
+		 * @tparam T Type of Entity. Must extend IEntity
+		 * @param entity Pointer to Entity that should be destroyed.
+		 */
+		template <typename T>
+		void DestroyEntity(T* entity) {
+			if (entity == nullptr) {
+				_log->error("Cannot destroy a null entity");
+				return;
+			}
 
-            // Remove all components associated with the entity
-            for (const auto& typeInfo: _typeInfos) {
-                auto typeIndex = typeInfo.first;
-                if (_components.contains(typeIndex)) {
-                    _components[typeIndex]->DestroyComponent(entityId);
-                }
-            }
+			size_t entityId = entity->Id;
+			if (entityId >= _entities.size()) {
+				_log->error("Entity id is out of range");
+				return;
+			}
 
-            // Remove the entity itself
-            _entities[entityId].reset();
-        }
+			// Remove all components associated with the entity
+			for (const auto& typeInfo : _typeInfos) {
+				auto typeIndex = typeInfo.first;
+				if (_components.contains(typeIndex)) {
+					_components[typeIndex]->DestroyComponent(entityId);
+				}
+			}
 
-        /**
-         * @brief Retrieves Entity by provided Id
-         * @tparam T Type of Entity. Must extend IEntity
-         * @param entityId Id of the Entity to retrieve.
-         * @return Pointer to Entity. Returns nullptr if Entity with Id doesn't exists.
-         */
-        template<typename T>
-        T* GetEntity(size_t entityId) {
-            if (entityId >= _entities.size()) {
-                return nullptr;
-            }
+			// Remove the entity itself
+			_entities[entityId].reset();
+		}
 
-            return static_cast<T*>(_entities[entityId].get());
-        }
+		/**
+		 * @brief Retrieves Entity by provided Id
+		 * @tparam T Type of Entity. Must extend IEntity
+		 * @param entityId Id of the Entity to retrieve.
+		 * @return Pointer to Entity. Returns nullptr if Entity with Id doesn't exists.
+		 */
+		template <typename T>
+		T* GetEntity(size_t entityId) {
+			if (entityId >= _entities.size()) {
+				return nullptr;
+			}
 
-        /**
-         * @brief Retrieves Entity by its name.
-         *
-         * If there's multiple Entities with the same name, the first one found will be retrieved.
-         * @tparam T Type of Entity. Must extend IEntity
-         * @param name Name od the Entity to retrieve.
-         * @return Pointer to Entity. Returns nullptr if Entity with Name doesn't exist.
-         */
-        template<typename T>
-        T* FindEntity(const std::string& name) {
-            for (const auto& entity: _entities) {
-                if (entity != nullptr && entity->Name == name) {
-                    return static_cast<T*>(entity.get());
-                }
-            }
-            return nullptr;
-        }
+			return static_cast<T*>(_entities[entityId].get());
+		}
 
-        /**
-         * @brief Retrieve entire collection of Entities.
-         *
-         * Method created to be used in DevTools.
-         * Be extra careful if using in Game Logic.
-         * @return Pointer to entire collection of Entities.
-         */
-        std::vector<std::unique_ptr<ECS::IEntity> >* GetAllEntities() {
-            return &_entities;
-        }
+		/**
+		 * @brief Retrieves Entity by its name.
+		 *
+		 * If there's multiple Entities with the same name, the first one found will be retrieved.
+		 * @tparam T Type of Entity. Must extend IEntity
+		 * @param name Name od the Entity to retrieve.
+		 * @return Pointer to Entity. Returns nullptr if Entity with Name doesn't exist.
+		 */
+		template <typename T>
+		T* FindEntity(const std::string& name) {
+			for (const auto& entity : _entities) {
+				if (entity != nullptr && entity->Name == name) {
+					return static_cast<T*>(entity.get());
+				}
+			}
+			return nullptr;
+		}
 
-        /**
-         * @brief Create new component and assigne it to Entity with provided Id.
-         * @tparam T Type of Component. Must extend IComponent
-         * @tparam Args Template arguments that will be forwarded to Component's c-tor
-         * @param entityId Id of the Entity that should have new Component attached.
-         * @param args List of arguments that should be forwarded to Component's c-tor
-         * @return Pointer to new componentn. Returns nullptr in case of error.
-         */
-        template<typename T, typename... Args>
-        T* CreateComponent(size_t entityId, Args&&... args) {
-            // register type
-            if (!_typeInfos.contains(std::type_index(typeid(T)))) {
-                TypeInfo& ti = _typeInfos[std::type_index(typeid(T))];
-                ti.Name = typeid(T).name();
-                ti.Id = _nextTypeId++;
-                ti.TypeIndex = std::type_index(typeid(T));
-                ti.Size = sizeof(T);
-                ti.Dependencies = T::GetDependencies();
-            }
+		/**
+		 * @brief Retrieve entire collection of Entities.
+		 *
+		 * Method created to be used in DevTools.
+		 * Be extra careful if using in Game Logic.
+		 * @return Pointer to entire collection of Entities.
+		 */
+		std::vector<std::unique_ptr<ECS::IEntity>>* GetAllEntities() {
+			return &_entities;
+		}
 
-            if (entityId >= _entities.size()) {
-                _log->error("Entity id is out of range");
-                return nullptr;
-            }
+		/**
+		 * @brief Register Component type in the system.
+		 * @tparam T Type of Component. Must extend IComponent
+		 */
+		template <typename T>
+		void RegisterComponentType() {
+			// register type
+			if (!_typeInfos.contains(std::type_index(typeid(T)))) {
+				TypeInfo& ti = _typeInfos[std::type_index(typeid(T))];
+				ti.Name = typeid(T).name();
+				ti.Id = _nextTypeId++;
+				ti.TypeIndex = std::type_index(typeid(T));
+				ti.TypeName = Utils::GetCleanTypeName<T>();
+				ti.Size = sizeof(T);
+				ti.Dependencies = T::GetDependencies();
 
-            // checking dependencies
-            const auto& typeInfo = _typeInfos[std::type_index(typeid(T))];
-            for (const auto& dependency: typeInfo.Dependencies) {
-                if (_components.find(dependency) == _components.end()) {
-                    _log->error("Component {} is a dependency for {}, but it is not registered", DemangledTypeName(dependency),
-                                DemangledTypeName(typeid(T)));
-                    return nullptr;
-                }
-                if (_components[dependency]->GetComponentPtr(entityId) == nullptr) {
-                    _log->error("Component {} is a dependency for {}, but it is not attached to Entity with id {}", DemangledTypeName(dependency),
-                                DemangledTypeName(typeid(T)), entityId);
-                    return nullptr;
-                }
-            }
+				ti.DeserializeFromJSON = [this](size_t entityId, const nlohmann::ordered_json& json) {
+					return DeserializeComponentFromJSON<T>(entityId, json);
+				};
+				// lambda can be replaced with std::bind, but I don't understand how it works :P
+				/*ti.DeserializeFromJSON = std::bind(&Memory::DeserializeComponentFromJSON<T>, this, std::placeholders::_1, std::placeholders::_2);*/
+			}
+		}
 
-            ComponentPool<T>& pool = GetOrCreatePool<T>();
-            T* component = pool.CreateComponent(this, entityId, std::forward<Args>(args)...);
-            if (component != nullptr) {
-                component->EntityId = entityId;
-                component->Active = true;
-                component->Initialize();
-            }
+		/**
+		 * @brief Create new component and assign it to Entity with provided Id.
+		 * @tparam T Type of Component. Must extend IComponent
+		 * @tparam Args Template arguments that will be forwarded to Component's c-tor
+		 * @param entityId Id of the Entity that should have new Component attached.
+		 * @param args List of arguments that should be forwarded to Component's c-tor
+		 * @return Pointer to new component. Returns nullptr in case of error.
+		 */
+		template <typename T, typename... Args>
+		T* CreateComponent(size_t entityId, Args&&... args) {
+			RegisterComponentType<T>();
 
-            _log->debug("Component {} created for Entity with id {}", DemangledTypeName(typeid(T)), entityId);
+			if (entityId >= _entities.size()) {
+				_log->error("Entity id is out of range");
+				return nullptr;
+			}
 
-            return component;
-        }
+			// checking dependencies
+			const auto& typeInfo = _typeInfos[std::type_index(typeid(T))];
+			for (const auto& dependency : typeInfo.Dependencies) {
+				if (!_components.contains(dependency)) {
+					_log->error("Component {} is a dependency for {}, but it is not registered",
+					            DemangledTypeName(dependency),
+					            DemangledTypeName(typeid(T)));
+					return nullptr;
+				}
+				if (_components[dependency]->GetComponentPtr(entityId) == nullptr) {
+					_log->error("Component {} is a dependency for {}, but it is not attached to Entity with id {}",
+					            DemangledTypeName(dependency),
+					            DemangledTypeName(typeid(T)), entityId);
+					return nullptr;
+				}
+			}
 
-        template<typename T>
-        bool IsComponentSafeToDestroy(size_t entityId) {
-            // check if component is a dependency for any other component
-            for (const auto& _component: _components) {
-                const std::type_index& compType = _component.first;
-                const std::unique_ptr<IComponentPool>& pool = _component.second;
+			ComponentPool<T>& pool = GetOrCreatePool<T>();
+			T* component = pool.CreateComponent(this, entityId, std::forward<Args>(args)...);
+			if (component != nullptr) {
+				component->EntityId = entityId;
+				component->Active = true;
+				component->Initialize();
+			}
 
-                if (compType == std::type_index(typeid(T))) continue; // skip self-dependency
+			_log->debug("Component {} created for Entity with id {}", DemangledTypeName(typeid(T)), entityId);
 
-                auto componentPtr = pool->GetComponentPtr(entityId);
-                if (componentPtr == nullptr) continue; // no component of this type attached to Entity
+			return component;
+		}
 
-                const auto& typeInfo = _typeInfos[compType];
-                if (std::find(typeInfo.Dependencies.begin(), typeInfo.Dependencies.end(), std::type_index(typeid(T))) != typeInfo.Dependencies.
-                    end()) {
-                    _log->debug("Component {} is a dependency for {}", DemangledTypeName(typeid(T)), DemangledTypeName(compType));
-                    return false;
-                }
-            }
-            return true;
-        }
+		template <typename T>
+		bool IsComponentSafeToDestroy(size_t entityId) {
+			// check if component is a dependency for any other component
+			for (const auto& _component : _components) {
+				const std::type_index& compType = _component.first;
+				const std::unique_ptr<IComponentPool>& pool = _component.second;
 
-        /**
-         * @brief Destroy Component of given type.
-         * @tparam T Type of the Component that should be destroyed.
-         * @param entityId Id of the Entity that owns Component.
-         *
-         * This method will remove Component from Entity and destroy it.
-         */
-        template<typename T>
-        void DestroyComponent(size_t entityId) {
-            auto typeIndex = std::type_index(typeid(T));
-            if (_components.find(typeIndex) == _components.end()) {
-                _log->warn("Component type {} not found", DemangledTypeName(typeid(T)));
-                return;
-            }
-            _components[typeIndex]->DestroyComponent(entityId);
-        }
+				if (compType == std::type_index(typeid(T))) continue; // skip self-dependency
 
-        /**
-         * @brief Retrieve component of requested type.
-         * @param entityId Id of the Entity that component is attached to.
-         * @param typeIndex Type of the component.
-         * @return Pointer to Component. Returns nullptr if Component was not found.
-         */
-        void* GetComponent(size_t entityId, const std::type_index& typeIndex) {
-            if (_entities.size() <= entityId) {
-                _log->error("Entity id is out of range");
-                return nullptr;
-            }
-            if (_components.find(typeIndex) == _components.end()) {
-                return nullptr;
-            }
-            return _components[typeIndex]->GetComponentPtr(entityId);
-        }
+				auto componentPtr = pool->GetComponentPtr(entityId);
+				if (componentPtr == nullptr) continue; // no component of this type attached to Entity
 
-        /**
-         * @brief Retrieve component of requested type.
-         * @tparam T Type of the component.
-         * @param entityId Id of the Entity that component is attached to.
-         * @return Pointer to Component. Returns nullptr if Component was not found.
-         */
-        template<typename T>
-        T* GetComponent(size_t entityId) {
-            auto typeIndex = std::type_index(typeid(T));
-            return static_cast<T*>(GetComponent(entityId, typeIndex));
-        }
+				const auto& typeInfo = _typeInfos[compType];
+				if (std::find(typeInfo.Dependencies.begin(), typeInfo.Dependencies.end(), std::type_index(typeid(T))) !=
+					typeInfo.Dependencies.
+					         end()) {
+					_log->debug("Component {} is a dependency for {}", DemangledTypeName(typeid(T)),
+					            DemangledTypeName(compType));
+					return false;
+				}
+			}
+			return true;
+		}
 
-        /**
-         * @brief Call function for all Components of particular type.
-         * @tparam T Type of Component
-         * @tparam Callback Type of a callback to be executed.
-         * @param callback Reference to a function that will be called.
-         */
-        template<typename T, typename Callback>
-        void ForEachComponent(Callback&& callback) {
-            ComponentPool<T>& pool = GetOrCreatePool<T>();
-            pool.ForEachComponent(std::forward<Callback>(callback));
-        }
+		/**
+		 * @brief Destroy Component of given type.
+		 * @tparam T Type of the Component that should be destroyed.
+		 * @param entityId Id of the Entity that owns Component.
+		 *
+		 * This method will remove Component from Entity and destroy it.
+		 */
+		template <typename T>
+		void DestroyComponent(size_t entityId) {
+			auto typeIndex = std::type_index(typeid(T));
+			if (!_components.contains(typeIndex)) {
+				_log->warn("Component type {} not found", DemangledTypeName(typeid(T)));
+				return;
+			}
+			_components[typeIndex]->DestroyComponent(entityId);
+		}
 
-        /**
-         * @brief Call Update function of all Components.
-         * @param deltaTime Time passed since last call, in seconds.
-         */
-        void UpdateAllComponents(float deltaTime);
+		/**
+		 * @brief Retrieve component of requested type.
+		 * @param entityId Id of the Entity that component is attached to.
+		 * @param typeIndex Type of the component.
+		 * @return Pointer to Component. Returns nullptr if Component was not found.
+		 */
+		void* GetComponent(size_t entityId, const std::type_index& typeIndex) {
+			if (_entities.size() <= entityId) {
+				_log->error("Entity id is out of range");
+				return nullptr;
+			}
+			if (!_components.contains(typeIndex)) {
+				return nullptr;
+			}
+			return _components[typeIndex]->GetComponentPtr(entityId);
+		}
 
-        /**
-         * @brief Check all Components in search of Sprites to draw.
-         *
-         * Sprites will be added to refered collection.
-         * @param[out] sprites Reference to collection that will be filled with Sprites that needs to be drawn.
-         */
-        void CollectSprites(std::vector<Sprite>& sprites);
+		/**
+		 * @brief Retrieve component of requested type.
+		 * @tparam T Type of the component.
+		 * @param entityId Id of the Entity that component is attached to.
+		 * @return Pointer to Component. Returns nullptr if Component was not found.
+		 */
+		template <typename T>
+		T* GetComponent(size_t entityId) {
+			auto typeIndex = std::type_index(typeid(T));
+			return static_cast<T*>(GetComponent(entityId, typeIndex));
+		}
 
-        /**
-         * @brief Remove all Entities and Component.
-         */
-        void Destroy();
+		/**
+		 * @brief Call function for all Components of particular type.
+		 * @tparam T Type of Component
+		 * @tparam Callback Type of a callback to be executed.
+		 * @param callback Reference to a function that will be called.
+		 */
+		template <typename T, typename Callback>
+		void ForEachComponent(Callback&& callback) {
+			ComponentPool<T>& pool = GetOrCreatePool<T>();
+			pool.ForEachComponent(std::forward<Callback>(callback));
+		}
 
-    protected:
-        /** @brief Counter for generating unique type IDs. */
-        static inline unsigned int _nextTypeId = 0;
+		/**
+		 * @brief Call Update function of all Components.
+		 * @param deltaTime Time passed since last call, in seconds.
+		 */
+		void UpdateAllComponents(float deltaTime);
 
-        /** @brief Collection of all entities in the system. */
-        std::vector<std::unique_ptr<ECS::IEntity> > _entities;
+		nlohmann::ordered_json SerializeAllEntitiesToJSON();
 
-        /** @brief Map of component pools indexed by their type. */
-        std::unordered_map<std::type_index, std::unique_ptr<IComponentPool> > _components;
+		template <typename T>
+		bool DeserializeAllEntitiesFromJSON(const nlohmann::ordered_json& jsonData) {
+			for (const auto& entityJson : jsonData) {
+				T* entity = CreateEntity<T>(entityJson.value("name", "Unnamed Entity"));
+				if (entity != nullptr) {
+					entity->DeserializeFromJSON(entityJson);
+				} else {
+					_log->error("Failed to create entity during deserialization");
+					return false;
+				}
+			}
 
-        /** @brief Map of type information for registered component types. */
-        std::unordered_map<std::type_index, TypeInfo> _typeInfos;
+			return true;
+		}
 
-        /**
-         * @brief Get or create a component pool for a specific type.
-         *
-         * @tparam T The component type for the pool.
-         * @return Reference to the component pool for type T.
-         */
-        template<typename T>
-        ComponentPool<T>& GetOrCreatePool() {
-            auto typeIdx = std::type_index(typeid(T));
-            auto it = _components.find(typeIdx);
-            if (it == _components.end()) {
-                auto newPool = std::make_unique<ComponentPool<T> >();
-                auto ptr = newPool.get();
-                _components[typeIdx] = std::move(newPool);
-                return *ptr;
-            }
-            return *static_cast<ComponentPool<T>*>(it->second.get());
-        }
-    };
+		/**
+		 * @brief Serialize all Components to JSON representation.
+		 * @return JSON object representing all Components.
+		 */
+		nlohmann::ordered_json SerializeAllComponentsToJSON();
+
+		/**
+		 * @brief Deserialize all Components from JSON representation.
+		 * @param jsonData JSON object representing all Components.
+		 * @return True if deserialization was successful, false otherwise.
+		 */
+		bool DeserializeAllComponentsFromJSON(const nlohmann::ordered_json& jsonData);
+
+		/**
+		 * @brief Check all Components in search of Sprites to draw.
+		 *
+		 * Sprites will be added to collection passed as parameter.
+		 * @param[out] sprites Reference to collection that will be filled with Sprites that needs to be drawn.
+		 */
+		void CollectSprites(std::vector<Sprite>& sprites);
+
+		/**
+		 * @brief Remove all Entities and Component.
+		 */
+		void Destroy();
+
+	protected:
+		/** @brief Counter for generating unique type IDs. */
+		static inline unsigned int _nextTypeId = 0;
+
+		/** @brief Collection of all entities in the system. */
+		std::vector<std::unique_ptr<ECS::IEntity>> _entities;
+
+		/** @brief Map of component pools indexed by their type. */
+		std::unordered_map<std::type_index, std::unique_ptr<IComponentPool>> _components;
+
+		/** @brief Map of type information for registered component types. */
+		std::unordered_map<std::type_index, TypeInfo> _typeInfos;
+
+		/**
+		 * @brief Get or create a component pool for a specific type.
+		 *
+		 * @tparam T The component type for the pool.
+		 * @return Reference to the component pool for type T.
+		 */
+		template <typename T>
+		ComponentPool<T>& GetOrCreatePool() {
+			auto typeIdx = std::type_index(typeid(T));
+			auto it = _components.find(typeIdx);
+			if (it == _components.end()) {
+				auto newPool = std::make_unique<ComponentPool<T>>();
+				auto ptr = newPool.get();
+				_components[typeIdx] = std::move(newPool);
+				return *ptr;
+			}
+			return *static_cast<ComponentPool<T>*>(it->second.get());
+		}
+
+		/**
+		 * @brief Deserialize a component of type T from JSON data for a specific entity.
+		 *
+		 * @tparam T The component type to deserialize.
+		 * @param entityId The ID of the entity to which the component belongs.
+		 * @param jsonData The JSON data representing the component.
+		 * @return True if deserialization was successful, false otherwise.
+		 */
+		template <typename T>
+		bool DeserializeComponentFromJSON(size_t entityId, const nlohmann::ordered_json& jsonData) {
+			T* comp = static_cast<T*>(this->GetComponent(entityId, std::type_index(typeid(T))));
+			if (comp == nullptr) {
+				comp = this->CreateComponent<T>(entityId);
+			}
+
+			if (comp != nullptr) {
+				comp->DeserializeFromJSON(jsonData);
+				return true;
+			}
+			_log->error("Failed to deserialize component of type '{}' for entity with id '{}'",
+			            Utils::GetCleanTypeName<T>(), entityId);
+			return false;
+		}
+	};
 }

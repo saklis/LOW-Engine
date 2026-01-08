@@ -204,8 +204,8 @@ namespace LowEngine {
 
     std::vector<std::string> Assets::GetTileMapAliases() {
         std::vector<std::string> aliases;
-        for (const auto& pair: GetInstance()->_mapAliases) {
-            aliases.push_back(pair.first);
+        for (const auto& mapAlias: GetInstance()->_mapAliases | std::views::keys) {
+            aliases.push_back(mapAlias);
         }
         return aliases;
     }
@@ -247,9 +247,9 @@ namespace LowEngine {
     }
 
     std::string Assets::GetTextureAlias(size_t textureId) {
-        for (auto& pair: GetInstance()->_textureAliases) {
-            if (pair.second == textureId) {
-                return pair.first;
+        for (const auto& [texAlias, texId]: GetInstance()->_textureAliases) {
+            if (texId == textureId) {
+                return texAlias;
             }
         }
 
@@ -259,8 +259,8 @@ namespace LowEngine {
 
     std::vector<std::string> Assets::GetTextureAliases() {
         std::vector<std::string> aliases;
-        for (const auto& pair: GetInstance()->_textureAliases) {
-            aliases.push_back(pair.first);
+        for (const auto& texAlias: GetInstance()->_textureAliases | std::views::keys) {
+            aliases.push_back(texAlias);
         }
         return aliases;
     }
@@ -271,8 +271,8 @@ namespace LowEngine {
 
     std::vector<std::string> Assets::GetFontAliases() {
         std::vector<std::string> aliases;
-        for (const auto& pair: GetInstance()->_fontAliases) {
-            aliases.push_back(pair.first);
+        for (const auto& fontAlias: GetInstance()->_fontAliases | std::views::keys) {
+            aliases.push_back(fontAlias);
         }
         return aliases;
     }
@@ -343,6 +343,10 @@ namespace LowEngine {
 
     Files::SoundBuffer& Assets::GetSound(const std::string& alias) {
         return GetSound(GetInstance()->_soundAliases[alias]);
+    }
+
+    rsize_t Assets::GetSoundId(const std::string& soundAlias) {
+		return GetInstance()->_soundAliases[soundAlias];
     }
 
     std::string Assets::GetSoundAlias(size_t soundId) {
@@ -743,7 +747,6 @@ namespace LowEngine {
         size_t textureId = terrainLayerDefinition->TextureId;
 
         map->TerrainLayer.LoadTexture(textureId);
-        auto& animSheet = GetSpriteSheet(textureId);
         for (auto& cellDefinition: terrainLayerDefinition->CellDefinitions) {
             for (const auto& animClipName: cellDefinition.second.AnimationClipNames) {
                 map->TerrainLayer.AnimatedTiles[cellDefinition.first].ClipNames.emplace_back(animClipName);

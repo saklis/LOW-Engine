@@ -1,5 +1,7 @@
 #include "Game.h"
 
+#include <algorithm>
+
 #include "log/LogMemoryBufferSink.h"
 
 namespace LowEngine {
@@ -43,7 +45,7 @@ namespace LowEngine {
 		WindowEvents.clear();
 		Input.ClearActionState();
 
-		bool isScenePaused = Scenes.GetCurrentScene()->IsPaused;
+		//bool isScenePaused = Scenes.GetCurrentScene()->IsPaused;
 
 		while (const std::optional event = Window.pollEvent()) {
 			if (event->is<sf::Event::Closed>()) {
@@ -56,12 +58,14 @@ namespace LowEngine {
 				Scenes.GetCurrentScene()->SetWindowSize(windowSize);
 			}
 
-			if (!isScenePaused) Input.Read(event);
+			//if (!isScenePaused) 
+				Input.Read(event);
 
 			WindowEvents.emplace_back(event);
 		}
 
-		if (!isScenePaused) Input.Update();
+		//if (!isScenePaused) 
+			Input.Update();
 
 		Update(DeltaTime.asSeconds());
 
@@ -79,6 +83,7 @@ namespace LowEngine {
 
 		nlohmann::ordered_json projectJson;
 		projectJson["title"] = Title;
+		projectJson["defaultSceneName"] = DefaultSceneName;
 		projectJson["assets"] = Assets::SerializeToJSON(ProjectDirectory);
 		projectJson["inputActions"] = Input.SerializeActionsToJSON();
 
@@ -90,6 +95,7 @@ namespace LowEngine {
 			return false;
 		}
 		_log->info("Project saved successfully to: {}", filePath);
+
 		return true;
 	}
 
@@ -142,6 +148,7 @@ namespace LowEngine {
 
 		if (!Scenes.DefaultSceneExists()) {
 			if (const auto defaultScene = Scenes.CreateDefaultScene()) {
+				DefaultSceneName = defaultScene->Name;
 				Scenes.SelectScene(defaultScene);
 			}
 		}
@@ -155,6 +162,33 @@ namespace LowEngine {
 		return true;
 	}
 
+	bool Game::SaveCurrentScene() {
+		std::filesystem::path sceneFilePath = ProjectDirectory / Config::SCENES_FOLDER_NAME;
+		std::filesystem::create_directories(sceneFilePath);
+		sceneFilePath /= Scenes.GetCurrentScene()->Name + Config::SCENE_FILE_EXTENSION;
+		
+		std::ofstream file(sceneFilePath);
+		if (!file.is_open()) {
+			_log->error("Failed to open file for saving scene: {}", sceneFilePath.string());
+			return false;
+		}
+
+		_log->debug("Saving scene to file: {}", sceneFilePath.string());
+
+		auto sceneJson = Scenes.GetCurrentScene()->SerializeToJSON();
+
+		file << sceneJson.dump(4); // pretty print with 4 spaces
+
+		file.close();
+		if (file.fail()) {
+			_log->error("Failed to write scene data to file: {}", sceneFilePath.string());
+			return false;
+		}
+		_log->info("Scene saved successfully to: {}", sceneFilePath.string());
+
+		return true;
+	}
+
 	void Game::CloseProject() {
 		Scenes.DestroyAll();
 		Input.RemoveAllActions();
@@ -162,8 +196,41 @@ namespace LowEngine {
 		_log->info("Project closed successfully");
 	}
 
+	void Game::LoadScene(const std::string& sceneName)
+	{
+		std::filesystem::path sceneFilePath = ProjectDirectory / Config::SCENES_FOLDER_NAME / (sceneName + Config::SCENE_FILE_EXTENSION);
+		_log->info("Loading scene from file: {}", sceneFilePath.string());
+		std::ifstream file(sceneFilePath);
+		if (!file.is_open()) {
+			_log->error("Failed to open scene file: {}", sceneFilePath.string());
+			return;
+		}
+		nlohmann::ordered_json sceneJson;
+		file >> sceneJson;
+		auto scene = Scenes.CreateEmptyScene(sceneName);
+		if (!scene) {
+			_log->error("Failed to create empty scene: {}", sceneName);
+			return;
+		}
+		if (!scene->DeserializeFromJSON(sceneJson)) {
+			_log->error("Failed to load scene data from JSON: {}", sceneName);
+			return;
+		}
+		Scenes.SelectScene(scene);
+		_log->info("Scene loaded successfully: {}", sceneName);
+	}
+
 	void Game::Update(float deltaTime) {
-		if (!Scenes.GetCurrentScene()->IsPaused) { Scenes.GetCurrentScene()->Update(deltaTime); }
+		_fixedUpdateAccumulator += deltaTime;
+		_fixedUpdateAccumulator = std::min(_fixedUpdateAccumulator, _maxFixedDeltaTime);
+
+		if (_fixedUpdateAccumulator >= _fixedDeltaTime) {
+			Scenes.GetCurrentScene()->FixedUpdate(_fixedDeltaTime);
+			_fixedUpdateAccumulator -= _fixedDeltaTime;
+		}
+
+		Scenes.GetCurrentScene()->Update(deltaTime);
 		Music.Update(deltaTime);
 	}
+
 }

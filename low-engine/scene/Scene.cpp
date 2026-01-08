@@ -3,7 +3,22 @@
 #include "Scene.h"
 
 namespace LowEngine {
+	Scene::Scene(): Name(""), _memory() {
+        RegisterDefaultComponentTypes();
+
+        auto worldDef = GetB2WorldDef();
+        _box2dWorldId = b2CreateWorld(&worldDef);
+
+		_memory.Box2dWorldId = _box2dWorldId;
+	}
+
     Scene::Scene(const std::string& name): Name(name), _memory() {
+        RegisterDefaultComponentTypes();
+
+        auto worldDef = GetB2WorldDef();
+        _box2dWorldId = b2CreateWorld(&worldDef);
+
+        _memory.Box2dWorldId = _box2dWorldId;
     }
 
     Scene::Scene(Scene const& other, const std::string& nameSufix): Initialized(false) // don’t auto-activate the clone
@@ -13,18 +28,68 @@ namespace LowEngine {
                                       , _spriteSortingMethod(other._spriteSortingMethod)
                                       , _memory(other._memory) // calls Memory(const Memory&) → deep copy!
     {
+        RegisterDefaultComponentTypes();
+
+        auto worldDef = GetB2WorldDef();
+        _box2dWorldId = b2CreateWorld(&worldDef);
+
+        _memory.Box2dWorldId = _box2dWorldId;
     }
 
-    void Scene::InitAsDefault() {
+	void Scene::InitAsDefault() {
         Initialized = true;
         Name = "Default scene";
     }
 
-    void Scene::Update(float deltaTime) {
+    nlohmann::ordered_json Scene::SerializeToJSON() {
+        nlohmann::ordered_json sceneJson;
+
+		sceneJson["name"] = Name;
+		sceneJson["entities"] = _memory.SerializeAllEntitiesToJSON();
+        sceneJson["components"] = _memory.SerializeAllComponentsToJSON();
+
+        return sceneJson;
+	}
+
+    bool Scene::DeserializeFromJSON(const nlohmann::ordered_json& jsonData) {
+        if (jsonData.contains("name")) {
+            Name = jsonData["name"].get<std::string>();
+        } else {
+			_log->error("Provided json data don't contain 'name' field for scene deserialization.");
+			return false;
+        }
+        if (jsonData.contains("entities")) {
+            if (!_memory.DeserializeAllEntitiesFromJSON<ECS::Entity>(jsonData["entities"]))
+            {
+				_log->error("Failed to deserialize entities for scene '{}'", Name);
+				return false;
+            }
+        }
+        if (jsonData.contains("components")) {
+			if (!_memory.DeserializeAllComponentsFromJSON(jsonData["components"]))
+            {
+                _log->error("Failed to deserialize components for scene '{}'", Name);
+                return false;
+			}
+		}
+
+		return true;
+	}
+
+	void Scene::Update(float deltaTime) {
+        if (IsPaused) return;
+
         _memory.UpdateAllComponents(deltaTime);
     }
 
-    void Scene::Draw(sf::RenderWindow& window) {
+	void Scene::FixedUpdate(float fixedDeltaTime) {
+        if (IsPaused) return;
+
+        b2World_Step(_box2dWorldId, fixedDeltaTime, 4);
+        auto contactEvents = b2World_GetContactEvents(_box2dWorldId);
+	}
+
+	void Scene::Draw(sf::RenderWindow& window) {
         if (_cameraEntityId < Config::MAX_SIZE) {
             auto cameraComponent = _memory.GetComponent<ECS::CameraComponent>(_cameraEntityId);
             if (cameraComponent) {
@@ -37,12 +102,12 @@ namespace LowEngine {
 
         switch (_spriteSortingMethod) {
             case SpriteSortingMethod::YAxisIncremental:
-                std::sort(sprites.begin(), sprites.end(), [](const Sprite& a, const Sprite& b) {
+                std::ranges::sort(sprites, [](const Sprite& a, const Sprite& b) {
                     return a.getPosition().y < b.getPosition().y;
                 });
                 break;
             case SpriteSortingMethod::Layers:
-                std::sort(sprites.begin(), sprites.end(), [](const Sprite& a, const Sprite& b) {
+                std::ranges::sort(sprites, [](const Sprite& a, const Sprite& b) {
                     return a.Layer < b.Layer;
                 });
                 break;
@@ -141,6 +206,25 @@ namespace LowEngine {
 
     void Scene::Destroy() {
         _log->info("Destroying scene '{}'", Name);
+		b2DestroyWorld(_box2dWorldId);
+		_box2dWorldId = b2_nullWorldId;
         _memory.Destroy();
     }
+
+	void Scene::RegisterDefaultComponentTypes() {
+        _memory.RegisterComponentType<ECS::AnimatedSpriteComponent>();
+		_memory.RegisterComponentType<ECS::CameraComponent>();
+		_memory.RegisterComponentType<ECS::SoundComponent>();
+		_memory.RegisterComponentType<ECS::SpriteComponent>();
+		_memory.RegisterComponentType<ECS::TileMapComponent>();
+		_memory.RegisterComponentType<ECS::TransformComponent>();
+	}
+
+	b2WorldDef Scene::GetB2WorldDef() {
+        auto worldDef = b2DefaultWorldDef();
+        
+		worldDef.enableSleep = false;
+
+        return worldDef;
+	}
 }

@@ -1,13 +1,9 @@
 #pragma once
 
-#include <fstream>
-#include <sstream>
-
 #include <imgui.h>
 #include <imgui-SFML.h>
-#include <ImGuiFileDialog.h>
 
-#include "Game.h"
+#include <Game.h>
 
 namespace LowEngine {
     class DevTools {
@@ -53,6 +49,8 @@ namespace LowEngine {
         static void DisplayAnimatedSpriteComponentProperties(Scene& scene);
 
         static void DisplayCameraComponentProperties(Scene& scene);
+
+        static void DisplayColliderComponentProperties(Scene& scene);
 
         static void DisplayInputEditor(Game& game);
 

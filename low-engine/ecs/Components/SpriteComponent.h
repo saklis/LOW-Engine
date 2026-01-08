@@ -53,6 +53,9 @@ namespace LowEngine::ECS {
             return &Sprite;
         }
 
+        nlohmann::ordered_json SerializeToJSON() override;
+        bool DeserializeFromJSON(const nlohmann::ordered_json& jsonData) override;
+
         /**
          * @brief Changes the texture the Sprite is using.
          * @param textureAlias Texture's alias.
