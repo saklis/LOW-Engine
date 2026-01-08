@@ -70,8 +70,8 @@ namespace LowEngine::ECS {
 			_sprite.setTexture(_renderTexture.getTexture(), true);
 			_sprite.setOrigin({center.x, center.y});
 
-			_sprite.setPosition({transform->Position.x, transform->Position.y});
-			_sprite.setRotation(transform->Rotation);
+			/*_sprite.setPosition({transform->Position.x, transform->Position.y});
+			_sprite.setRotation(transform->Rotation);*/
 		}
 	}
 
