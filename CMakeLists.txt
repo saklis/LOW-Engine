@@ -264,7 +264,7 @@ set_target_properties(${LOW_ENGINE_NAME}
 find_package(OpenGL REQUIRED)
 
 # ImGui Pack
-set(IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/DearImGui")
+set(IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/DearImGuiDocking")
 set(IMGUI_SFML_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/imgui-sfml")
 set(IMGUIFILEDIALOG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/ImGuiFileDialog")
 

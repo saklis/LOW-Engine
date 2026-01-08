@@ -40,17 +40,17 @@ if %BUILD% gtr 0 (
 )
 
 echo.
-echo === Creating link to .sln from "%BUILD_DIR%" ===
+echo === Creating link to .slnx from "%BUILD_DIR%" ===
 
 set "SLN_PATH="
-for /f "delims=" %%f in ('dir /b /a:-d "%BUILD_DIR%\*.sln"') do (
+for /f "delims=" %%f in ('dir /b /a:-d "%BUILD_DIR%\*.slnx"') do (
     set "SLN_PATH=%CD%\%BUILD_DIR%\%%f"
     goto :found_sln
 )
 
 :found_sln
 if not defined SLN_PATH (
-    echo !!! ERROR: File .sln was not found in "%BUILD_DIR%".
+    echo !!! ERROR: File .slnx was not found in "%BUILD_DIR%".
     goto :end
 )
 

@@ -36,6 +36,10 @@
 .vscode/
 .vs/
 
+# VS solution links
+LowEngine - VS2022 Win32.lnk
+LowEngine - VS2026 Win32.lnk
+
 # output dirs
 CMakeFiles/
 _deps
