@@ -6,10 +6,6 @@
 [submodule "3rd_party/spdlog"]
 	path = 3rd_party/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "3rd_party/DearImGui"]
-	path = 3rd_party/DearImGui
-	url = https://github.com/ocornut/imgui/tree/docking
-	branch = docking
 [submodule "3rd_party/imgui-sfml"]
 	path = 3rd_party/imgui-sfml
 	url = https://github.com/SFML/imgui-sfml.git
