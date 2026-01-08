@@ -14,7 +14,7 @@
 	url = https://github.com/nlohmann/json
 [submodule "3rd_party/TGUI"]
 	path = 3rd_party/TGUI
-	url = https://github.com/texus/TGUI.git
+	url = https://github.com/saklis/TGUI.git
 [submodule "3rd_party/box2d"]
 	path = 3rd_party/box2d
 	url = https://github.com/saklis/box2d.git
