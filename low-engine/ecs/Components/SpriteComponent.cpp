@@ -42,6 +42,8 @@ namespace LowEngine::ECS {
 			_log->error("SpriteComponent deserialization failed: missing 'Layer' field.");
 			return false;
 		}
+		
+		return true;
 	}
 
 	void SpriteComponent::SetTexture(const std::string& textureAlias) {

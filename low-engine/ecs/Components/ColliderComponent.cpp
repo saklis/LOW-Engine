@@ -13,19 +13,25 @@ namespace LowEngine::ECS {
 			auto transform = _memory->GetComponent<TransformComponent>(EntityId);
 			auto currentPos = b2Body_GetPosition(_bodyId);
 			float currentRot = b2Rot_GetAngle(b2Body_GetRotation(_bodyId));
+			
+			if (transform->Position.x != currentPos.x || transform->Position.y != currentPos.y)
+			{
+				b2Vec2 targetPos = { transform->Position.x, transform->Position.y };
 
-			b2Vec2 targetPos = { transform->Position.x, transform->Position.y };
+				b2Vec2 velocity = {
+					(targetPos.x - currentPos.x) / deltaTime,
+					(targetPos.y - currentPos.y) / deltaTime
+				};
+
+				b2Body_SetLinearVelocity(_bodyId, velocity);
+			}
+			
 			float targetRot = transform->Rotation.asRadians();
-
-			b2Vec2 velocity = {
-				(targetPos.x - currentPos.x) / deltaTime,
-				(targetPos.y - currentPos.y) / deltaTime
-			};
-
-			b2Body_SetLinearVelocity(_bodyId, velocity);
-
-			float angularVelocity = (targetRot - currentRot) / deltaTime;
-			b2Body_SetAngularVelocity(_bodyId, angularVelocity);
+			if (targetRot != currentRot)
+			{				
+				float angularVelocity = (targetRot - currentRot) / deltaTime;
+				b2Body_SetAngularVelocity(_bodyId, angularVelocity);
+			}
 		}
 
 		if (DrawCollisionOverlay && B2_IS_NON_NULL(_bodyId)) {
@@ -66,12 +72,12 @@ namespace LowEngine::ECS {
 			}
 
 			_renderTexture.display();
-
+			
 			_sprite.setTexture(_renderTexture.getTexture(), true);
 			_sprite.setOrigin({center.x, center.y});
 
-			/*_sprite.setPosition({transform->Position.x, transform->Position.y});
-			_sprite.setRotation(transform->Rotation);*/
+			_sprite.setPosition({position.x, position.y});
+			_sprite.setRotation(sf::radians(angleRad));
 		}
 	}
 
