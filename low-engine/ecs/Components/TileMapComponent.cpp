@@ -54,6 +54,8 @@ namespace LowEngine::ECS {
 			_log->error("TileMapComponent deserialization failed: missing 'Layer' field.");
 			return false;
 		}
+		
+		return true;
 	}
 
 	void TileMapComponent::SetMapId(size_t mapId) {

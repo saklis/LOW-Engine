@@ -45,8 +45,6 @@ namespace LowEngine {
 		WindowEvents.clear();
 		Input.ClearActionState();
 
-		//bool isScenePaused = Scenes.GetCurrentScene()->IsPaused;
-
 		while (const std::optional event = Window.pollEvent()) {
 			if (event->is<sf::Event::Closed>()) {
 				OnWindowClosed();
@@ -57,15 +55,12 @@ namespace LowEngine {
 				auto windowSize = static_cast<sf::Vector2f>(Window.getSize());
 				Scenes.GetCurrentScene()->SetWindowSize(windowSize);
 			}
-
-			//if (!isScenePaused) 
-				Input.Read(event);
-
+			
+			Input.Read(event);
 			WindowEvents.emplace_back(event);
 		}
-
-		//if (!isScenePaused) 
-			Input.Update();
+		
+		Input.Update();
 
 		Update(DeltaTime.asSeconds());
 
