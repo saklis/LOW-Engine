@@ -11,6 +11,16 @@
 
 namespace LowEngine::Memory {
 	class Memory;
+	
+	/**
+	 * @brief Wrapper to ensure proper alignment of Component type.
+	 * @tparam T Type of the Component
+	 */
+	template <typename T>
+	struct AlignedStorage
+	{
+		alignas(T) std::byte data[sizeof(T)];
+	};
 
 	/**
 	 * @brief Interface abstracting Component Pool
@@ -165,7 +175,7 @@ namespace LowEngine::Memory {
 
 			size_t lastIndex = Storage.size() - 1;
 
-			// swamp component to remove (index) with the last one
+			// swap component to remove (index) with the last one
 			if (removedIndex != lastIndex) {
 				std::swap(Storage[removedIndex], Storage[lastIndex]);
 
@@ -251,7 +261,7 @@ namespace LowEngine::Memory {
 		/**
 		 * @brief Collection of storage objects. Each object is a single component.
 		 */
-		std::vector<std::aligned_storage_t<sizeof(T), alignof(T)>> Storage;
+		std::vector<AlignedStorage<T>> Storage;
 
 		/**
 		 * @brief Map of Entity Id to Component Id.
