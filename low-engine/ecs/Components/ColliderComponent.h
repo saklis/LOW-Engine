@@ -50,6 +50,8 @@ namespace LowEngine::ECS {
 		void Initialize() override {}
 
 		void Update(float deltaTime) override;
+		
+		void FixedUpdate(float fixedDeltaTime) override;
 
 		LowEngine::Sprite* Draw() override;
 

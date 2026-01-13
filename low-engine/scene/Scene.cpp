@@ -84,6 +84,8 @@ namespace LowEngine {
 
 	void Scene::FixedUpdate(float fixedDeltaTime) {
         if (IsPaused) return;
+	    
+	    _memory.FixedUpdateAllComponents(fixedDeltaTime);
 
         b2World_Step(_box2dWorldId, fixedDeltaTime, 4);
         auto contactEvents = b2World_GetContactEvents(_box2dWorldId);

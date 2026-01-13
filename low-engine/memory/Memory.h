@@ -320,6 +320,8 @@ namespace LowEngine::Memory {
 		 * @param deltaTime Time passed since last call, in seconds.
 		 */
 		void UpdateAllComponents(float deltaTime);
+		
+		void FixedUpdateAllComponents(float fixedDeltaTime);
 
 		nlohmann::ordered_json SerializeAllEntitiesToJSON();
 

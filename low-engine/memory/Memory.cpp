@@ -30,6 +30,13 @@ namespace LowEngine::Memory {
         }
     }
 
+    void Memory::FixedUpdateAllComponents(float fixedDeltaTime)
+    {
+        for (auto& component: _components) {
+            component.second->FixedUpdate(fixedDeltaTime);
+        }
+    }
+
     nlohmann::ordered_json Memory::SerializeAllEntitiesToJSON() {
 		nlohmann::ordered_json entitiesJson = nlohmann::ordered_json::array();
         for (const auto& entity : _entities) {

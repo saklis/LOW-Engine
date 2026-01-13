@@ -59,6 +59,17 @@ namespace LowEngine::ECS {
          */
         virtual void Update(float deltaTime) {
         };
+        
+        /**
+         * @brief Update Component's state at a fixed time interval.
+         * 
+         * Called at regular intervals independent of frame rate, useful for physics calculations
+         * and other time-dependent operations that require consistent timing.
+         * 
+         * @param fixedDeltaTime Fixed time step between updates in seconds.
+         */
+        virtual void FixedUpdate(float fixedDeltaTime) {
+        };
 
         /**
          * @brief Retrieve a pointer to Sprite that should be drawn in the current frame.

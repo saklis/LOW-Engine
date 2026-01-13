@@ -48,6 +48,12 @@ namespace LowEngine::Memory {
 		 * @param deltaTime Time passed since last update, in seconds.
 		 */
 		virtual void Update(float deltaTime) = 0;
+		
+		/**
+		 * @brief Call FixedUpdate method for all Components.
+		 * @param fixedDeltaTime Fixed time step for physics and other fixed-rate updates, in seconds.
+		 */
+		virtual void FixedUpdate(float fixedDeltaTime) = 0;
 
 		/**
 		 * @brief Check all Components in search of Sprites to draw.
@@ -224,6 +230,19 @@ namespace LowEngine::Memory {
 				auto component = reinterpret_cast<T*>(&storage);
 				if (component->Active) {
 					component->Update(deltaTime);
+				}
+			}
+		}
+
+		/**
+		 * @brief Call fixed update function for all active components.
+		 * @param fixedDeltaTime Fixed time step for physics and other fixed-rate updates, in seconds.
+		 */
+		void FixedUpdate(float fixedDeltaTime) override {
+			for (auto& storage : Storage) {
+				auto component = reinterpret_cast<T*>(&storage);
+				if (component->Active) {
+					component->FixedUpdate(fixedDeltaTime);
 				}
 			}
 		}

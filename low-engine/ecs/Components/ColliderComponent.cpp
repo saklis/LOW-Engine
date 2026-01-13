@@ -9,6 +9,11 @@ namespace LowEngine::ECS {
 	}
 
 	void ColliderComponent::Update(float deltaTime) {
+		
+	}
+
+	void ColliderComponent::FixedUpdate(float fixedDeltaTime)
+	{
 		if (_type == ColliderType::Kinematic && B2_IS_NON_NULL(_bodyId)) {
 			auto transform = _memory->GetComponent<TransformComponent>(EntityId);
 			auto currentPos = b2Body_GetPosition(_bodyId);
@@ -19,8 +24,8 @@ namespace LowEngine::ECS {
 				b2Vec2 targetPos = { transform->Position.x, transform->Position.y };
 
 				b2Vec2 velocity = {
-					(targetPos.x - currentPos.x) / deltaTime,
-					(targetPos.y - currentPos.y) / deltaTime
+					(targetPos.x - currentPos.x) / fixedDeltaTime,
+					(targetPos.y - currentPos.y) / fixedDeltaTime
 				};
 
 				b2Body_SetLinearVelocity(_bodyId, velocity);
@@ -29,7 +34,7 @@ namespace LowEngine::ECS {
 			float targetRot = transform->Rotation.asRadians();
 			if (targetRot != currentRot)
 			{				
-				float angularVelocity = (targetRot - currentRot) / deltaTime;
+				float angularVelocity = (targetRot - currentRot) / fixedDeltaTime;
 				b2Body_SetAngularVelocity(_bodyId, angularVelocity);
 			}
 		}
