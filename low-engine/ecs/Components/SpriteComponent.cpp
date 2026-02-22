@@ -1,5 +1,7 @@
 #include "SpriteComponent.h"
 
+#include "memory/Memory.h"
+
 namespace LowEngine::ECS {
 	void SpriteComponent::SetTexture(const sf::Texture& texture) {
 		Sprite.setTexture(texture);

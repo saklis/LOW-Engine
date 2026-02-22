@@ -1,16 +1,22 @@
 #pragma once
 
 #include <string>
+#include <typeindex>
+#include <nlohmann/json_fwd.hpp>
 
 #include "SFML/Graphics/RenderWindow.hpp"
 #include "box2d/box2d.h"
 
+#include "EngineConfig.h"
+#include "ecs/IEntity.h"
 #include "memory/Memory.h"
-#include "ecs/ECSHeaders.h"
-#include "TGUI/Event.hpp"
 
 namespace LowEngine {
-    /**
+	namespace ECS {
+		class Entity;
+	}
+
+	/**
      * @brief Represents a scene containing entities.
      *
      * It provides functionality to add, remove, and manipulate elements in the scene.
@@ -180,10 +186,6 @@ namespace LowEngine {
          */
         template<typename T>
         bool IsComponentSafeToDestroy(size_t entityId) {
-            if (typeid(T) == typeid(ECS::CameraComponent)) {
-                if (this->_cameraEntityId == entityId) return false;
-            }
-
             return _memory.IsComponentSafeToDestroy<T>(entityId);
         }
 
@@ -232,6 +234,13 @@ namespace LowEngine {
          * @return Pointer to current camera Entity. Returns nullptr if no camera is set.
          */
         ECS::Entity* GetCurrentCamera();
+
+        /**
+         * @brief Check if provided Entity is current camera.
+         * @param entityId Id of the Entity.
+         * @return True if provided Entity is current camera. False otherwise.
+		 */
+		bool IsCurrentCamera(size_t entityId);
 
         /**
          * @brief Inform current camera entity that window size changed.

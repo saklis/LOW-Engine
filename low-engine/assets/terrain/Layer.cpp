@@ -1,6 +1,6 @@
 #include "Layer.h"
 
-#include "Config.h"
+#include "EngineConfig.h"
 #include "assets/Assets.h"
 #include "SFML/System/Vector2.hpp"
 

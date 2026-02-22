@@ -1,13 +1,25 @@
 #pragma once
 
+#include <filesystem>
 #include <imgui.h>
 #include <imgui-SFML.h>
+#include <typeindex>
 
-#include <Game.h>
+#include "ComponentEditorBinding.h"
 
 namespace LowEngine {
+
+	namespace Terrain {
+        class Layer;
+    }
+
+    class Game;
+    class Scene;
+
     class DevTools {
     public:
+        static std::vector<ComponentEditorBinding> ComponentEditorBindings;
+        
         static bool Initialize(sf::RenderWindow& window);
 
         static void Free();

@@ -1,6 +1,6 @@
 #include "Assets.h"
 
-#include "Config.h"
+#include "EngineConfig.h"
 
 namespace LowEngine {
     Assets::Assets() {

@@ -1,5 +1,8 @@
 #include "SceneManager.h"
 
+#include "ecs/ECSHeaders.h"
+#include "log/Log.h"
+
 namespace LowEngine {
     SceneManager::SceneManager(): _scenes(), _currentSceneIndex(0) {
     }
@@ -22,16 +25,19 @@ namespace LowEngine {
             // camera entity
             auto cameraEntity = newScene->AddEntity("Default camera");
             if (cameraEntity) {
-                if (auto tc = cameraEntity->AddComponent<ECS::TransformComponent>(); !tc) {
-                    _log->error("Failed to add TransformComponent to camera entity in scene '{}'", name);
-                    return nullptr;
-                }
-                if (auto camera = cameraEntity->AddComponent<ECS::CameraComponent>()) {
-                    newScene->SetCurrentCamera(cameraEntity->Id);
-                } else {
-                    _log->error("Failed to add camera component to entity in scene '{}'", name);
-                    return nullptr;
-                }
+                newScene->AddComponent<ECS::TransformComponent>(cameraEntity->Id);
+                newScene->AddComponent<ECS::CameraComponent>(cameraEntity->Id);
+                newScene->SetCurrentCamera(cameraEntity->Id);
+                // if (auto tc = cameraEntity->AddComponent<ECS::TransformComponent>(); !tc) {
+                //     _log->error("Failed to add TransformComponent to camera entity in scene '{}'", name);
+                //     return nullptr;
+                // }
+                // if (auto camera = cameraEntity->AddComponent<ECS::CameraComponent>()) {
+                //     newScene->SetCurrentCamera(cameraEntity->Id);
+                // } else {
+                //     _log->error("Failed to add camera component to entity in scene '{}'", name);
+                //     return nullptr;
+                // }
             }
         }
 

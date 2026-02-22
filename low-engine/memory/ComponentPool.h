@@ -5,7 +5,7 @@
 
 #include "nlohmann/json.hpp"
 
-#include "Config.h"
+#include "EngineConfig.h"
 #include "../log/Log.h"
 #include "graphics/Sprite.h"
 

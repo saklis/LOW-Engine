@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <memory>
 
 #include "scene/Scene.h"
 
@@ -10,7 +11,7 @@ namespace LowEngine {
     class Game;
 
     /**
-     * @brief Scene Manager keeps a list of all existing scenes, alloes creation of new onse and switching between them.
+     * @brief Scene Manager keeps a list of all existing scenes, allows creation of new ones and switching between them.
      */
     class SceneManager {
     public:

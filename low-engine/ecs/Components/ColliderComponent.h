@@ -2,6 +2,7 @@
 
 #include "box2d/box2d.h"
 
+#include "EngineConfig.h"
 #include "ecs/IComponent.h"
 #include "ecs/Components/TransformComponent.h"
 #include "graphics/Sprite.h"
@@ -67,9 +68,17 @@ namespace LowEngine::ECS {
 		 *
 		 * Static colliders do not move.
 		 * Dynamic colliders are affected by physics.
-		 * Kinematic colliders can be moved manually, but are not affected by physics.
+		 * Kinematic colliders can be moved manualy, but are not affected by physics.
 		 */
 		ColliderType _type = ColliderType::Kinematic;
+
+		/**
+		 * @brief Precision for collision detection, in units.
+		 * 
+		 * This is a threshold for precise collision detection for each frame.
+		 * If a body moved further than this during a single frame, it'll be teleported instead of simulated along the path.
+		 */
+		float _collisionPrecision = 0.001f;
 
 		/**
 		 * @brief Box2D Body ID associated with this collider.
@@ -85,5 +94,14 @@ namespace LowEngine::ECS {
 		 * @brief texture used to generate an overlay image.
 		 */
 		sf::RenderTexture _renderTexture;
+		
+		// Tunable thresholds (safe for Box2D contacts)
+		const float _snapLinear = 0.015f; // 1.5 cm
+		const float _snapLinear2 = _snapLinear * _snapLinear;
+		const float _snapAngular = 0.035f; // ~2 degrees (0.0349 rad)
+		const float _teleportLinear = 0.25f; // 25 cm (choose to taste)
+		const float _teleportLinear2 = _teleportLinear * _teleportLinear;
+		
+		float shortestAngleDiff(float a, float b);
 	};
 }

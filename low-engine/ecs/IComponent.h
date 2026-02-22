@@ -9,8 +9,11 @@
 #include "nlohmann/json.hpp"
 
 #include "graphics/Sprite.h"
-#include "memory/Memory.h"
 #include "utils/TypeName.h"
+
+namespace LowEngine::Memory {
+    class Memory;
+}
 
 namespace LowEngine::ECS {
     class IComponentBase {

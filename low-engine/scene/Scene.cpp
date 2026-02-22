@@ -1,6 +1,8 @@
+#include "Scene.h"
+
 #include <algorithm>
 
-#include "Scene.h"
+#include "ecs/ECSHeaders.h"
 
 namespace LowEngine {
 	Scene::Scene(): Name(""), _memory() {
@@ -77,18 +79,23 @@ namespace LowEngine {
 	}
 
 	void Scene::Update(float deltaTime) {
-        if (IsPaused) return;
-
-        _memory.UpdateAllComponents(deltaTime);
+        _memory.UpdateAllComponents(IsPaused ? 0.0f : deltaTime);
     }
 
 	void Scene::FixedUpdate(float fixedDeltaTime) {
-        if (IsPaused) return;
+	    _memory.FixedUpdateAllComponents(IsPaused ? 0.0f : fixedDeltaTime);
 	    
-	    _memory.FixedUpdateAllComponents(fixedDeltaTime);
-
-        b2World_Step(_box2dWorldId, fixedDeltaTime, 4);
+        b2World_Step(_box2dWorldId, IsPaused ? 0.0f : fixedDeltaTime, 4);
+        
         auto contactEvents = b2World_GetContactEvents(_box2dWorldId);
+	    if (contactEvents.beginCount > 0)
+	        _log->info("Fixed update completed with {} contact begin events", contactEvents.beginCount);
+	    if (contactEvents.hitCount > 0)
+	        _log->info("Fixed update completed with {} contact hit events", contactEvents.hitCount);
+	    
+	    auto sensorEvents = b2World_GetSensorEvents(_box2dWorldId);
+	    if (sensorEvents.beginCount > 0)
+	        _log->info("Fixed update completed with {} sensor begin events", sensorEvents.beginCount);
 	}
 
 	void Scene::Draw(sf::RenderWindow& window) {
@@ -186,6 +193,10 @@ namespace LowEngine {
         return _memory.GetEntity<ECS::Entity>(_cameraEntityId);
     }
 
+    bool Scene::IsCurrentCamera(size_t entityId) {
+		return _cameraEntityId == entityId;
+	}
+
     void Scene::SetWindowSize(sf::Vector2f windowSize) {
         if (_cameraEntityId == -1) {
             _log->warn("No camera entity set");
@@ -216,6 +227,7 @@ namespace LowEngine {
 	void Scene::RegisterDefaultComponentTypes() {
         _memory.RegisterComponentType<ECS::AnimatedSpriteComponent>();
 		_memory.RegisterComponentType<ECS::CameraComponent>();
+	    _memory.RegisterComponentType<ECS::ColliderComponent>();
 		_memory.RegisterComponentType<ECS::SoundComponent>();
 		_memory.RegisterComponentType<ECS::SpriteComponent>();
 		_memory.RegisterComponentType<ECS::TileMapComponent>();

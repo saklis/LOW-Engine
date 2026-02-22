@@ -1,5 +1,7 @@
 #include "TileMapComponent.h"
 
+#include "memory/Memory.h"
+
 namespace LowEngine::ECS {
 	void TileMapComponent::Update(float deltaTime) {
 		auto& map = Assets::GetTileMap(_mapId);

@@ -1,5 +1,7 @@
 #include "AnimatedSpriteComponent.h"
 
+#include "memory/Memory.h"
+
 namespace LowEngine::ECS {
 	void AnimatedSpriteComponent::SetTexture(const std::string& textureAlias) {
 		if (!Assets::HasSpriteSheet(textureAlias)) {

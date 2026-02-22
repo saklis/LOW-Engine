@@ -1,5 +1,7 @@
 #include "CameraComponent.h"
 
+#include "memory/Memory.h"
+
 namespace LowEngine::ECS {
 	void CameraComponent::Update(float deltaTime) {
 		auto transformComponent = _memory->GetComponent<TransformComponent>(EntityId);

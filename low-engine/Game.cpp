@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "scene/Scene.h"
+
 #include "log/LogMemoryBufferSink.h"
 
 namespace LowEngine {

@@ -1,5 +1,7 @@
 #include "ecs/Components/ColliderComponent.h"
 
+#include "memory/Memory.h"
+
 namespace LowEngine::ECS {
 	ColliderComponent::~ColliderComponent() {
 		if (B2_IS_NON_NULL(_bodyId) && b2Body_IsValid(_bodyId)) {
@@ -16,26 +18,36 @@ namespace LowEngine::ECS {
 	{
 		if (_type == ColliderType::Kinematic && B2_IS_NON_NULL(_bodyId)) {
 			auto transform = _memory->GetComponent<TransformComponent>(EntityId);
-			auto currentPos = b2Body_GetPosition(_bodyId);
-			float currentRot = b2Rot_GetAngle(b2Body_GetRotation(_bodyId));
 			
-			if (transform->Position.x != currentPos.x || transform->Position.y != currentPos.y)
-			{
-				b2Vec2 targetPos = { transform->Position.x, transform->Position.y };
-
-				b2Vec2 velocity = {
-					(targetPos.x - currentPos.x) / fixedDeltaTime,
-					(targetPos.y - currentPos.y) / fixedDeltaTime
-				};
-
-				b2Body_SetLinearVelocity(_bodyId, velocity);
+			b2Vec2 currentPos = b2Body_GetPosition(_bodyId);
+			b2Rot currentRot = b2Body_GetRotation(_bodyId);
+			float currentAng = b2Rot_GetAngle(currentRot);
+			
+			b2Vec2 targetPos = { transform->Position.x, transform->Position.y };
+			b2Rot targetRot = b2MakeRot(transform->Rotation.asRadians());
+			float targetAng = b2Rot_GetAngle(targetRot);
+			
+			float dx = targetPos.x - currentPos.x;
+			float dy = targetPos.y - currentPos.y;
+			float distance2 = dx*dx + dy*dy;
+			
+			float dAng = fabsf(shortestAngleDiff(currentAng, targetAng));
+			
+			if (distance2 <= _snapLinear2 && dAng <= _snapAngular) {
+				// close enough - snap transforms to avoid jiggle
+				b2Body_SetTransform(_bodyId, targetPos, targetRot);
+				b2Body_SetLinearVelocity(_bodyId, b2Vec2_zero);
+				b2Body_SetAngularVelocity(_bodyId, 0.0f);
 			}
-			
-			float targetRot = transform->Rotation.asRadians();
-			if (targetRot != currentRot)
-			{				
-				float angularVelocity = (targetRot - currentRot) / fixedDeltaTime;
-				b2Body_SetAngularVelocity(_bodyId, angularVelocity);
+			else if (distance2 >= _teleportLinear2) {
+				// large jump - ignore collision on the way
+				b2Body_SetTransform(_bodyId, targetPos, targetRot);
+				b2Body_SetLinearVelocity(_bodyId, b2Vec2_zero);
+				b2Body_SetAngularVelocity(_bodyId, 0.0f);
+			}
+			else {
+				// normal case - set velocity to detect collision on the way
+				b2Body_SetTargetTransform(_bodyId, {targetPos, targetRot}, fixedDeltaTime, true);
 			}
 		}
 
@@ -136,10 +148,20 @@ namespace LowEngine::ECS {
 		// create shape
 		auto shape = b2MakeBox(halfWidth, halfHeight);
 		auto shapeDef = b2DefaultShapeDef();
+		shapeDef.enableContactEvents = true;
+		shapeDef.isSensor = true;
+		shapeDef.enableSensorEvents = true;
 		b2CreatePolygonShape(_bodyId, &shapeDef, &shape);
 
 		_log->debug("ColliderComponent: Box collider created with size {0}x{1}.", halfWidth * 2, halfHeight * 2);
 
 		return true;
+	}
+
+	float ColliderComponent::shortestAngleDiff(float a, float b) {
+		float d = b - a;
+		while (d > B2_PI) d -= 2.0f * B2_PI;
+		while (d < -B2_PI) d += 2.0f * B2_PI;
+		return d;
 	}
 }

@@ -6,8 +6,14 @@
 
 #include <ImGuiFileDialog.h>
 
-#include "Config.h"
+#include "Game.h"
+#include "scene/Scene.h"
+#include "EditorConfig.h"
 #include "FormatHelpers.h"
+#include "editors/cameraEditor.h"
+#include "editors/SpriteEditor.h"
+
+#include "editors/TransformEditor.h"
 
 namespace LowEngine {
     sf::Texture DevTools::playTexture;
@@ -22,6 +28,8 @@ namespace LowEngine {
 }
 
 namespace LowEngine {
+    std::vector<ComponentEditorBinding> DevTools::ComponentEditorBindings;
+
     bool DevTools::Initialize(sf::RenderWindow& window) {
         bool result = ImGui::SFML::Init(window);
         if (!result) {
@@ -34,6 +42,17 @@ namespace LowEngine {
             _log->error("Failed to load icons for DevTools.");
             return false;
         }
+
+		// build list of component editor bindings
+        ComponentEditorBindings.emplace_back("Transform", typeid(LowEngine::ECS::TransformComponent),
+                                             LowEngine::Editors::AddTransformComponent,
+                                             LowEngine::Editors::DrawTransformEditor);
+        ComponentEditorBindings.emplace_back("Camera", typeid(LowEngine::ECS::CameraComponent),
+                                             LowEngine::Editors::AddCameraComponent,
+                                             LowEngine::Editors::DrawCameraEditor);
+        ComponentEditorBindings.emplace_back("Sprite", typeid(LowEngine::ECS::SpriteComponent),
+                                             LowEngine::Editors::AddSpriteComponent,
+                                             LowEngine::Editors::DrawSpriteEditor);
 
         return true;
     }
@@ -442,35 +461,53 @@ namespace LowEngine {
             }
 
             if (ImGui::Button("(+) Add Component", ImVec2(width - 15, 20))) { ImGui::OpenPopup("Add component"); }
-
-            if (ImGui::BeginPopup("Add component")) {
-                if (ImGui::MenuItem("Transform")) {
-                    scene->AddComponent<ECS::TransformComponent>(_selectedEntityId);
-                    scene->Update(0.0f);
+            
+            for (auto& binding : ComponentEditorBindings) {
+                if (entity->HasComponent(binding.ComponentType)) {
+	                binding.DrawEditor(scene, _selectedEntityId);
                 }
-                if (ImGui::MenuItem("Sprite")) {
-                    scene->AddComponent<ECS::SpriteComponent>(_selectedEntityId);
-                    scene->Update(0.0f);
-                }
-                if (ImGui::MenuItem("Animated Sprite")) {
-                    scene->AddComponent<ECS::AnimatedSpriteComponent>(_selectedEntityId);
-                    scene->Update(0.0f);
-                }
-                if (ImGui::MenuItem("Camera")) {
-                    scene->AddComponent<ECS::CameraComponent>(_selectedEntityId);
-                    scene->Update(0.0f);
-                }
-                if (ImGui::MenuItem("Collider")) {
-                    scene->AddComponent<ECS::ColliderComponent>(_selectedEntityId);
-                    scene->Update(0.0f);
-                }
-                ImGui::EndPopup();
             }
 
-			DisplayTransformComponentProperties(*scene);
-            DisplayAnimatedSpriteComponentProperties(*scene);
-            DisplayCameraComponentProperties(*scene);
-            DisplayColliderComponentProperties(*scene);
+            if (ImGui::BeginPopup("Add component")) {
+                for (auto& binding : ComponentEditorBindings) {
+                    if (ImGui::MenuItem(binding.Label.c_str())) {
+						binding.AddComponent(scene, _selectedEntityId);
+                        scene->Update(0.0f);
+                    }
+                }
+	            ImGui::EndPopup();
+            }
+
+            
+
+   //          if (ImGui::BeginPopup("Add component")) {
+   //              if (ImGui::MenuItem("Transform")) {
+   //                  scene->AddComponent<ECS::TransformComponent>(_selectedEntityId);
+   //                  scene->Update(0.0f);
+   //              }
+   //              if (ImGui::MenuItem("Sprite")) {
+   //                  scene->AddComponent<ECS::SpriteComponent>(_selectedEntityId);
+   //                  scene->Update(0.0f);
+   //              }
+   //              if (ImGui::MenuItem("Animated Sprite")) {
+   //                  scene->AddComponent<ECS::AnimatedSpriteComponent>(_selectedEntityId);
+   //                  scene->Update(0.0f);
+   //              }
+   //              if (ImGui::MenuItem("Camera")) {
+   //                  scene->AddComponent<ECS::CameraComponent>(_selectedEntityId);
+   //                  scene->Update(0.0f);
+   //              }
+   //              if (ImGui::MenuItem("Collider")) {
+   //                  scene->AddComponent<ECS::ColliderComponent>(_selectedEntityId);
+   //                  scene->Update(0.0f);
+   //              }
+   //              ImGui::EndPopup();
+   //          }
+   //          
+			// DisplayTransformComponentProperties(*scene);
+   //          DisplayAnimatedSpriteComponentProperties(*scene);
+   //          DisplayCameraComponentProperties(*scene);
+   //          DisplayColliderComponentProperties(*scene);
         } else { ImGui::Begin("Properties:"); }
 
         ImGui::End();
@@ -491,7 +528,7 @@ namespace LowEngine {
         if (ImGui::BeginPopup("TransformComponentContextMenu")) {
             if (ImGui::MenuItem("Delete")) {
                 if (scene.IsComponentSafeToDestroy<ECS::TransformComponent>(entity->Id)) {
-                    entity->DestroyComponent<ECS::TransformComponent>();
+                    //entity->DestroyComponent<ECS::TransformComponent>();
                 }
             }
             ImGui::EndPopup();
@@ -579,7 +616,7 @@ namespace LowEngine {
         }
 
         if (ImGui::BeginPopup("AnimatedSpriteComponentContextMenu")) {
-            if (ImGui::MenuItem("Delete")) { entity->DestroyComponent<ECS::AnimatedSpriteComponent>(); }
+            //if (ImGui::MenuItem("Delete")) { entity->DestroyComponent<ECS::AnimatedSpriteComponent>(); }
             ImGui::EndPopup();
         }
 
@@ -626,7 +663,7 @@ namespace LowEngine {
         }
 
         if (ImGui::BeginPopup("CameraComponentContextMenu")) {
-            if (ImGui::MenuItem("Delete")) { entity->DestroyComponent<ECS::CameraComponent>(); }
+            //if (ImGui::MenuItem("Delete")) { entity->DestroyComponent<ECS::CameraComponent>(); }
             ImGui::EndPopup();
         }
 
@@ -654,7 +691,7 @@ namespace LowEngine {
         }
 
         if (ImGui::BeginPopup("ColliderComponentContextMenu")) {
-            if (ImGui::MenuItem("Delete")) { entity->DestroyComponent<ECS::ColliderComponent>(); }
+            //if (ImGui::MenuItem("Delete")) { entity->DestroyComponent<ECS::ColliderComponent>(); }
             ImGui::EndPopup();
         }
 

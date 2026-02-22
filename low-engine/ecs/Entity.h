@@ -7,12 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "log/Log.h"
 #include "IEntity.h"
-#include "memory/Memory.h"
-
-namespace LowEngine::Memory {
-    class Memory;
-}
 
 namespace LowEngine::ECS {
     /**
@@ -52,17 +48,17 @@ namespace LowEngine::ECS {
          * @param args Arguments for Component's Initialize() function.
          * @return Pointer to newly created Componet.
          */
-        template<typename T, typename... Args>
-        T* AddComponent(Args&&... args) {
-            T* component = _memory->CreateComponent<T>(Id, std::forward<Args>(args)...);
-            if (component == nullptr) {
-                _log->error("Failed to create component of type {} for entity with id {}", DemangledTypeName(typeid(T)), Id);
-                return nullptr;
-            }
-
-            _log->debug("Component of type {} created for entity with id {}", DemangledTypeName(typeid(T)), Id);
-            return component;
-        }
+        // template<typename T, typename... Args>
+        // T* AddComponent(Args&&... args) {
+        //     T* component = _memory->CreateComponent<T>(Id, std::forward<Args>(args)...);
+        //     if (component == nullptr) {
+        //         _log->error("Failed to create component of type {} for entity with id {}", DemangledTypeName(typeid(T)), Id);
+        //         return nullptr;
+        //     }
+        //
+        //     _log->debug("Component of type {} created for entity with id {}", DemangledTypeName(typeid(T)), Id);
+        //     return component;
+        // }
 
         /**
          * @brief Destroy Component of given type.
@@ -70,12 +66,12 @@ namespace LowEngine::ECS {
          *
          * This method will remove Component from Entity and destroy it.
          */
-        template<typename T>
-        void DestroyComponent() {
-            _memory->DestroyComponent<T>(Id);
-
-            _log->debug("Component of type {} destroyed for entity with id {}", DemangledTypeName(typeid(T)), Id);
-        }
+        // template<typename T>
+        // void DestroyComponent() {
+        //     _memory->DestroyComponent<T>(Id);
+        //
+        //     _log->debug("Component of type {} destroyed for entity with id {}", DemangledTypeName(typeid(T)), Id);
+        // }
 
         /**
          * @brief Check if this Entity has a Component of given type.
@@ -110,10 +106,10 @@ namespace LowEngine::ECS {
          * @tparam T Type of the component to retrieve.
          * @return Pointer to Component. Nullptr if component doesn't exists.
          */
-        template<typename T>
-        T* GetComponent() {
-            return _memory->GetComponent<T>(Id);
-        }
+        // template<typename T>
+        // T* GetComponent() {
+        //     return _memory->GetComponent<T>(Id);
+        // }
 
     protected:
         /**
