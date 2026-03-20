@@ -11,7 +11,7 @@ namespace LowEngine::ECS {
 		_sprite.setPosition(transformComponent->Position);
 		_sprite.setRotation(transformComponent->Rotation);
 		_sprite.setScale(transformComponent->Scale);
-		_sprite.Layer = Layer;
+		_sprite.DrawOrder = Layer;
 	}
 
 	Sprite* TileMapComponent::Draw() {
@@ -33,7 +33,7 @@ namespace LowEngine::ECS {
 	nlohmann::ordered_json TileMapComponent::SerializeToJSON() {
 		nlohmann::ordered_json json = IComponent::SerializeToJSON();
 		json["MapId"] = _mapId;
-		json["Layer"] = Layer;
+		json["DrawOrder"] = Layer;
 		return json;
 	}
 
@@ -50,10 +50,10 @@ namespace LowEngine::ECS {
 			_log->error("TileMapComponent deserialization failed: missing 'MapId' field.");
 			return false;
 		}
-		if (jsonData.contains("Layer")) {
-			Layer = jsonData["Layer"].get<int>();
+		if (jsonData.contains("DrawOrder")) {
+			Layer = jsonData["DrawOrder"].get<int>();
 		} else {
-			_log->error("TileMapComponent deserialization failed: missing 'Layer' field.");
+			_log->error("TileMapComponent deserialization failed: missing 'DrawOrder' field.");
 			return false;
 		}
 		

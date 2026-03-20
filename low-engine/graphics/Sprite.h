@@ -3,30 +3,30 @@
 #include "SFML/Graphics/Sprite.hpp"
 
 namespace LowEngine {
-    class Sprite : public sf::Sprite {
-    public:
-        /**
-         * @brief Layer number.
-         *
-         * Sprite of this component will be drawn on this layer.
-         * This applies only if Scene's sorting mode is set to Layer.
-         */
-        int Layer = 0;
+	class Sprite : public sf::Sprite {
+	public:
+		/** 
+		 * @brief The draw order of the sprite.
+		 * 
+		 * Sprites with lower draw orders will be drawn first, and thus appear behind sprites with higher draw orders.
+		 * The default draw order is 0.
+		 */
+		int DrawOrder = 0;
 
-        explicit Sprite(const sf::Texture& texture)
-            : sf::Sprite(texture) {
-        }
+		explicit Sprite(const sf::Texture& texture)
+			: sf::Sprite(texture) {
+		}
 
-        explicit Sprite(const sf::Texture&& texture)
-            : sf::Sprite(texture) {
-        }
+		explicit Sprite(const sf::Texture&& texture)
+			: sf::Sprite(texture) {
+		}
 
-        Sprite(const sf::Texture& texture, const sf::IntRect& rectangle)
-            : sf::Sprite(texture, rectangle) {
-        }
+		Sprite(const sf::Texture& texture, const sf::IntRect& rectangle)
+			: sf::Sprite(texture, rectangle) {
+		}
 
-        Sprite(const sf::Texture&& texture, const sf::IntRect& rectangle)
-            : sf::Sprite(texture, rectangle) {
-        }
-    };
+		Sprite(const sf::Texture&& texture, const sf::IntRect& rectangle)
+			: sf::Sprite(texture, rectangle) {
+		}
+	};
 }

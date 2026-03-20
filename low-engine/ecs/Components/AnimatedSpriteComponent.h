@@ -27,12 +27,12 @@ namespace LowEngine::ECS {
         LowEngine::Sprite Sprite;
 
         /**
-         * @brief Layer number.
+         * @brief The draw order of the sprite.
          *
-         * Sprite of this component will be drawn on this layer.
-         * This applies only if Scene's sorting mode is set to Layer.
-         */
-        int Layer = 0;
+         * Sprites with lower draw orders will be drawn first, and thus appear behind sprites with higher draw orders.
+         * The default draw order is 0.
+		 */
+        int DrawOrder = 0;
 
         /**
          * @brief Name of currently playing animation.
@@ -63,7 +63,7 @@ namespace LowEngine::ECS {
 
         AnimatedSpriteComponent(Memory::Memory* memory, AnimatedSpriteComponent const* other)
             : IComponent(memory, other),
-              TextureId(other->TextureId), Sprite(other->Sprite), Layer(other->Layer),
+              TextureId(other->TextureId), Sprite(other->Sprite), DrawOrder(other->DrawOrder),
               CurrentClipName(other->CurrentClipName),
               CurrentFrame(other->CurrentFrame), FrameTime(other->FrameTime), Loop(other->Loop) {
         }

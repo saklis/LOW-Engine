@@ -20,7 +20,7 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio.*")
     set(CMAKE_SYSTEM_VERSION 10.0) # Windows SDK 11.0
 endif ()
 
-# define a macro that helps defining an option - "stolen" from SFML
+# a macro that helps defining options - "stolen" from SFML
 macro(low_set_option var default type docstring)
     if (NOT DEFINED ${var})
         set(${var} ${default})
@@ -32,12 +32,11 @@ endmacro()
 # CONFIGURATION
 ###############################################################################
 
-low_set_option(BUILD_LOW_EDITOR ON BOOL "Build the Low Editor along with the engine")
-low_set_option(BUILD_LOW_ENGINE_SHARED ON BOOL "Build LowEngine as a shared library")
+low_set_option(BUILD_LOW_EDITOR ON BOOL "Build the LOWEditor along with the engine")
+low_set_option(BUILD_LOW_ENGINE_SHARED ON BOOL "Build LOWEngine as a shared library")
 
-
-low_set_option(LOW_ENGINE_NAME "LowEngine" STRING "Name of Low Engine library")
-low_set_option(LOW_EDITOR_NAME "LowEditor" STRING "Name of Low Editor executable")
+low_set_option(LOW_ENGINE_NAME "LOWEngine" STRING "Name of LOWEngine library")
+low_set_option(LOW_EDITOR_NAME "LOWEditor" STRING "Name of LOWEditor executable")
 
 low_set_option(ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/low-editor/assets" STRING "Asset directory for Low Editor")
 
@@ -92,16 +91,34 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/$<CONFIG>)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/$<CONFIG>)
 
 ###############################################################################
-# 3-rd PARTY for LOW ENGINE
+# 3-rd PARTY for LOWENGINE
 ###############################################################################
 
 # MinGW-libs
-set(MINGW_LIBS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/mingw-libs")
-set(MINGW_LIBS
-        libgcc_s_dw2-1.dll
-        libstdc++-6.dll
-        libwinpthread-1.dll
-)
+if (WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # query the directory of the MinGW bin folder (where the .dlls are located) from the compiler path
+    get_filename_component(MINGW_BIN_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
+    set(MINGW_LIBS_DIR "${MINGW_BIN_DIR}")
+    message(STATUS "MinGW bin dir detected: ${MINGW_BIN_DIR}")
+
+    # libgcc have different names depending on version of MinGW:
+    #   SEH  (64-bit, default MinGW-w64): libgcc_s_seh-1.dll
+    #   DW2  (32-bit or older):           libgcc_s_dw2-1.dll
+    #   SJLJ (alternate):                 libgcc_s_sjlj-1.dll
+    set(MINGW_LIBS "")
+    foreach(_gcc_variant libgcc_s_seh-1.dll libgcc_s_dw2-1.dll libgcc_s_sjlj-1.dll)
+        if (EXISTS "${MINGW_BIN_DIR}/${_gcc_variant}")
+            list(APPEND MINGW_LIBS ${_gcc_variant})
+            message(STATUS "Detected libgcc variant: ${_gcc_variant}")
+            break()
+        endif()
+    endforeach()
+
+    list(APPEND MINGW_LIBS
+            libstdc++-6.dll
+            libwinpthread-1.dll
+    )
+endif()
 
 # SFML
 set(SFML_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/SFML")
@@ -185,7 +202,7 @@ add_subdirectory(${NLOHMANN_JSON_DIR} EXCLUDE_FROM_ALL)
 set(CMAKE_FOLDER "${_old_cmake_folder}")
 
 ###############################################################################
-# LOW ENGINE RUNTIME
+# LOW ENGINE LIBRARY
 ###############################################################################
 
 # engine source
@@ -208,7 +225,7 @@ if (MSVC)
     # While MinGW exports all by default, MSVC needs to be told to do so.
     set_target_properties(${LOW_ENGINE_NAME}
             PROPERTIES
-            OUTPUT_NAME "LowEngine"
+            OUTPUT_NAME "LOWEngine"
             PREFIX ""
             WINDOWS_EXPORT_ALL_SYMBOLS ON # <- export all symbols ... except not all! Only functions
     )
@@ -220,7 +237,7 @@ if (MSVC)
 else ()
     set_target_properties(${LOW_ENGINE_NAME}
             PROPERTIES
-            OUTPUT_NAME "LowEngine"
+            OUTPUT_NAME "LOWEngine"
             PREFIX ""
     )
 
@@ -257,7 +274,7 @@ set_target_properties(${LOW_ENGINE_NAME}
 )
 
 ###############################################################################
-# 3-rd PARTY for LOW EDITOR
+# 3-rd PARTY for LOWEDITOR
 ###############################################################################
 
 # OpenGL
@@ -335,7 +352,7 @@ if (BUILD_LOW_EDITOR)
     set(CMAKE_FOLDER "Editor")
     add_executable(${LOW_EDITOR_NAME} ${LOWEDITOR_SOURCE_FILES} ${LOWEDITOR_HEADER_FILES})
     set(CMAKE_FOLDER "${_old_cmake_folder}")
-    set_target_properties(${LOW_EDITOR_NAME} PROPERTIES OUTPUT_NAME "LOW Editor")
+    set_target_properties(${LOW_EDITOR_NAME} PROPERTIES OUTPUT_NAME "LOWEditor")
 
     # Link the executable against our LowEngine library
     target_link_libraries(${LOW_EDITOR_NAME}

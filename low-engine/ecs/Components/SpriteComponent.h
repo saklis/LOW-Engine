@@ -27,19 +27,19 @@ namespace LowEngine::ECS {
         LowEngine::Sprite Sprite;
 
         /**
-         * @brief Layer number.
+         * @brief The draw order of the sprite.
          *
-         * Sprite of this component will be drawn on this layer.
-         * This applies only if Scene's sorting mode is set to Layer.
+         * Sprites with lower draw orders will be drawn first, and thus appear behind sprites with higher draw orders.
+         * The default draw order is 0.
          */
-        int Layer = 0;
+        int DrawOrder = 0;
 
         explicit SpriteComponent(Memory::Memory* memory)
             : IComponent(memory), Sprite(Assets::GetDefaultTexture()) {
         }
 
         SpriteComponent(Memory::Memory* memory, SpriteComponent const* other)
-            : IComponent(memory, other), TextureId(other->TextureId), Sprite(other->Sprite), Layer(other->Layer) {
+            : IComponent(memory, other), TextureId(other->TextureId), Sprite(other->Sprite), DrawOrder(other->DrawOrder) {
         }
 
         virtual ~SpriteComponent() = default;

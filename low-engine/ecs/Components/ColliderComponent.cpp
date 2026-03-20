@@ -7,6 +7,7 @@ namespace LowEngine::ECS {
 		if (B2_IS_NON_NULL(_bodyId) && b2Body_IsValid(_bodyId)) {
 			b2DestroyBody(_bodyId);
 			_bodyId = b2_nullBodyId;
+			_shapeId = b2_nullShapeId;
 		}
 	}
 
@@ -16,7 +17,7 @@ namespace LowEngine::ECS {
 
 	void ColliderComponent::FixedUpdate(float fixedDeltaTime)
 	{
-		if (_type == ColliderType::Kinematic && B2_IS_NON_NULL(_bodyId)) {
+		if (Type == ColliderType::Kinematic && B2_IS_NON_NULL(_bodyId)) {
 			auto transform = _memory->GetComponent<TransformComponent>(EntityId);
 			
 			b2Vec2 currentPos = b2Body_GetPosition(_bodyId);
@@ -72,10 +73,7 @@ namespace LowEngine::ECS {
 
 				sf::ConvexShape debugShape;
 				debugShape.setPointCount(polygon.count);
-
-				debugShape.setOutlineColor(sf::Color::Green);
-				debugShape.setOutlineThickness(1.f);
-				debugShape.setFillColor(sf::Color(0, 255, 0, 128)); // semi-transparent green
+				debugShape.setOutlineThickness(0.0f); // disable outline for now, as it can cause calculation errors while shape is being constructed.
 
 				for (int i=0; i<polygon.count; i++) {
 					// center shape around texture's center
@@ -84,6 +82,10 @@ namespace LowEngine::ECS {
 
 					debugShape.setPoint(i, sf::Vector2f(x, y));
 				}
+
+				debugShape.setOutlineThickness(1.0f);
+				debugShape.setOutlineColor(sf::Color::Green);
+				debugShape.setFillColor(sf::Color(0, 255, 0, 128)); // semi-transparent green
 
 				_renderTexture.draw(debugShape);
 			}
@@ -129,6 +131,18 @@ namespace LowEngine::ECS {
 		return true;
 	}
 
+	bool ColliderComponent::HasBody() {
+		return B2_IS_NON_NULL(_bodyId);
+	}
+
+	b2BodyId ColliderComponent::GetBodyId() {
+		return _bodyId;
+	}
+
+	b2ShapeId ColliderComponent::GetShapeId() {
+		return _shapeId;
+	}
+
 	bool ColliderComponent::CreateBoxCollider(float halfWidth, float halfHeight) {
 		if (B2_IS_NON_NULL(_bodyId)) {
 			_log->warn("ColliderComponent::CreateBoxCollider called, but body already exists.");
@@ -138,7 +152,7 @@ namespace LowEngine::ECS {
 		// create body
 		auto bodyDef = b2DefaultBodyDef();
 		bodyDef.type = b2BodyType::b2_kinematicBody;
-		_type = ColliderType::Kinematic;
+		Type = ColliderType::Kinematic;
 
 		auto transform = _memory->GetComponent<TransformComponent>(EntityId);
 		bodyDef.position = b2Vec2{transform->Position.x, transform->Position.y};
@@ -151,11 +165,133 @@ namespace LowEngine::ECS {
 		shapeDef.enableContactEvents = true;
 		shapeDef.isSensor = true;
 		shapeDef.enableSensorEvents = true;
-		b2CreatePolygonShape(_bodyId, &shapeDef, &shape);
+		_shapeId = b2CreatePolygonShape(_bodyId, &shapeDef, &shape);
 
 		_log->debug("ColliderComponent: Box collider created with size {0}x{1}.", halfWidth * 2, halfHeight * 2);
 
 		return true;
+	}
+
+	void ColliderComponent::CopyColliderToB2World(b2WorldId worldId) {
+		if (!b2World_IsValid(worldId)) {
+			_log->error("ColliderComponent::CopyColliderToB2World failed: target world is invalid.");
+			return;
+		}
+
+		// Source ids from the copied component (pointing to original world's objects)
+		const b2BodyId sourceBodyId = _bodyId;
+		const b2ShapeId sourceShapeId = _shapeId;
+
+		if (B2_IS_NULL(sourceBodyId) || !b2Body_IsValid(sourceBodyId)) {
+			// Nothing to copy
+			_bodyId = b2_nullBodyId;
+			_shapeId = b2_nullShapeId;
+			return;
+		}
+
+		// Build body definition from source body runtime state
+		b2BodyDef bodyDef = b2DefaultBodyDef();
+		bodyDef.type = b2Body_GetType(sourceBodyId);
+		bodyDef.position = b2Body_GetPosition(sourceBodyId);
+		bodyDef.rotation = b2Body_GetRotation(sourceBodyId);
+		bodyDef.linearVelocity = b2Body_GetLinearVelocity(sourceBodyId);
+		bodyDef.angularVelocity = b2Body_GetAngularVelocity(sourceBodyId);
+		bodyDef.linearDamping = b2Body_GetLinearDamping(sourceBodyId);
+		bodyDef.angularDamping = b2Body_GetAngularDamping(sourceBodyId);
+		bodyDef.gravityScale = b2Body_GetGravityScale(sourceBodyId);
+		bodyDef.sleepThreshold = b2Body_GetSleepThreshold(sourceBodyId);
+		bodyDef.enableSleep = b2Body_IsSleepEnabled(sourceBodyId);
+		bodyDef.isAwake = b2Body_IsAwake(sourceBodyId);
+		bodyDef.isBullet = b2Body_IsBullet(sourceBodyId);
+		bodyDef.isEnabled = b2Body_IsEnabled(sourceBodyId);
+		bodyDef.motionLocks = b2Body_GetMotionLocks(sourceBodyId);
+		bodyDef.userData = b2Body_GetUserData(sourceBodyId);
+
+		const char* sourceName = b2Body_GetName(sourceBodyId);
+		if (sourceName != nullptr && sourceName[0] != '\0') {
+			bodyDef.name = sourceName;
+		}
+
+		_bodyId = b2CreateBody(worldId, &bodyDef);
+		if (B2_IS_NULL(_bodyId) || !b2Body_IsValid(_bodyId)) {
+			_log->error("ColliderComponent::CopyColliderToB2World failed: body creation failed.");
+			_bodyId = b2_nullBodyId;
+			_shapeId = b2_nullShapeId;
+			return;
+		}
+
+		// Keep component enum aligned with copied Box2D type
+		switch (bodyDef.type) {
+		case b2BodyType::b2_staticBody:
+			Type = ColliderType::Static;
+			break;
+		case b2BodyType::b2_dynamicBody:
+			Type = ColliderType::Dynamic;
+			break;
+		case b2BodyType::b2_kinematicBody:
+		default:
+			Type = ColliderType::Kinematic;
+			break;
+		}
+
+		// Resolve source shape id (fallback: first shape on body)
+		b2ShapeId shapeToCopy = sourceShapeId;
+		if (B2_IS_NULL(shapeToCopy) || !b2Shape_IsValid(shapeToCopy)) {
+			const int shapeCount = b2Body_GetShapeCount(sourceBodyId);
+			if (shapeCount > 0) {
+				std::vector<b2ShapeId> shapeIds(shapeCount);
+				const int copied = b2Body_GetShapes(sourceBodyId, shapeIds.data(), shapeCount);
+				if (copied > 0) {
+					shapeToCopy = shapeIds[0];
+				}
+			}
+		}
+
+		if (B2_IS_NULL(shapeToCopy) || !b2Shape_IsValid(shapeToCopy)) {
+			_log->warn("ColliderComponent::CopyColliderToB2World: source body has no valid shape.");
+			_shapeId = b2_nullShapeId;
+			return;
+		}
+
+		// Build shape definition from source shape runtime state
+		b2ShapeDef shapeDef = b2DefaultShapeDef();
+		shapeDef.userData = b2Shape_GetUserData(shapeToCopy);
+		shapeDef.material = b2Shape_GetSurfaceMaterial(shapeToCopy);
+		shapeDef.density = b2Shape_GetDensity(shapeToCopy);
+		shapeDef.filter = b2Shape_GetFilter(shapeToCopy);
+		shapeDef.isSensor = b2Shape_IsSensor(shapeToCopy);
+		shapeDef.enableSensorEvents = b2Shape_AreSensorEventsEnabled(shapeToCopy);
+		shapeDef.enableContactEvents = b2Shape_AreContactEventsEnabled(shapeToCopy);
+		shapeDef.enablePreSolveEvents = b2Shape_ArePreSolveEventsEnabled(shapeToCopy);
+		shapeDef.enableHitEvents = b2Shape_AreHitEventsEnabled(shapeToCopy);
+
+		switch (b2Shape_GetType(shapeToCopy)) {
+		case b2ShapeType::b2_circleShape: {
+			const b2Circle circle = b2Shape_GetCircle(shapeToCopy);
+			_shapeId = b2CreateCircleShape(_bodyId, &shapeDef, &circle);
+			break;
+		}
+		case b2ShapeType::b2_capsuleShape: {
+			const b2Capsule capsule = b2Shape_GetCapsule(shapeToCopy);
+			_shapeId = b2CreateCapsuleShape(_bodyId, &shapeDef, &capsule);
+			break;
+		}
+		case b2ShapeType::b2_segmentShape: {
+			const b2Segment segment = b2Shape_GetSegment(shapeToCopy);
+			_shapeId = b2CreateSegmentShape(_bodyId, &shapeDef, &segment);
+			break;
+		}
+		case b2ShapeType::b2_polygonShape: {
+			const b2Polygon polygon = b2Shape_GetPolygon(shapeToCopy);
+			_shapeId = b2CreatePolygonShape(_bodyId, &shapeDef, &polygon);
+			break;
+		}
+		default:
+			_log->error("ColliderComponent::CopyColliderToB2World failed: unsupported shape type {}.",
+				static_cast<int>(b2Shape_GetType(shapeToCopy)));
+			_shapeId = b2_nullShapeId;
+			break;
+		}
 	}
 
 	float ColliderComponent::shortestAngleDiff(float a, float b) {

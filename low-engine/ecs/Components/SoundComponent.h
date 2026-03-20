@@ -10,13 +10,6 @@ namespace LowEngine::ECS {
      */
     class SoundComponent : public IComponent<SoundComponent> {
     public:
-		size_t SoundId = 0;
-
-        /**
-         * @brief Instance of the Sound that manages the playback.
-         */
-        sf::Sound Sound;
-
         explicit SoundComponent(Memory::Memory* memory)
             : IComponent(memory), Sound(Assets::GetDefaultSound()) {
         }
@@ -26,6 +19,13 @@ namespace LowEngine::ECS {
         }
 
         ~SoundComponent() override = default;
+
+        size_t SoundId = 0;
+
+        /**
+         * @brief Instance of the Sound that manages the playback.
+         */
+        sf::Sound Sound;
 
         /**
          * @brief Set sound to be played.

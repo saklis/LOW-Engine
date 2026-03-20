@@ -3,7 +3,7 @@
 #include <imgui.h>
 
 #include "scene/Scene.h"
-#include "ecs/Components/TransformComponent.h"
+#include "ecs/components/TransformComponent.h"
 
 namespace LowEngine::Editors {
 	void AddTransformComponent(Scene* scene, std::size_t entityId) {

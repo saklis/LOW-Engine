@@ -10,6 +10,7 @@
 #include "EngineConfig.h"
 #include "ecs/IEntity.h"
 #include "memory/Memory.h"
+#include "terrain/TerrainManager.h"
 
 namespace LowEngine {
 	namespace ECS {
@@ -35,7 +36,7 @@ namespace LowEngine {
          *
          * The available sorting methods include:
          * - `None`: No sorting is performed on sprites.
-         * - `Layers`: Sprites are sorted based on their assigned layer values.
+		 * - `DrawOrder`: Sprites are sorted based on their assigned DrawOrder values. Lower DrawOrder values are rendered first.
          * - `YAxisIncremental`: Sprites are sorted based on the y-axis position, with smaller y-values being rendered first.
          */
         enum class SpriteSortingMethod {
@@ -44,9 +45,9 @@ namespace LowEngine {
              */
             None,
             /**
-             * @brief Sprites are sorted based on their assigned layer values.
+             * @brief Sprites are sorted based on their assigned DrawOrder values. Lower DrawOrder values are rendered first.
              */
-            Layers,
+            DrawOrder,
             /**
              * @brief Sprites are sorted based on the y-axis position, with smaller y-values being rendered first.
              */
@@ -78,6 +79,11 @@ namespace LowEngine {
          * @brief Name of this scene.
          */
         std::string Name;
+
+        /**
+         * @brief This scene's Terrain Manager.
+         */
+        Terrain::TerrainManager Terrain;
 
         Scene();
 

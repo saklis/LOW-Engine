@@ -16,13 +16,13 @@ namespace LowEngine::ECS {
 		Sprite.setPosition(transformComponent->Position);
 		Sprite.setRotation(transformComponent->Rotation);
 		Sprite.setScale(transformComponent->Scale);
-		Sprite.Layer = Layer;
+		Sprite.DrawOrder = DrawOrder;
 	}
 
 	nlohmann::ordered_json SpriteComponent::SerializeToJSON() {
 		nlohmann::ordered_json json = IComponent::SerializeToJSON();
 		json["TextureId"] = TextureId;
-		json["Layer"] = Layer;
+		json["DrawOrder"] = DrawOrder;
 		return json;
 	}
 
@@ -38,10 +38,10 @@ namespace LowEngine::ECS {
 			_log->error("SpriteComponent deserialization failed: missing 'TextureId' field.");
 			return false;
 		}
-		if (jsonData.contains("Layer")) {
-			Layer = jsonData["Layer"].get<int>();
+		if (jsonData.contains("DrawOrder")) {
+			DrawOrder = jsonData["DrawOrder"].get<int>();
 		} else {
-			_log->error("SpriteComponent deserialization failed: missing 'Layer' field.");
+			_log->error("SpriteComponent deserialization failed: missing 'DrawOrder' field.");
 			return false;
 		}
 		

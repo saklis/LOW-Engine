@@ -56,7 +56,7 @@ namespace LowEngine::ECS {
 		Sprite.setPosition(transformComponent->Position);
 		Sprite.setRotation(transformComponent->Rotation);
 		Sprite.setScale(transformComponent->Scale);
-		Sprite.Layer = Layer;
+		Sprite.DrawOrder = DrawOrder;
 
 		if (CurrentClipName.empty()) return;
 
@@ -83,7 +83,7 @@ namespace LowEngine::ECS {
 	nlohmann::ordered_json AnimatedSpriteComponent::SerializeToJSON() {
 		nlohmann::ordered_json json = IComponent::SerializeToJSON();
 		json["TextureId"] = TextureId;
-		json["Layer"] = Layer;
+		json["DrawOrder"] = DrawOrder;
 		json["CurrentClipName"] = CurrentClipName;
 		json["CurrentFrame"] = CurrentFrame;
 		json["FrameTime"] = FrameTime;
@@ -103,10 +103,10 @@ namespace LowEngine::ECS {
 			_log->error("AnimatedSpriteComponent deserialization failed: 'TextureId' field is missing.");
 			return false;
 		}
-		if (jsonData.contains("Layer")) {
-			Layer = jsonData["Layer"].get<int>();
+		if (jsonData.contains("DrawOrder")) {
+			DrawOrder = jsonData["DrawOrder"].get<int>();
 		} else {
-			_log->error("AnimatedSpriteComponent deserialization failed: 'Layer' field is missing.");
+			_log->error("AnimatedSpriteComponent deserialization failed: 'DrawOrder' field is missing.");
 			return false;
 		}
 		if (jsonData.contains("CurrentClipName")) {

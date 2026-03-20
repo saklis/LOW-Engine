@@ -36,6 +36,18 @@ namespace LowEngine {
         _box2dWorldId = b2CreateWorld(&worldDef);
 
         _memory.Box2dWorldId = _box2dWorldId;
+        auto entities = _memory.GetAllEntities();
+        for (const auto& entityPtr : *entities) {
+            if (entityPtr) {
+                auto entity = static_cast<ECS::Entity*>(entityPtr.get());
+                if (entity->HasComponent(std::type_index(typeid(ECS::ColliderComponent)))) {
+                    auto colliderComp = _memory.GetComponent<ECS::ColliderComponent>(entity->Id);
+                    if (colliderComp) {
+                        colliderComp->CopyColliderToB2World(_box2dWorldId);
+                    }
+                }
+            }
+		}
     }
 
 	void Scene::InitAsDefault() {
@@ -107,6 +119,7 @@ namespace LowEngine {
         }
 
         std::vector<Sprite> sprites;
+        Terrain.CollectSprites(sprites);
         _memory.CollectSprites(sprites);
 
         switch (_spriteSortingMethod) {
@@ -115,9 +128,9 @@ namespace LowEngine {
                     return a.getPosition().y < b.getPosition().y;
                 });
                 break;
-            case SpriteSortingMethod::Layers:
+            case SpriteSortingMethod::DrawOrder:
                 std::ranges::sort(sprites, [](const Sprite& a, const Sprite& b) {
-                    return a.Layer < b.Layer;
+                    return a.DrawOrder < b.DrawOrder;
                 });
                 break;
             case SpriteSortingMethod::None:
@@ -229,6 +242,7 @@ namespace LowEngine {
 		_memory.RegisterComponentType<ECS::CameraComponent>();
 	    _memory.RegisterComponentType<ECS::ColliderComponent>();
 		_memory.RegisterComponentType<ECS::SoundComponent>();
+        _memory.RegisterComponentType<ECS::SoundCueComponent>();
 		_memory.RegisterComponentType<ECS::SpriteComponent>();
 		_memory.RegisterComponentType<ECS::TileMapComponent>();
 		_memory.RegisterComponentType<ECS::TransformComponent>();

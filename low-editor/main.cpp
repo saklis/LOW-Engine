@@ -7,6 +7,7 @@ int main() {
     LowEngine::Game game;
 	game.Title = "LOWEditor";
 
+    // create temp background scene
     auto mainScene = game.Scenes.CreateScene("new scene");
     game.DefaultSceneName = mainScene->Name;
     mainScene->IsPaused = true;

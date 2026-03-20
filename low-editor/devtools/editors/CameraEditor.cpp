@@ -2,7 +2,7 @@
 
 #include <imgui.h>
 
-#include "ecs/Components/CameraComponent.h"
+#include "ecs/components/CameraComponent.h"
 #include "scene/Scene.h"
 
 namespace LowEngine::Editors {

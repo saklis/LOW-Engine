@@ -42,7 +42,7 @@ LowEngine - VS2026 Win32.lnk
 
 # output dirs
 CMakeFiles/
-_deps
+_deps/
 bin/
 build/
 out/
@@ -51,6 +51,6 @@ cmake-build-release/
 cmake-build-debug-32bit/
 cmake-build-release-32bit/
 build-vs2022-win32/
-build-vs2026-win32
+build-vs2026-win32/
 vs2022-win32-sln/
-Folder.DotSettings.user
+Folder.DotSettings.user/

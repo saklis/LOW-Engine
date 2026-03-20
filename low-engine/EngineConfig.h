@@ -34,7 +34,7 @@ namespace LowEngine {
          *
          * This value is used as "null" value for size_t.
          */
-        inline static const unsigned int MAX_SIZE = std::numeric_limits<std::size_t>::max();
+        inline static const unsigned long long MAX_SIZE = std::numeric_limits<std::size_t>::max();
 
         /**
          * @brief Default alias for the texture that is used when no texture is specified.

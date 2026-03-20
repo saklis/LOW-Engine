@@ -16,7 +16,7 @@ namespace LowEngine::ECS {
          * @brief Layer number.
          *
          * Sprite of this component will be drawn on this layer.
-         * This applies only if Scene's sorting mode is set to Layer.
+         * This applies only if Scene's sorting mode is set to DrawOrder.
          */
         int Layer = 0;
 
