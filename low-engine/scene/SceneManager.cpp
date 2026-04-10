@@ -57,7 +57,7 @@ namespace LowEngine {
     size_t SceneManager::CreateCopySceneFromCurrent(const std::string& nameSufix) {
         if (_scenes.empty()) {
             _log->warn("No scene to copy");
-            return Config::MAX_SIZE;
+            return Config::INVALID_ID;
         }
 
         // Copy‐construct from the current scene:

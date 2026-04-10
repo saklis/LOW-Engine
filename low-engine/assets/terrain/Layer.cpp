@@ -47,7 +47,7 @@ namespace LowEngine::Terrain {
         // it goes through all Cells, checking what is the index for each of it. Index is equvalent to "Cell Type" (and also actual image, that should be used)
         for (size_t cellIndex = 0; cellIndex < Cells.size(); cellIndex++) {
             auto sourceIndex = Cells[cellIndex];
-            if (sourceIndex != Config::MAX_SIZE) {
+            if (sourceIndex != Config::INVALID_ID) {
                 // sourceFrame is a coordinate of origin point (upper-left corner) for a piece of texture that should be used to paint current cell.
                 sf::Vector2<size_t> sourceFrame;
 

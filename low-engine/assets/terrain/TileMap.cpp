@@ -57,7 +57,7 @@ void LowEngine::Terrain::TileMap::LoadFromLDTkJson(std::string path) {
             NavGrid.Width = layer["__cWid"].get<size_t>();
             NavGrid.Height = layer["__cHei"].get<size_t>();
 
-            TerrainLayer.Cells.assign(TerrainLayer.CellCount.x * TerrainLayer.CellCount.y, Config::MAX_SIZE);
+            TerrainLayer.Cells.assign(TerrainLayer.CellCount.x * TerrainLayer.CellCount.y, Config::INVALID_ID);
             for (auto& gridCell : layer["gridTiles"]) {
                 auto cellIndex = static_cast<size_t>(gridCell["d"][0]);
                 size_t tileIndex = static_cast<size_t>(gridCell["src"][1]) / TerrainLayer.CellSize;
@@ -68,7 +68,7 @@ void LowEngine::Terrain::TileMap::LoadFromLDTkJson(std::string path) {
         if (layer["__identifier"] == "Features") {
             FeaturesLayer.SetSize({layer["__cWid"].get<size_t>(), layer["__cHei"].get<size_t>()}, layer["__gridSize"].get<size_t>());
 
-            FeaturesLayer.Cells.assign(FeaturesLayer.CellCount.x * FeaturesLayer.CellCount.y, Config::MAX_SIZE);
+            FeaturesLayer.Cells.assign(FeaturesLayer.CellCount.x * FeaturesLayer.CellCount.y, Config::INVALID_ID);
             for (auto& gridCell : layer["gridTiles"]) {
                 auto cellIndex = static_cast<size_t>(gridCell["d"][0]);
                 size_t tileIndex = static_cast<size_t>(gridCell["src"][1]) / FeaturesLayer.CellSize;

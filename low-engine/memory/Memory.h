@@ -362,6 +362,15 @@ namespace LowEngine::Memory {
 		void CollectSprites(std::vector<Sprite>& sprites);
 
 		/**
+		 * @brief Call DrawDirect on all active components across all pools.
+		 *
+		 * Invoked by Scene::Draw after the sprite pass to allow components
+		 * that manage their own GPU resources to draw directly to the render target.
+		 * @param target Render target to draw to.
+		 */
+		void DrawDirect(sf::RenderTarget& target);
+
+		/**
 		 * @brief Remove all Entities and Component.
 		 */
 		void Destroy();

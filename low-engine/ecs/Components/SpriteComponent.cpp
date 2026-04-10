@@ -21,7 +21,7 @@ namespace LowEngine::ECS {
 
 	nlohmann::ordered_json SpriteComponent::SerializeToJSON() {
 		nlohmann::ordered_json json = IComponent::SerializeToJSON();
-		json["TextureId"] = TextureId;
+		json["TextureAlias"] = Assets::GetTextureAlias(TextureId);
 		json["DrawOrder"] = DrawOrder;
 		return json;
 	}
@@ -31,11 +31,13 @@ namespace LowEngine::ECS {
 			_log->error("SpriteComponent deserialization failed: base component data not set.");
 			return false;
 		}
-		if (jsonData.contains("TextureId")) {
-			TextureId = jsonData["TextureId"].get<size_t>();
-			SetTexture(TextureId);
+		if (jsonData.contains("TextureAlias")) {
+			SetTexture(jsonData["TextureAlias"].get<std::string>());
+		} else if (jsonData.contains("TextureId")) {
+			// legacy: fallback to raw numeric ID (may assign wrong texture if load order changed)
+			SetTexture(jsonData["TextureId"].get<size_t>());
 		} else {
-			_log->error("SpriteComponent deserialization failed: missing 'TextureId' field.");
+			_log->error("SpriteComponent deserialization failed: missing 'TextureAlias' field.");
 			return false;
 		}
 		if (jsonData.contains("DrawOrder")) {

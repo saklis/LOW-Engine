@@ -10,3 +10,4 @@
 #include "ecs/components/SoundComponent.h"
 #include "ecs/components/SoundCueComponent.h"
 #include "ecs/components/ColliderComponent.h"
+#include "ecs/components/ParticleComponent.h"

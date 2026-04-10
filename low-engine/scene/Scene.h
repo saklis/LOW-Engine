@@ -267,8 +267,8 @@ namespace LowEngine {
 
     protected:
 		b2WorldId _box2dWorldId = b2_nullWorldId;
-        size_t _cameraEntityId = Config::MAX_SIZE;
-        SpriteSortingMethod _spriteSortingMethod = SpriteSortingMethod::None;
+        size_t _cameraEntityId = Config::INVALID_ID;
+        SpriteSortingMethod _spriteSortingMethod = SpriteSortingMethod::DrawOrder;
         Memory::Memory _memory;
 
         /**

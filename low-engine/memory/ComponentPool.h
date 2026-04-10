@@ -63,6 +63,8 @@ namespace LowEngine::Memory {
 		 */
 		virtual void CollectSprites(std::vector<Sprite>& sprites) = 0;
 
+		virtual void DrawDirect(sf::RenderTarget& target) = 0;
+
 		bool IsDependantOn(size_t entityId, const std::type_info& typeInfo);
 
 		/**
@@ -257,10 +259,16 @@ namespace LowEngine::Memory {
 			for (auto& storage : Storage) {
 				T* component = reinterpret_cast<T*>(&storage);
 				if (component->Active) {
-					Sprite* sprite = component->Draw();
-					if (sprite != nullptr) {
-						sprites.emplace_back(*sprite);
-					}
+					component->Draw(sprites);
+				}
+			}
+		}
+
+		void DrawDirect(sf::RenderTarget& target) override {
+			for (auto & storage : Storage) {
+				T* component = reinterpret_cast<T*>(&storage);
+				if (component->Active) {
+					component->DrawDirect(target);
 				}
 			}
 		}

@@ -75,12 +75,20 @@ namespace LowEngine::ECS {
         };
 
         /**
-         * @brief Retrieve a pointer to Sprite that should be drawn in the current frame.
-         * @return Pointer to Sprite. Returns nullptr if there's nothing to be drawn.
+         * @brief Adds all Sprites, that should be drawn in the current frame, to the collection.
+         *
+         * @param sprites Reference to a Collection that the sprites from this component should be added to.
          */
-        virtual Sprite* Draw() {
-            return nullptr;
-        };
+        virtual void Draw(/* out */std::vector<Sprite>& sprites) {}
+
+        /**
+         * @brief Draw this component directly to the render target, bypassing the sprite pipeline.
+         *
+         * Intended for components that manage their own GPU resources (e.g. sf::VertexArray).
+         * Called after the sprite pass in Scene::Draw. Default implementation does nothing.
+         * @param target Render target to draw to.
+         */
+        virtual void DrawDirect(sf::RenderTarget& target) {}
 
 
 

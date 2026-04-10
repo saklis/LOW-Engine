@@ -10,6 +10,8 @@ namespace LowEngine::Terrain {
 
 	class TerrainManager {
 	public:
+		void Update(float deltaTime);
+
 		/**
 		 * @brief Collect all sprites that need to be drawn for this terrain.
 		 *
@@ -25,6 +27,12 @@ namespace LowEngine::Terrain {
 		}
 
 		void DeleteLayer(int layerIndex);
+
+		nlohmann::ordered_json SerializeToJSON();
+
+		bool DeserializeFromJSON(const nlohmann::ordered_json& json);
+
+		void CopyLayersFrom(const TerrainManager& terrain);
 
 	protected:
 		std::vector<LowEngine::TileMap::TileMapLayer> _layers;

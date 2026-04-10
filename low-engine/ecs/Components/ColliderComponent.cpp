@@ -100,12 +100,10 @@ namespace LowEngine::ECS {
 		}
 	}
 
-	LowEngine::Sprite* ColliderComponent::Draw() {
+	void ColliderComponent::Draw(/* out */std::vector<LowEngine::Sprite>& sprites) {
 		if (DrawCollisionOverlay && B2_IS_NON_NULL(_bodyId)) {
-			return &_sprite;
+			sprites.emplace_back(_sprite);
 		}
-
-		return nullptr;
 	}
 
 	nlohmann::ordered_json ColliderComponent::SerializeToJSON() {

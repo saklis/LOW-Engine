@@ -79,21 +79,30 @@ namespace LowEngine::Controls {
         }
     }
 
-    void TexturePickerPopup(const char *popup_str_id, ECS::SpriteComponent *sc) {
-        TexturePickerPopupImpl(popup_str_id, sc->TextureId, false, [sc](std::size_t id) {
+    bool TexturePickerPopup(const char *popup_str_id, ECS::SpriteComponent *sc) {
+        bool textureSelected = false;
+        TexturePickerPopupImpl(popup_str_id, sc->TextureId, false, [sc, &textureSelected](std::size_t id) {
             sc->SetTexture(id);
+            textureSelected = true;
         });
+        return textureSelected;
     }
 
-    void TexturePickerPopup(const char *popup_str_id, ECS::AnimatedSpriteComponent *asc) {
-        TexturePickerPopupImpl(popup_str_id, asc->TextureId, true, [asc](std::size_t id) {
+    bool TexturePickerPopup(const char *popup_str_id, ECS::AnimatedSpriteComponent *asc) {
+        bool textureSelected = false;
+        TexturePickerPopupImpl(popup_str_id, asc->TextureId, true, [asc, &textureSelected](std::size_t id) {
             asc->SetTexture(id);
+            textureSelected = true;
         });
+        return textureSelected;
     }
 
-    void TexturePickerPopup(const char *popup_str_id, std::size_t &out_textureId) {
-        TexturePickerPopupImpl(popup_str_id, out_textureId, true, [&out_textureId](std::size_t id) {
+    bool TexturePickerPopup(const char *popup_str_id, std::size_t &out_textureId) {
+        bool textureSelected = false;
+        TexturePickerPopupImpl(popup_str_id, out_textureId, true, [&out_textureId, &textureSelected](std::size_t id) {
             out_textureId = id;
+            textureSelected = true;
         });
+        return textureSelected;
     }
 }

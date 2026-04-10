@@ -70,7 +70,7 @@ namespace LowEngine::ECS {
 
 		void FixedUpdate(float fixedDeltaTime) override;
 
-		Sprite* Draw() override;
+		void Draw(/* out */std::vector<LowEngine::Sprite>& sprites) override;
 
 		nlohmann::ordered_json SerializeToJSON() override;
 

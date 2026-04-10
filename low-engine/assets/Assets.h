@@ -25,6 +25,7 @@
 
 #include "defaults/unitblock.hpp"
 #include "files/Music.h"
+#include "particles/Emitter.h"
 #include "SFML/Audio/Music.hpp"
 #include "terrain/LayerDefinition.h"
 
@@ -418,6 +419,53 @@ namespace LowEngine {
         static std::vector<std::string> GetMusicAliases();
 
         /**
+         * @brief Load an Emitter from a JSON file and register it under an alias.
+         *
+         * The referenced texture must already be loaded in the Assets manager before calling this,
+         * as deserialization resolves the texture by alias.
+         *
+         * @param alias Unique name used to reference the emitter later.
+         * @param path Filesystem path to the emitter file (.emitter).
+         * @return ID of the loaded emitter. Returns Config::INVALID_ID on failure.
+         */
+    	static std::size_t LoadEmitter(const std::string& alias, const std::string& path);
+
+        /**
+         * @brief Serialize an Emitter to a JSON file in the project's emitters directory.
+         *
+         * The file is written to: rootDirectory / assets / emitters / fileName.lowemitter
+         * The directory is created if it does not exist.
+         * On success, Emitter::Path is updated to reflect the written file path.
+         *
+         * @param emitter Emitter to save. Its Path field will be updated on success.
+         * @param projectDirectory Root directory of the project (i.e. Game::ProjectDirectory).
+         * @param fileName Name of the output file, without extension.
+         * @return True on success. False if the file could not be opened or written.
+         */
+    	static bool SaveEmitter(Particles::Emitter& emitter, const std::filesystem::path& projectDirectory, const std::string& fileName);
+
+        /**
+         * @brief Check if an emitter with the given alias is loaded.
+         * @param emitterAlias Alias to look up.
+         * @return True if an emitter with that alias exists, false otherwise.
+         */
+    	static bool EmitterExists(const std::string& emitterAlias);
+
+        /**
+         * @brief Retrieve an Emitter by its ID.
+         * @param emitterId ID returned by LoadEmitter.
+         * @return Reference to the requested Emitter.
+         */
+    	static Particles::Emitter& GetEmitter(std::size_t emitterId);
+
+        /**
+         * @brief Retrieve an Emitter by its alias.
+         * @param emitterAlias Alias registered with LoadEmitter.
+         * @return Reference to the requested Emitter.
+         */
+    	static Particles::Emitter& GetEmitter(const std::string& emitterAlias);
+
+        /**
          * @brief Serialize all loaded assets to JSON format.
          *
          * This method generates a JSON representation of all loaded assets, including textures, sounds, fonts, and tile maps.
@@ -487,5 +535,8 @@ namespace LowEngine {
 
         std::vector<std::unique_ptr<Files::Music> > _music;
         std::unordered_map<std::string, size_t> _musicAliases;
+
+    	std::vector<Particles::Emitter> _emitters;
+    	std::unordered_map<std::string, size_t> _emitterAliases;
     };
 }

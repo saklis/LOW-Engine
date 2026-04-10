@@ -21,5 +21,7 @@ namespace LowEngine {
         void DrawProperties(Scene* scene, int posX, int posY, int width, int height,
                             size_t& selectedEntityId, int resetLayoutFrames,
                             const std::vector<ComponentEditorBinding>& bindings);
+
+        void CurrentCameraControls(Game& game, Scene* scene);
     }
 }

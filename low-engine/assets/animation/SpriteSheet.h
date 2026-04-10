@@ -92,6 +92,14 @@ namespace LowEngine::Animation {
         sf::Vector2<size_t> FrameCount;
 
         /**
+         * @brief Retrieves the rectangle for a tile at the given grid coordinates.
+         * @param x Column index of the tile (zero-based).
+         * @param y Row index of the tile (zero-based).
+         * @return An sf::IntRect describing the tile's position and size in texture space, in pixels.
+         */
+        sf::IntRect GetTile(std::size_t x, std::size_t y);
+
+        /**
          * @brief Add a new animation definition to this Sheet.
          * @param name Name of the animation.
          * @param frameIndex Index of the first frame for the animation.

@@ -357,7 +357,7 @@ if (BUILD_LOW_EDITOR)
     # Link the executable against our LowEngine library
     target_link_libraries(${LOW_EDITOR_NAME}
             PRIVATE
-            LowEngine
+            ${LOW_ENGINE_NAME}
             ImGuiPack # <- ImGui Pack with ImGui, ImGui-SFML and ImGuiFileDialog
     )
 

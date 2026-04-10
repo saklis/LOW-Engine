@@ -141,13 +141,16 @@ namespace LowEngine {
 			_log->warn("Project JSON does not contain 'inputActions' field");
 		}
 
-		// TODO: Load scenes
-
 		if (!Scenes.DefaultSceneExists()) {
 			if (const auto defaultScene = Scenes.CreateDefaultScene()) {
 				DefaultSceneName = defaultScene->Name;
 				Scenes.SelectScene(defaultScene);
 			}
+		}
+
+		if (projectJson.contains("defaultSceneName")) {
+			std::string sceneNameToLoad = projectJson["defaultSceneName"].get<std::string>();
+			LoadScene(sceneNameToLoad);
 		}
 
 		file.close();

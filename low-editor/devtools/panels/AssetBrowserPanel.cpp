@@ -842,7 +842,7 @@ namespace LowEngine::Panels {
             } else {
                 auto& tileMap = Assets::GetTileMap(tileMapAlias);
 
-                if (!tileMapPreview.resize({tileMap.Size.x, tileMap.Size.y})) {
+                if (!tileMapPreview.resize({static_cast<unsigned>(tileMap.Size.x), static_cast<unsigned>(tileMap.Size.y)})) {
                     _log->error("Failed to resize map render texture to {}x{}.", tileMap.Size.x, tileMap.Size.y);
                 }
                 tileMapPreview.clear(sf::Color::Magenta);
@@ -1045,7 +1045,7 @@ namespace LowEngine::Panels {
 
         ImGui::Columns(columnsCount, "SoundBrowserColumnsLayout", false);
 
-        for (auto alias : aliases) {
+        for (auto& alias : aliases) {
             if (ImGui::ImageButton(alias.c_str(), EditorAssets::SoundIconTexture()->getNativeHandle(),
                                    ImVec2(thumbnailSize, thumbnailSize), ImVec2(0.0f, 0.0f),
                                    ImVec2(1.0f, 1.0f))) {
@@ -1093,7 +1093,7 @@ namespace LowEngine::Panels {
                                            addNewSoundDialogCenter.y - addSoundSize.y / 2),
                                     ImGuiCond_Appearing);
             ImGui::SetNextWindowSize(ImVec2(addSoundDialogSize.x, addSoundDialogSize.y), ImGuiCond_Appearing);
-            if (ImGui::Begin("Add New Soun", &showAddNewSoundDialog,
+            if (ImGui::Begin("Add New Sound", &showAddNewSoundDialog,
                              ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
                 ImGui::Text("Selected file: %s", newSoundFile.string().c_str());
 

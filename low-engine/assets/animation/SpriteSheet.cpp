@@ -22,6 +22,15 @@ namespace LowEngine::Animation {
         EndFrame = StartFrame + FrameCount - 1;
     }
 
+    sf::IntRect SpriteSheet::GetTile(std::size_t x, std::size_t y) {
+        sf::IntRect tile;
+        tile.position.x = x * FrameSize.x;
+        tile.position.y = y * FrameSize.y;
+        tile.size.x = FrameSize.x;
+        tile.size.y = FrameSize.y;
+        return tile;
+    }
+
     void SpriteSheet::AddAnimationClip(const std::string& name, size_t frameIndex, size_t frameCount, float frameDuration,
                                        const sf::Vector2<size_t>& firstFrameOrigin) {
         if (!HasAnimationClip(name)) {

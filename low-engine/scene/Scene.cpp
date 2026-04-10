@@ -35,6 +35,8 @@ namespace LowEngine {
         auto worldDef = GetB2WorldDef();
         _box2dWorldId = b2CreateWorld(&worldDef);
 
+	    Terrain.CopyLayersFrom(other.Terrain);
+
         _memory.Box2dWorldId = _box2dWorldId;
         auto entities = _memory.GetAllEntities();
         for (const auto& entityPtr : *entities) {
@@ -59,6 +61,9 @@ namespace LowEngine {
         nlohmann::ordered_json sceneJson;
 
 		sceneJson["name"] = Name;
+	    sceneJson["spriteSortingMethod"] = _spriteSortingMethod;
+	    sceneJson["currentCameraEntityId"] = _cameraEntityId;
+	    sceneJson["terrain"] = Terrain.SerializeToJSON();
 		sceneJson["entities"] = _memory.SerializeAllEntitiesToJSON();
         sceneJson["components"] = _memory.SerializeAllComponentsToJSON();
 
@@ -72,6 +77,18 @@ namespace LowEngine {
 			_log->error("Provided json data don't contain 'name' field for scene deserialization.");
 			return false;
         }
+	    if (jsonData.contains("spriteSortingMethod")) {
+	        _spriteSortingMethod = (jsonData["spriteSortingMethod"].get<SpriteSortingMethod>());
+	    } else {
+	        _log->error("Provided json data don't contain 'spriteSortingMethod' field for scene deserialization.");
+	        return false;
+	    }
+	    if (jsonData.contains("terrain")) {
+	        if (!Terrain.DeserializeFromJSON(jsonData["terrain"])) {
+	            _log->error("Failed to deserialize terrain for scene '{}'", Name);
+	            return false;
+	        }
+	    }
         if (jsonData.contains("entities")) {
             if (!_memory.DeserializeAllEntitiesFromJSON<ECS::Entity>(jsonData["entities"]))
             {
@@ -86,11 +103,19 @@ namespace LowEngine {
                 return false;
 			}
 		}
+	    if (jsonData.contains("currentCameraEntityId")) {
+	        auto cameraEId = jsonData["currentCameraEntityId"].get<std::size_t>();
+	        SetCurrentCamera(cameraEId);
+	    } else {
+	        _log->error("Provided json data don't contain 'currentCameraEntityId' field for scene deserialization.");
+	        return false;
+	    }
 
 		return true;
 	}
 
 	void Scene::Update(float deltaTime) {
+	    Terrain.Update(deltaTime);
         _memory.UpdateAllComponents(IsPaused ? 0.0f : deltaTime);
     }
 
@@ -111,7 +136,7 @@ namespace LowEngine {
 	}
 
 	void Scene::Draw(sf::RenderWindow& window) {
-        if (_cameraEntityId < Config::MAX_SIZE) {
+        if (_cameraEntityId < Config::INVALID_ID) {
             auto cameraComponent = _memory.GetComponent<ECS::CameraComponent>(_cameraEntityId);
             if (cameraComponent) {
                 cameraComponent->SetView(window);
@@ -140,6 +165,8 @@ namespace LowEngine {
         for (auto& sprite: sprites) {
             window.draw(sprite);
         }
+
+	    _memory.DrawDirect(window);
     }
 
     ECS::Entity* Scene::AddEntity(const std::string& name) {
@@ -198,7 +225,7 @@ namespace LowEngine {
     }
 
     ECS::Entity* Scene::GetCurrentCamera() {
-        if (_cameraEntityId == Config::MAX_SIZE) {
+        if (_cameraEntityId == Config::INVALID_ID) {
             _log->debug("No camera entity set for scene '{}'", Name);
             return nullptr;
         }
@@ -241,6 +268,7 @@ namespace LowEngine {
         _memory.RegisterComponentType<ECS::AnimatedSpriteComponent>();
 		_memory.RegisterComponentType<ECS::CameraComponent>();
 	    _memory.RegisterComponentType<ECS::ColliderComponent>();
+	    _memory.RegisterComponentType<ECS::ParticleComponent>();
 		_memory.RegisterComponentType<ECS::SoundComponent>();
         _memory.RegisterComponentType<ECS::SoundCueComponent>();
 		_memory.RegisterComponentType<ECS::SpriteComponent>();

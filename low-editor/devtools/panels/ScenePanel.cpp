@@ -2,6 +2,8 @@
 
 #include <imgui.h>
 
+#include "devtools/Action.h"
+#include "ecs/components/CameraComponent.h"
 #include "Game.h"
 #include "scene/Scene.h"
 #include "EngineConfig.h"
@@ -71,7 +73,7 @@ namespace LowEngine::Panels {
                                uv0, uv1)) {
             selectedEntityId = -1;
             size_t tempSceneIndex = game.Scenes.CreateCopySceneFromCurrent(LowEditor::Config::TEMPORARY_SCENE_SUFFIX);
-            if (tempSceneIndex != Config::MAX_SIZE) {
+            if (tempSceneIndex != Config::INVALID_ID) {
                 game.Scenes.SelectScene(tempSceneIndex);
                 game.Scenes.GetCurrentScene()->IsPaused = false;
             } else { _log->error("Failed to create temporary scene"); }
@@ -211,6 +213,40 @@ namespace LowEngine::Panels {
         } else { ImGui::Begin("Properties###Properties"); }
 
         ImGui::End();
+    }
+
+    void CurrentCameraControls(Game& game, Scene* scene) {
+        auto* tertiary = EditorAction::Action(MouseAction::Tertiary);
+        if (tertiary->Pressed) {
+            auto cameraEntity = scene->GetCurrentCamera();
+            auto transform = scene->GetComponent<ECS::TransformComponent>(cameraEntity->Id);
+
+            static sf::Vector2i prevMousePos;
+            sf::Vector2i mousePos = sf::Mouse::getPosition(game.Window);
+
+            if (tertiary->Started) {
+                prevMousePos = mousePos;
+            }
+
+            sf::Vector2i mousePosDelta = mousePos - prevMousePos;
+            transform->Position.x -= mousePosDelta.x;
+            transform->Position.y -= mousePosDelta.y;
+
+            prevMousePos = mousePos;
+        }
+
+        if (EditorAction::Action(MouseScrollAction::Up)->Started) {
+            auto cameraEntity = scene->GetCurrentCamera();
+            auto camera = scene->GetComponent<ECS::CameraComponent>(cameraEntity->Id);
+
+            camera->ZoomFactor = std::clamp(camera->ZoomFactor - 0.1f, 0.0f, 1000.0f);
+        }
+        if (EditorAction::Action(MouseScrollAction::Down)->Started) {
+            auto cameraEntity = scene->GetCurrentCamera();
+            auto camera = scene->GetComponent<ECS::CameraComponent>(cameraEntity->Id);
+
+            camera->ZoomFactor += 0.1;
+        }
     }
 
 }

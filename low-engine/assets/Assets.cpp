@@ -23,13 +23,13 @@ namespace LowEngine {
         } catch (sf::Exception& ex) {
             _log->error("Failed to load texture: {}", path);
             _log->error("Error: {}", ex.what());
-            return Config::MAX_SIZE;
+            return Config::INVALID_ID;
         }
     }
 
     size_t Assets::LoadTexture(const std::string& alias, const std::string& path) {
         size_t index = LoadTexture(path);
-        if (index != Config::MAX_SIZE) {
+        if (index != Config::INVALID_ID) {
             GetInstance()->_textureAliases[alias] = index;
         }
 
@@ -42,7 +42,7 @@ namespace LowEngine {
                                               size_t frameHeight,
                                               size_t frameCountX, size_t frameCountY) {
         size_t textureId = LoadTexture(path);
-        if (textureId != Config::MAX_SIZE) {
+        if (textureId != Config::INVALID_ID) {
             AddSpriteSheet(textureId, frameCountX, frameCountY);
         }
 
@@ -54,7 +54,7 @@ namespace LowEngine {
                                               size_t frameHeight, size_t frameCountX,
                                               size_t frameCountY) {
         size_t textureId = LoadTexture(alias, path);
-        if (textureId != Config::MAX_SIZE) {
+        if (textureId != Config::INVALID_ID) {
             AddSpriteSheet(textureId, frameCountX, frameCountY);
         }
 
@@ -395,6 +395,70 @@ namespace LowEngine {
             aliases.push_back(pair.first);
         }
         return aliases;
+    }
+
+    std::size_t Assets::LoadEmitter(const std::string& alias, const std::string& path) {
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            _log->error("LoadEmitter: failed to open file: {}", path);
+            return Config::INVALID_ID;
+        }
+
+        nlohmann::ordered_json json;
+        file >> json;
+        file.close();
+
+        Particles::Emitter emitter;
+        if (!emitter.DeserializeFromJSON(json)) {
+            _log->error("LoadEmitter: failed to deserialize emitter from file: {}", path);
+            return Config::INVALID_ID;
+        }
+
+        emitter.Path = path;
+
+        const std::size_t index = GetInstance()->_emitters.size();
+        GetInstance()->_emitters.emplace_back(std::move(emitter));
+        GetInstance()->_emitterAliases[alias] = index;
+
+        _log->debug("Emitter loaded from '{}' with alias '{}' and id {}", path, alias, index);
+        return index;
+    }
+
+    bool Assets::SaveEmitter(Particles::Emitter& emitter, const std::filesystem::path& projectDirectory, const std::string& fileName) {
+        const auto dir = projectDirectory / Config::ASSETS_FOLDER_NAME / Config::EMITTERS_FOLDER_NAME;
+        std::filesystem::create_directories(dir);
+
+        const auto filePath = dir / (fileName + Config::EMITTER_FILE_EXTENSION);
+
+        std::ofstream file(filePath);
+        if (!file.is_open()) {
+            _log->error("SaveEmitter: failed to open file for writing: {}", filePath.string());
+            return false;
+        }
+
+        file << emitter.SerializeToJSON().dump(4);
+
+        file.close();
+        if (file.fail()) {
+            _log->error("SaveEmitter: failed to write emitter data to file: {}", filePath.string());
+            return false;
+        }
+
+        emitter.Path = filePath;
+        _log->info("Emitter saved successfully to: {}", filePath.string());
+        return true;
+    }
+
+    bool Assets::EmitterExists(const std::string& emitterAlias) {
+        return GetInstance()->_emitterAliases.contains(emitterAlias);
+    }
+
+    Particles::Emitter& Assets::GetEmitter(std::size_t emitterId) {
+        return GetInstance()->_emitters[emitterId];
+    }
+
+    Particles::Emitter& Assets::GetEmitter(const std::string& emitterAlias) {
+        return GetInstance()->_emitters[GetInstance()->_emitterAliases[emitterAlias]];
     }
 
     nlohmann::ordered_json Assets::SerializeToJSON(const std::filesystem::path& rootDirectory) {
@@ -755,7 +819,7 @@ namespace LowEngine {
 
         for (size_t cellIndex = 0; cellIndex < map->TerrainLayer.Cells.size(); cellIndex++) {
             auto cellValue = map->TerrainLayer.Cells[cellIndex];
-            if (cellValue != Config::MAX_SIZE) {
+            if (cellValue != Config::INVALID_ID) {
                 if (map->TerrainLayer.AnimatedTiles.size() > 1) {
                     if (map->TerrainLayer.AnimatedTiles.find(cellValue) != map->TerrainLayer.AnimatedTiles.end()) {
                         std::uniform_int_distribution<> dis(0, static_cast<int>(map->TerrainLayer.AnimatedTiles.size() - 1));
@@ -785,7 +849,7 @@ namespace LowEngine {
 
         for (size_t cellIndex = 0; cellIndex < map->FeaturesLayer.Cells.size(); cellIndex++) {
             auto cellValue = map->FeaturesLayer.Cells[cellIndex];
-            if (cellValue != Config::MAX_SIZE) {
+            if (cellValue != Config::INVALID_ID) {
                 auto animTile = map->FeaturesLayer.AnimatedTiles.find(cellValue);
                 if (animTile != map->FeaturesLayer.AnimatedTiles.end()) {
                     if (animTile->second.ClipNames.size() >= 2) {
@@ -807,7 +871,7 @@ namespace LowEngine {
             navCell.Position.y = i / map->NavGrid.Width;
 
             size_t terrainCellIndexType = layer->Cells[i];
-            if (terrainCellIndexType != Config::MAX_SIZE) {
+            if (terrainCellIndexType != Config::INVALID_ID) {
                 auto& typeDefinition = layerDefinition->CellDefinitions.at(terrainCellIndexType);
 
                 navCell.IsWalkable = typeDefinition.IsWalkable;

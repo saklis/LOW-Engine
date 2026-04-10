@@ -30,11 +30,11 @@ namespace LowEngine {
         inline static const char* LOGGER_NAME = "low_engine_spdlog_logger_name";
 
         /**
-         * @brief Maximum value for size_t.
+         * @brief Arbitrary value treated as "null" value for any ID field defined as size_t.\
          *
-         * This value is used as "null" value for size_t.
+         * Set to maximum value for size_t.
          */
-        inline static const unsigned long long MAX_SIZE = std::numeric_limits<std::size_t>::max();
+        inline static const unsigned long long INVALID_ID = std::numeric_limits<std::size_t>::max();
 
         /**
          * @brief Default alias for the texture that is used when no texture is specified.
@@ -94,6 +94,16 @@ namespace LowEngine {
          * @brief Default name for the font assets directory.
          */
         inline static const std::string FONTS_FOLDER_NAME = "fonts";
+
+        /**
+         * @brief Default name for the emitter assets directory.
+         */
+        inline static const std::string EMITTERS_FOLDER_NAME = "emitters";
+
+        /**
+         * @brief Default file extension for emitter asset files.
+         */
+        inline static const std::string EMITTER_FILE_EXTENSION = ".emitter";
 
         /**
          * @brief Default name for the scenes directory.

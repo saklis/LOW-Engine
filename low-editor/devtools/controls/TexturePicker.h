@@ -7,7 +7,7 @@ namespace LowEngine::ECS {
 }
 
 namespace LowEngine::Controls {
-	void TexturePickerPopup(const char* popup_str_id, LowEngine::ECS::SpriteComponent* sc);
-	void TexturePickerPopup(const char* popup_str_id, LowEngine::ECS::AnimatedSpriteComponent* asc);
-	void TexturePickerPopup(const char* popup_str_id, std::size_t& out_textureId);
+	bool TexturePickerPopup(const char* popup_str_id, LowEngine::ECS::SpriteComponent* sc);
+	bool TexturePickerPopup(const char* popup_str_id, LowEngine::ECS::AnimatedSpriteComponent* asc);
+	bool TexturePickerPopup(const char* popup_str_id, std::size_t& out_textureId);
 }
