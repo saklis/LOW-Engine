@@ -466,6 +466,20 @@ namespace LowEngine {
     	static Particles::Emitter& GetEmitter(const std::string& emitterAlias);
 
         /**
+         * @brief Retrieve the alias of an Emitter by its ID.
+         * @param emitterId ID of the Emitter.
+         * @return Alias string registered with LoadEmitter.
+         */
+        static std::string GetEmitterAlias(std::size_t emitterId);
+
+        /**
+         * @brief Retrieve the ID of an Emitter by its alias.
+         * @param emitterAlias Alias registered with LoadEmitter.
+         * @return ID of the Emitter.
+         */
+        static std::size_t GetEmitterId(const std::string& emitterAlias);
+
+        /**
          * @brief Serialize all loaded assets to JSON format.
          *
          * This method generates a JSON representation of all loaded assets, including textures, sounds, fonts, and tile maps.

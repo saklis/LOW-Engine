@@ -54,7 +54,12 @@ namespace LowEngine::Particles {
             return false;
         }
 
-        Mode       = static_cast<SpriteMode>(json.value("Mode", static_cast<int>(SpriteMode::FullTexture)));
+        const int modeInt = json.value("Mode", static_cast<int>(SpriteMode::FullTexture));
+        if (modeInt < 0 || modeInt > static_cast<int>(SpriteMode::AnimationClip)) {
+            _log->error("Emitter deserialization failed: invalid Mode value {}.", modeInt);
+            return false;
+        }
+        Mode = static_cast<SpriteMode>(modeInt);
         FrameIndex = json.value("FrameIndex", std::size_t{0});
         AnimClipName = json.value("AnimClipName", std::string{});
 

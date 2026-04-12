@@ -461,6 +461,18 @@ namespace LowEngine {
         return GetInstance()->_emitters[GetInstance()->_emitterAliases[emitterAlias]];
     }
 
+    std::string Assets::GetEmitterAlias(std::size_t emitterId) {
+        for (const auto& [alias, id] : GetInstance()->_emitterAliases) {
+            if (id == emitterId)
+                return alias;
+        }
+        return {};
+    }
+
+    std::size_t Assets::GetEmitterId(const std::string& emitterAlias) {
+        return GetInstance()->_emitterAliases[emitterAlias];
+    }
+
     nlohmann::ordered_json Assets::SerializeToJSON(const std::filesystem::path& rootDirectory) {
         nlohmann::ordered_json assetsJson;
         nlohmann::ordered_json texturesJson;
