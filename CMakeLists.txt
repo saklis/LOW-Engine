@@ -34,6 +34,7 @@ endmacro()
 
 low_set_option(BUILD_LOW_EDITOR ON BOOL "Build the LOWEditor along with the engine")
 low_set_option(BUILD_LOW_ENGINE_SHARED ON BOOL "Build LOWEngine as a shared library")
+low_set_option(BUILD_LOW_TESTS OFF BOOL "Build LOWEngine unit tests")
 
 low_set_option(LOW_ENGINE_NAME "LOWEngine" STRING "Name of LOWEngine library")
 low_set_option(LOW_EDITOR_NAME "LOWEditor" STRING "Name of LOWEditor executable")
@@ -272,6 +273,63 @@ set_target_properties(${LOW_ENGINE_NAME}
         RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BUILD_OUTPUT_DEBUG}
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
 )
+
+###############################################################################
+# LOW ENGINE TESTS
+###############################################################################
+
+if (BUILD_LOW_TESTS)
+
+    include(FetchContent)
+
+    # Catch2 presence check — avoid FETCHCONTENT_FULLY_DISCONNECTED blocking first fetch
+    if (NOT EXISTS "${FETCHCONTENT_BASE_DIR}/catch2-src")
+        set(FETCHCONTENT_FULLY_DISCONNECTED OFF CACHE BOOL "" FORCE)
+    endif ()
+
+    FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG        v3.14.0
+    )
+    FetchContent_MakeAvailable(Catch2)
+
+    # Put Catch2 targets in the Dependencies IDE folder
+    foreach (_catch2Target IN ITEMS Catch2 Catch2WithMain)
+        if (TARGET ${_catch2Target})
+            set_target_properties(${_catch2Target} PROPERTIES FOLDER "${3RD_PARTY_FOLDER}/Catch2")
+        endif ()
+    endforeach ()
+
+    file(GLOB_RECURSE LOW_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp")
+
+    set(_old_cmake_folder "${CMAKE_FOLDER}")
+    set(CMAKE_FOLDER "Tests")
+    add_executable(LOWEngineTests ${LOW_TEST_FILES})
+    set(CMAKE_FOLDER "${_old_cmake_folder}")
+
+    target_link_libraries(LOWEngineTests PRIVATE
+        ${LOW_ENGINE_NAME}
+        Catch2::Catch2WithMain
+    )
+
+    target_include_directories(LOWEngineTests PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/low-engine"
+    )
+
+    set_target_properties(LOWEngineTests PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${BUILD_OUTPUT_DEBUG}
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BUILD_OUTPUT_RELEASE}
+    )
+
+    if (MSVC)
+        set_target_properties(LOWEngineTests PROPERTIES
+            VS_DEBUGGER_WORKING_DIRECTORY
+            "$<IF:$<CONFIG:Debug>,${BUILD_OUTPUT_DEBUG},${BUILD_OUTPUT_RELEASE}>"
+        )
+    endif ()
+
+endif ()
 
 ###############################################################################
 # 3-rd PARTY for LOWEDITOR
