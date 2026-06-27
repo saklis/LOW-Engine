@@ -445,6 +445,24 @@ namespace LowEngine {
     	static bool SaveEmitter(Particles::Emitter& emitter, const std::filesystem::path& projectDirectory, const std::string& fileName);
 
         /**
+         * @brief Unload an emitter by its ID.
+         *
+         * Removes the emitter from the internal store and clears its alias mapping.
+         * Any ParticleComponent still referencing this ID will have a dangling EmitterId.
+         * @param emitterId ID returned by LoadEmitter.
+         */
+        static void UnloadEmitter(std::size_t emitterId);
+
+        /**
+         * @brief Unload an emitter by its alias.
+         *
+         * Removes the emitter from the internal store and clears its alias mapping.
+         * Any ParticleComponent still referencing this emitter will have a dangling EmitterId.
+         * @param emitterAlias Alias registered with LoadEmitter.
+         */
+        static void UnloadEmitter(const std::string& emitterAlias);
+
+        /**
          * @brief Check if an emitter with the given alias is loaded.
          * @param emitterAlias Alias to look up.
          * @return True if an emitter with that alias exists, false otherwise.
@@ -478,6 +496,12 @@ namespace LowEngine {
          * @return ID of the Emitter.
          */
         static std::size_t GetEmitterId(const std::string& emitterAlias);
+
+        /**
+         * @brief Retrieve all registered emitter aliases.
+         * @return Vector of alias strings, in unspecified order.
+         */
+        static std::vector<std::string> GetEmitterAliases();
 
         /**
          * @brief Serialize all loaded assets to JSON format.
@@ -550,7 +574,7 @@ namespace LowEngine {
         std::vector<std::unique_ptr<Files::Music> > _music;
         std::unordered_map<std::string, size_t> _musicAliases;
 
-    	std::vector<Particles::Emitter> _emitters;
+    	std::vector<std::unique_ptr<Particles::Emitter>> _emitters;
     	std::unordered_map<std::string, size_t> _emitterAliases;
     };
 }

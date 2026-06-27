@@ -22,6 +22,7 @@ namespace LowEngine
 		static sf::Texture* ProjectIconTexture();
 		static sf::Texture* SoundIconTexture();
 		static sf::Texture* MusicIconTexture();
+		static sf::Texture* ParticleIconTexture();
 
 	protected:
 		static EditorAssets* GetInstance() {
@@ -38,5 +39,6 @@ namespace LowEngine
 		sf::Texture* _projectIconTexture;
 		sf::Texture* _soundIconTexture;
 		sf::Texture* _musicIconTexture;
+		sf::Texture* _particleIconTexture;
 	};
 }

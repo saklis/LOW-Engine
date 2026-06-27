@@ -186,7 +186,7 @@ namespace LowEngine::Panels {
 
             ImGui::Text("Name:");
             ImGui::SameLine();
-            auto nameBuffer = new char[255];
+            char nameBuffer[255];
             std::strncpy(nameBuffer, entity->Name.c_str(), 255);
             if (ImGui::InputText("##Name", nameBuffer, 255, ImGuiInputTextFlags_EnterReturnsTrue)) {
                 entity->Name = nameBuffer;

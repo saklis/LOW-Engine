@@ -14,7 +14,7 @@ namespace LowEngine::ECS {
 		_sprite.DrawOrder = Layer;
 	}
 
-	void TileMapComponent::Draw(/* out */std::vector<LowEngine::Sprite>& sprites) {
+	void TileMapComponent::Draw(/* out */std::vector<SceneDrawable>& drawables) {
 		auto& map = Assets::GetTileMap(_mapId);
 
 		_texture.clear(sf::Color::Magenta);
@@ -27,7 +27,7 @@ namespace LowEngine::ECS {
 		_texture.display();
 
 		_sprite.setTexture(_texture.getTexture());
-		sprites.emplace_back(_sprite);
+		drawables.emplace_back(_sprite);
 	}
 
 	nlohmann::ordered_json TileMapComponent::SerializeToJSON() {

@@ -3,11 +3,13 @@
 #include <string>
 #include <typeindex>
 #include <vector>
+#include <filesystem>
 
 #include <imgui-SFML.h>
 
 #include "ComponentEditorBinding.h"
 #include "terrain/Tile.h"
+#include "tools/TerrainBrushManager.h"
 
 namespace LowEngine {
 
@@ -32,6 +34,10 @@ namespace LowEngine {
 
         static void Render(sf::RenderWindow& window);
 
+        static bool LoadProject(Game& game, const std::filesystem::path& projectFilePath);
+        static bool SaveProject(Game& game, const std::filesystem::path& projectFilePath);
+        static void CloseProject(Game& game);
+
     protected:
         static inline Scene* _currentScene = nullptr;
 
@@ -42,6 +48,13 @@ namespace LowEngine {
         static inline sf::IntRect _selectedTerrainLayerTile;
         static inline TileMap::TileType _selectedTerrainLayerTileType = TileMap::TileType::Static;
         static inline std::string _selectedAnimClipName;
+
+        static inline Tools::TerrainBrushManager _terrainBrushManager;
+        static inline std::uint8_t _brushTraversalMask = TileMap::Traversal::None;
+        static inline std::uint8_t _brushEntryCost = 1;
+        static inline bool _brushHasCollision = false;
+        static inline size_t _selectedTerrainBrushIndex = -1;
+        static inline bool _navOverlayVisible = false;
 
         static inline bool _isInTerrainEditMode = false;
         static inline bool _isNewProjectWizardVisible = true;

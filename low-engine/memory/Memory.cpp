@@ -102,9 +102,9 @@ namespace LowEngine::Memory {
         return true;
     }
 
-    void Memory::CollectSprites(std::vector<Sprite>& sprites) {
+    void Memory::CollectDrawables(std::vector<SceneDrawable>& drawables) {
         for (auto& [type, pool]: _components) {
-            pool->CollectSprites(sprites);
+            pool->CollectDrawables(drawables);
         }
     }
 

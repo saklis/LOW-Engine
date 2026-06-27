@@ -2,7 +2,7 @@
 #include <nlohmann/json.hpp>
 
 #include "Layer.h"
-#include "navigation/NavigationGrid.h"
+#include "terrain/navigation/NavigationGrid.h"
 
 namespace LowEngine::Terrain {
     /**

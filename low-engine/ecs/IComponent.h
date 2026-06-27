@@ -9,6 +9,7 @@
 #include "nlohmann/json.hpp"
 
 #include "graphics/Sprite.h"
+#include "graphics/Drawables.h"
 #include "utils/TypeName.h"
 
 namespace LowEngine::Memory {
@@ -75,11 +76,11 @@ namespace LowEngine::ECS {
         };
 
         /**
-         * @brief Adds all Sprites, that should be drawn in the current frame, to the collection.
+         * @brief Adds all drawables for the current frame to the collection.
          *
-         * @param sprites Reference to a Collection that the sprites from this component should be added to.
+         * @param drawables Reference to a collection that drawables from this component should be added to.
          */
-        virtual void Draw(/* out */std::vector<Sprite>& sprites) {}
+        virtual void Draw(/* out */std::vector<SceneDrawable>& drawables) {}
 
         /**
          * @brief Draw this component directly to the render target, bypassing the sprite pipeline.

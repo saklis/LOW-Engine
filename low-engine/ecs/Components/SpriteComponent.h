@@ -49,8 +49,8 @@ namespace LowEngine::ECS {
 
         void Update(float deltaTime) override;
 
-        void Draw(/* out */std::vector<LowEngine::Sprite>& sprites) override {
-            sprites.emplace_back(Sprite);
+        void Draw(/* out */std::vector<SceneDrawable>& drawables) override {
+            drawables.emplace_back(Sprite);
         }
 
         nlohmann::ordered_json SerializeToJSON() override;

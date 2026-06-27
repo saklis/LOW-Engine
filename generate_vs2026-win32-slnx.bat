@@ -1,18 +1,28 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-echo ===========================================
-echo  LOW-Engine - Visual Studio 2026 (Win32)
-echo  Generate / Build / Shortcut script
-echo ===========================================
-
-set "BUILD_DIR=build-vs2026-win32"
 set "GENERATOR=Visual Studio 18 2026"
 set "ARCH=Win32"
 set "BUILD=0"
 
+echo ===========================================
+echo  LOW-Engine - %GENERATOR% (%ARCH%)
+echo  Generate / Build / Shortcut script
+echo ===========================================
+
+REM derive Visual Studio year from generator name
+set "VS_YEAR=%GENERATOR:~-4%"
+
+REM normalize common CMake arch names for folder naming
+set "ARCH_DIR=%ARCH%"
+if /I "%ARCH%"=="Win32" set "ARCH_DIR=win32"
+if /I "%ARCH%"=="x64" set "ARCH_DIR=x64"
+if /I "%ARCH%"=="ARM64" set "ARCH_DIR=arm64"
+
+set "BUILD_DIR=build-vs%VS_YEAR%-%ARCH_DIR%"
+
 echo.
-echo === Generating Visual Studio 2026 Win32 solution ===
+echo === Generating %GENERATOR% %ARCH% solution ===
 
 REM run CMake
 cmake -S . -B "%BUILD_DIR%" -G "%GENERATOR%" -A %ARCH%
@@ -67,9 +77,7 @@ if errorlevel 1 (
 
 REM create .lnk to solution file
 set "LINK_DIR=%~dp0"
-set "SLN_NAME="
-for %%~ in ("%SLN_PATH%") do set "SLN_NAME=%~n0"
-for %%A in ("%SLN_PATH%") do set "LINK_PATH=%LINK_DIR%%%~nA - VS2026 Win32.lnk"
+for %%A in ("%SLN_PATH%") do set "LINK_PATH=%LINK_DIR%%%~nA - VS%VS_YEAR% %ARCH%.lnk"
 
 echo.
 echo === Creating shortcut ===
@@ -79,7 +87,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$L.TargetPath='%SLN_PATH%'; " ^
   "$L.WorkingDirectory='$(Split-Path -Parent ''%SLN_PATH%'')'; " ^
   "$L.IconLocation='%SLN_PATH%,0'; " ^
-  "$L.Description='Open Visual Studio solution (Win32)'; " ^
+  "$L.Description='Open Visual Studio solution (%ARCH%)'; " ^
   "$L.Save()"
 
 if exist "%LINK_PATH%" (
@@ -87,12 +95,12 @@ if exist "%LINK_PATH%" (
 ) else (
     echo.
     echo !!! ERROR: Unable to create a shortcut: "%LINK_PATH%"
-    pasue
+    pause
 )
 
 :end
 echo.
-echo === FINSHED ===
+echo === FINISHED ===
 echo.
 endlocal
 pause

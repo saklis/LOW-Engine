@@ -31,10 +31,8 @@
 *.out
 *.app
 
-# editor settings
-.idea/
-.vscode/
-.vs/
+# local settings
+/.*/
 
 # VS solution links
 LowEngine - VS2022 Win32.lnk
@@ -52,5 +50,3 @@ cmake-build-debug-32bit/
 cmake-build-release-32bit/
 build-vs2022-win32/
 build-vs2026-win32/
-vs2022-win32-sln/
-Folder.DotSettings.user/

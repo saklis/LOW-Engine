@@ -1,11 +1,11 @@
 #pragma once
 
-#if defined(_MSC_VER)
-#ifdef LOWENGINE_EXPORTS
+#if defined(_MSC_VER) && !defined(LOWENGINE_STATIC)
+	#ifdef LOWENGINE_EXPORTS
 		#define LOWENGINE_API __declspec(dllexport)
-#else
-#define LOWENGINE_API __declspec(dllimport)
-#endif
+	#else
+		#define LOWENGINE_API __declspec(dllimport)
+	#endif
 #else
 	#define LOWENGINE_API // GCC/Clang/MinGW export-all by default
 #endif

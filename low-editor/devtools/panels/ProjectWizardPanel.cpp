@@ -11,6 +11,7 @@
 #include "EngineConfig.h"
 #include "EditorConfig.h"
 #include "devtools/Assets.h"
+#include "devtools/DevTools.h"
 #include "log/Log.h"
 
 namespace LowEngine::Panels {
@@ -53,9 +54,9 @@ namespace LowEngine::Panels {
 
             _log->info("New project created: {}", projectFilePath.string());
 
-            game.CloseProject();
-            game.LoadProject(projectFilePath.string());
-            game.SaveProject(projectFilePath.string());
+            DevTools::CloseProject(game);
+            DevTools::LoadProject(game, projectFilePath.string());
+            DevTools::SaveProject(game, projectFilePath.string());
 
             game.Scenes.GetCurrentScene()->IsPaused = true;
             game.Window.setTitle("LOWEditor: " + game.Title);
@@ -171,8 +172,8 @@ namespace LowEngine::Panels {
                 if (ImGui::ImageButton(localProjectName.c_str(), EditorAssets::ProjectIconTexture()->getNativeHandle(),
                                        ImVec2(50, 50), ImVec2(0.0f, 0.0f),
                                        ImVec2(1.0f, 1.0f))) {
-                    game.CloseProject();
-                    game.LoadProject(project.string());
+                    DevTools::CloseProject(game);
+                    DevTools::LoadProject(game, project.string());
 
                     game.Scenes.GetCurrentScene()->IsPaused = true;
                     game.Window.setTitle("LOWEditor: " + game.Title);

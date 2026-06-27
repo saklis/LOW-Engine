@@ -100,9 +100,9 @@ namespace LowEngine::ECS {
 		}
 	}
 
-	void ColliderComponent::Draw(/* out */std::vector<LowEngine::Sprite>& sprites) {
+	void ColliderComponent::Draw(/* out */std::vector<SceneDrawable>& drawables) {
 		if (DrawCollisionOverlay && B2_IS_NON_NULL(_bodyId)) {
-			sprites.emplace_back(_sprite);
+			drawables.emplace_back(_sprite);
 		}
 	}
 

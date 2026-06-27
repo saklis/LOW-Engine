@@ -8,6 +8,7 @@
 #include "EngineConfig.h"
 #include "../log/Log.h"
 #include "graphics/Sprite.h"
+#include "graphics/Drawables.h"
 
 namespace LowEngine::Memory {
 	class Memory;
@@ -56,12 +57,11 @@ namespace LowEngine::Memory {
 		virtual void FixedUpdate(float fixedDeltaTime) = 0;
 
 		/**
-		 * @brief Check all Components in search of Sprites to draw.
+		 * @brief Collect all drawables from active components into the provided collection.
 		 *
-		 * Sprites will be added to refered collection.
-		 * @param[out] sprites Reference to collection that will be filled with Sprites that needs to be drawn.
+		 * @param[out] drawables Reference to collection that will be filled with drawables to render.
 		 */
-		virtual void CollectSprites(std::vector<Sprite>& sprites) = 0;
+		virtual void CollectDrawables(std::vector<SceneDrawable>& drawables) = 0;
 
 		virtual void DrawDirect(sf::RenderTarget& target) = 0;
 
@@ -250,16 +250,15 @@ namespace LowEngine::Memory {
 		}
 
 		/**
-		 * @brief Check all Components in search of Sprites to draw.
+		 * @brief Collect all drawables from active components into the provided collection.
 		 *
-		 * Sprites will be added to refered collection.
-		 * @param[out] sprites Reference to collection that will be filled with Sprites that needs to be drawn.
+		 * @param[out] drawables Reference to collection that will be filled with drawables to render.
 		 */
-		void CollectSprites(std::vector<Sprite>& sprites) override {
+		void CollectDrawables(std::vector<SceneDrawable>& drawables) override {
 			for (auto& storage : Storage) {
 				T* component = reinterpret_cast<T*>(&storage);
 				if (component->Active) {
-					component->Draw(sprites);
+					component->Draw(drawables);
 				}
 			}
 		}

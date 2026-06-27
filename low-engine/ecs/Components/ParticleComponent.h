@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 #include "EngineConfig.h"
 #include "TransformComponent.h"
 #include "assets/particles/Particle.h"
@@ -30,6 +31,15 @@ namespace LowEngine::ECS {
          * Lower values are drawn first (appear behind).
          */
         int DrawOrder = 0;
+
+        /**
+         * @brief Offset added to the spawn origin every time a particle is spawned.
+         *
+         * Applied on top of the entity's transform position (or the position override
+         * when one is active). Useful for emitters that should not originate exactly
+         * at the entity's pivot point.
+         */
+        sf::Vector2f PositionOffset = sf::Vector2f(0.0f, 0.0f);
 
         explicit ParticleComponent(Memory::Memory* memory)
             : IComponent(memory) {
@@ -81,6 +91,26 @@ namespace LowEngine::ECS {
          */
         void Clear();
 
+        /**
+         * @brief Overrides the spawn origin with a fixed world-space position.
+         *
+         * When set, the entity's TransformComponent is ignored for spawn origin
+         * resolution. PositionOffset is still applied on top of the override.
+         * Intended for editor previews and other contexts where no entity exists.
+         * @param position World-space position to use as the spawn origin.
+         */
+        void SetPositionOverride(sf::Vector2f position) { _positionOverride = position; }
+
+        /**
+         * @brief Removes the position override, restoring normal TransformComponent lookup.
+         */
+        void ClearPositionOverride() { _positionOverride = std::nullopt; }
+
+        /**
+         * @brief Returns whether the system is currently active (playing or draining).
+         */
+        [[nodiscard]] bool IsPlaying() const { return _playing; }
+
     protected:
         /**
          * @brief Whether the system is currently emitting particles.
@@ -101,12 +131,44 @@ namespace LowEngine::ECS {
         float _emissionAccumulator = 0.0f;
 
         /**
+         * @brief Total particles spawned since the last Play() call.
+         *
+         * Used by non-looping emitters to enforce the MaxParticles lifetime cap:
+         * once this reaches MaxParticles, no further particles are spawned regardless
+         * of how many live particles remain. Resets to zero on Play() and Clear().
+         */
+        uint32_t _totalSpawned = 0;
+
+        /**
+         * @brief Set to true the first time a particle is spawned after Play().
+         *
+         * Prevents the one-shot stop condition from firing on the very first
+         * frame before the emission accumulator has had time to reach 1.0.
+         */
+        bool _hasEmitted = false;
+
+        /**
          * @brief Vertex buffer used to render all live particles in a single draw call.
          *
          * Uses Triangles primitive — 6 vertices per particle (2 triangles per quad).
          * Sized to Emitter::MaxParticles * 6 on Play().
          */
         sf::VertexArray _vertices;
+
+        /**
+         * @brief Fixed spawn origin used instead of the entity's TransformComponent.
+         *
+         * Empty by default (normal ECS lookup). Set via SetPositionOverride().
+         */
+        std::optional<sf::Vector2f> _positionOverride;
+
+        /**
+         * @brief Resolves the world-space spawn origin for this frame.
+         *
+         * Returns the position override (if set) or the entity's TransformComponent position,
+         * with PositionOffset added in either case.
+         */
+        [[nodiscard]] sf::Vector2f ResolveSpawnOrigin() const;
 
         /**
          * @brief Spawns a single new particle at the given origin using the emitter's configuration.

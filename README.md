@@ -41,6 +41,8 @@ Outputs go to `bin/Debug/` or `bin/Release/`.
 
 ## Usage
 
+For editor project creation and opening workflows, see [New Project Wizard](docs/manual/new-project-wizard.md).
+
 ```cpp
 #include "Game.h"
 #include "ecs/ECSHeaders.h"

@@ -1,8 +1,10 @@
 #include "Scene.h"
 
 #include <algorithm>
+#include <variant>
 
 #include "ecs/ECSHeaders.h"
+#include "graphics/Drawables.h"
 
 namespace LowEngine {
 	Scene::Scene(): Name(""), _memory() {
@@ -50,6 +52,7 @@ namespace LowEngine {
                 }
             }
 		}
+
     }
 
 	void Scene::InitAsDefault() {
@@ -120,6 +123,7 @@ namespace LowEngine {
     }
 
 	void Scene::FixedUpdate(float fixedDeltaTime) {
+        Terrain.BakeCollisions(_box2dWorldId);
 	    _memory.FixedUpdateAllComponents(IsPaused ? 0.0f : fixedDeltaTime);
 	    
         b2World_Step(_box2dWorldId, IsPaused ? 0.0f : fixedDeltaTime, 4);
@@ -143,27 +147,43 @@ namespace LowEngine {
             }
         }
 
-        std::vector<Sprite> sprites;
-        Terrain.CollectSprites(sprites);
-        _memory.CollectSprites(sprites);
+        std::vector<SceneDrawable> drawables;
+        Terrain.CollectDrawables(drawables);
+        _memory.CollectDrawables(drawables);
+
+        auto drawOrderOf = [](const SceneDrawable& d) {
+            return std::visit([](const auto& x) { return x.DrawOrder; }, d);
+        };
+        auto yPosOf = [](const SceneDrawable& d) {
+            return std::visit([](const auto& x) -> float {
+                if constexpr (std::is_same_v<std::decay_t<decltype(x)>, Sprite>)
+                    return x.getPosition().y;
+                return 0.0f;
+            }, d);
+        };
 
         switch (_spriteSortingMethod) {
             case SpriteSortingMethod::YAxisIncremental:
-                std::ranges::sort(sprites, [](const Sprite& a, const Sprite& b) {
-                    return a.getPosition().y < b.getPosition().y;
+                std::ranges::sort(drawables, [&](const SceneDrawable& a, const SceneDrawable& b) {
+                    return yPosOf(a) < yPosOf(b);
                 });
                 break;
             case SpriteSortingMethod::DrawOrder:
-                std::ranges::sort(sprites, [](const Sprite& a, const Sprite& b) {
-                    return a.DrawOrder < b.DrawOrder;
+                std::ranges::sort(drawables, [&](const SceneDrawable& a, const SceneDrawable& b) {
+                    return drawOrderOf(a) < drawOrderOf(b);
                 });
                 break;
             case SpriteSortingMethod::None:
             default: /* no sorting */;
         }
 
-        for (auto& sprite: sprites) {
-            window.draw(sprite);
+        for (auto& drawable : drawables) {
+            std::visit([&window](const auto& d) {
+                if constexpr (std::is_same_v<std::decay_t<decltype(d)>, VertexArrayDrawable>)
+                    window.draw(*d.vertices, sf::RenderStates(d.texture));
+                else
+                    window.draw(d);
+            }, drawable);
         }
 
 	    _memory.DrawDirect(window);

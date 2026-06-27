@@ -42,6 +42,10 @@ namespace LowEngine {
 		if (!GetInstance()->_musicIconTexture->loadFromFile("assets/editor/icons/musicicon.png"))
 			return false;
 
+		GetInstance()->_particleIconTexture = new sf::Texture();
+		if (!GetInstance()->_particleIconTexture->loadFromFile("assets/editor/icons/particleeffect.png"))
+			return false;
+
 		return true;
 	}
 
@@ -73,6 +77,9 @@ namespace LowEngine {
 
 		delete GetInstance()->_musicIconTexture;
 		GetInstance()->_musicIconTexture = nullptr;
+
+		delete GetInstance()->_particleIconTexture;
+		GetInstance()->_particleIconTexture = nullptr;
 		return true;
 	}
 
@@ -117,7 +124,12 @@ namespace LowEngine {
 	}
 
 	sf::Texture* EditorAssets::MusicIconTexture()
-	{	
+	{
 		return GetInstance()->_musicIconTexture;
+	}
+
+	sf::Texture* EditorAssets::ParticleIconTexture()
+	{
+		return GetInstance()->_particleIconTexture;
 	}
 }

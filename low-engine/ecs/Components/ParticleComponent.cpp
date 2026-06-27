@@ -13,17 +13,28 @@
 #include <random>
 
 namespace LowEngine::ECS {
+    sf::Vector2f ParticleComponent::ResolveSpawnOrigin() const {
+        if (_positionOverride.has_value())
+            return *_positionOverride + PositionOffset;
+        const auto* transform = _memory->GetComponent<TransformComponent>(EntityId);
+        return transform->Position + PositionOffset;
+    }
+
     void ParticleComponent::Update(float deltaTime) {
         if (!_playing || EmitterId == Config::INVALID_ID)
             return;
 
         const auto& emitter = Assets::GetEmitter(EmitterId);
-        auto* transform = _memory->GetComponent<TransformComponent>(EntityId);
 
         // Fetch animation clip once for all particles this frame
         const Animation::AnimationClip* clip = nullptr;
-        if (emitter.Mode == Particles::Emitter::SpriteMode::AnimationClip)
-            clip = &Assets::GetSpriteSheet(emitter.TextureId).GetAnimationClip(emitter.AnimClipName);
+        if (emitter.Mode == Particles::Emitter::SpriteMode::AnimationClip) {
+            if (Assets::HasSpriteSheet(emitter.TextureId)) {
+                auto& spriteSheet = Assets::GetSpriteSheet(emitter.TextureId);
+                if (spriteSheet.HasAnimationClip(emitter.AnimClipName))
+                    clip = &spriteSheet.GetAnimationClip(emitter.AnimClipName);
+            }
+        }
 
         // Update and kill dead particles
         for (int i = static_cast<int>(_particles.size()) - 1; i >= 0; i--) {
@@ -35,26 +46,31 @@ namespace LowEngine::ECS {
         }
 
         // Spawn new particles
-        if (_particles.size() < emitter.MaxParticles) {
+        if (_particles.size() < emitter.MaxParticles && (emitter.Loop || _totalSpawned < emitter.MaxParticles)) {
             _emissionAccumulator += emitter.EmissionRate * deltaTime;
             while (_emissionAccumulator >= 1.0f && _particles.size() < emitter.MaxParticles) {
-                SpawnParticle(emitter, transform->Position);
+                SpawnParticle(emitter, ResolveSpawnOrigin());
                 _emissionAccumulator -= 1.0f;
+                _totalSpawned++;
+                _hasEmitted = true;
             }
         }
 
-        // Stop if one-shot and all particles dead
-        if (!emitter.Loop && _particles.empty() && _emissionAccumulator < 1.0f)
+        // Stop if one-shot and all particles dead — guarded by _hasEmitted so
+        // the condition doesn't fire on the first frame before emission begins
+        if (!emitter.Loop && _hasEmitted && _particles.empty() && _emissionAccumulator < 1.0f) {
             _playing = false;
+        }
     }
 
     void ParticleComponent::DrawDirect(sf::RenderTarget& target) {
         if (_particles.empty() || EmitterId == Config::INVALID_ID)
             return;
 
-        const auto& emitter  = Assets::GetEmitter(EmitterId);
-        const auto& texture  = Assets::GetTexture(emitter.TextureId);
-        _vertices.resize(_particles.size() * 6); // since Play() pre-allocates MaxParticles capacity, this should never cause any memory move/copy
+        const auto& emitter = Assets::GetEmitter(EmitterId);
+        const auto& texture = Assets::GetTexture(emitter.TextureId);
+        _vertices.resize(_particles.size() * 6);
+        // since Play() pre-allocates MaxParticles capacity, this should never cause any memory move/copy
 
         // Pre-compute static rect and clip pointer for modes that don't vary per-particle
         sf::IntRect staticRect;
@@ -67,7 +83,12 @@ namespace LowEngine::ECS {
                 break;
             }
             case Particles::Emitter::SpriteMode::AnimationClip:
-                drawClip = &Assets::GetSpriteSheet(emitter.TextureId).GetAnimationClip(emitter.AnimClipName);
+                if (Assets::HasSpriteSheet(emitter.TextureId)) {
+                    auto& spriteSheet = Assets::GetSpriteSheet(emitter.TextureId);
+                    if (spriteSheet.HasAnimationClip(emitter.AnimClipName)) {
+                        drawClip = &spriteSheet.GetAnimationClip(emitter.AnimClipName);
+                    }
+                }
                 break;
             case Particles::Emitter::SpriteMode::FullTexture:
             default:
@@ -95,19 +116,21 @@ namespace LowEngine::ECS {
             const float hh = rect.size.y * 0.5f * p.Scale;
 
             // Rotation
-            const float rad  = p.Rotation * (std::numbers::pi_v<float> / 180.0f);
+            const float rad = p.Rotation * (std::numbers::pi_v<float> / 180.0f);
             const float cosR = std::cos(rad);
             const float sinR = std::sin(rad);
 
             auto rotate = [&](float lx, float ly) -> sf::Vector2f {
-                return { p.Position.x + lx * cosR - ly * sinR,
-                         p.Position.y + lx * sinR + ly * cosR };
+                return {
+                    p.Position.x + lx * cosR - ly * sinR,
+                    p.Position.y + lx * sinR + ly * cosR
+                };
             };
 
             const sf::Vector2f tl = rotate(-hw, -hh);
-            const sf::Vector2f tr = rotate( hw, -hh);
-            const sf::Vector2f bl = rotate(-hw,  hh);
-            const sf::Vector2f br = rotate( hw,  hh);
+            const sf::Vector2f tr = rotate(hw, -hh);
+            const sf::Vector2f bl = rotate(-hw, hh);
+            const sf::Vector2f br = rotate(hw, hh);
 
             // Texture coords
             const float tx0 = static_cast<float>(rect.position.x);
@@ -121,12 +144,12 @@ namespace LowEngine::ECS {
 
             // Write 6 vertices (2 triangles: TL-TR-BL, TR-BR-BL)
             const std::size_t v = i * 6;
-            _vertices[v + 0] = { tl, color, { tx0, ty0 } };
-            _vertices[v + 1] = { tr, color, { tx1, ty0 } };
-            _vertices[v + 2] = { bl, color, { tx0, ty1 } };
-            _vertices[v + 3] = { tr, color, { tx1, ty0 } };
-            _vertices[v + 4] = { br, color, { tx1, ty1 } };
-            _vertices[v + 5] = { bl, color, { tx0, ty1 } };
+            _vertices[v + 0] = {tl, color, {tx0, ty0}};
+            _vertices[v + 1] = {tr, color, {tx1, ty0}};
+            _vertices[v + 2] = {bl, color, {tx0, ty1}};
+            _vertices[v + 3] = {tr, color, {tx1, ty0}};
+            _vertices[v + 4] = {br, color, {tx1, ty1}};
+            _vertices[v + 5] = {bl, color, {tx0, ty1}};
         }
 
         sf::RenderStates states;
@@ -137,7 +160,7 @@ namespace LowEngine::ECS {
     nlohmann::ordered_json ParticleComponent::SerializeToJSON() {
         nlohmann::ordered_json json = IComponent::SerializeToJSON();
         json["EmitterAlias"] = Assets::GetEmitterAlias(EmitterId);
-        json["DrawOrder"]    = DrawOrder;
+        json["DrawOrder"] = DrawOrder;
         return json;
     }
 
@@ -168,18 +191,24 @@ namespace LowEngine::ECS {
         }
 
         const auto& emitter = Assets::GetEmitter(EmitterId);
-        auto* transform = _memory->GetComponent<TransformComponent>(EntityId);
 
         _playing = true;
         _emissionAccumulator = 0.0f;
+        _totalSpawned = 0;
+        _hasEmitted = false;
         _particles.clear();
         _particles.reserve(emitter.MaxParticles);
         _vertices = sf::VertexArray(sf::PrimitiveType::Triangles, emitter.MaxParticles * 6);
 
+        const sf::Vector2f origin = ResolveSpawnOrigin();
         for (std::size_t i = 0; i < emitter.BurstCount; i++) {
-            if (_particles.size() < emitter.MaxParticles)
-                SpawnParticle(emitter, transform->Position);
+            if (_particles.size() < emitter.MaxParticles) {
+                SpawnParticle(emitter, origin);
+                _totalSpawned++;
+            }
         }
+        if (!_particles.empty())
+            _hasEmitted = true;
     }
 
     void ParticleComponent::Stop() {
@@ -199,17 +228,21 @@ namespace LowEngine::ECS {
         }
 
         const auto& emitter = Assets::GetEmitter(EmitterId);
-        auto* transform = _memory->GetComponent<TransformComponent>(EntityId);
 
+        const sf::Vector2f origin = ResolveSpawnOrigin();
         for (std::size_t i = 0; i < emitter.BurstCount; i++) {
-            if (_particles.size() < emitter.MaxParticles)
-                SpawnParticle(emitter, transform->Position);
+            if (_particles.size() < emitter.MaxParticles) {
+                SpawnParticle(emitter, origin);
+                _totalSpawned++;
+            }
         }
     }
 
     void ParticleComponent::Clear() {
         _playing = false;
         _emissionAccumulator = 0.0f;
+        _hasEmitted = false;
+        _totalSpawned = 0;
         _particles.clear();
     }
 
@@ -220,8 +253,9 @@ namespace LowEngine::ECS {
 
         // Lifetime
         particle.MaxLifetime = (emitter.LifetimeMin < emitter.LifetimeMax)
-            ? std::uniform_real_distribution<float>(emitter.LifetimeMin, emitter.LifetimeMax)(rng)
-            : emitter.LifetimeMin;
+                                   ? std::uniform_real_distribution<float>(emitter.LifetimeMin, emitter.LifetimeMax)(
+                                       rng)
+                                   : emitter.LifetimeMin;
         particle.Lifetime = 0.0f;
 
         // Position — random point within SpawnRadius
@@ -239,19 +273,20 @@ namespace LowEngine::ECS {
         const float baseAngle = std::atan2(emitter.Direction.y, emitter.Direction.x);
         const float halfSpread = (emitter.SpreadAngle * 0.5f) * (std::numbers::pi_v<float> / 180.0f);
         const float finalAngle = (halfSpread > 0.0f)
-            ? baseAngle + std::uniform_real_distribution<float>(-halfSpread, halfSpread)(rng)
-            : baseAngle;
+                                     ? baseAngle + std::uniform_real_distribution<float>(-halfSpread, halfSpread)(rng)
+                                     : baseAngle;
         const float speed = (emitter.SpeedMin < emitter.SpeedMax)
-            ? std::uniform_real_distribution<float>(emitter.SpeedMin, emitter.SpeedMax)(rng)
-            : emitter.SpeedMin;
+                                ? std::uniform_real_distribution<float>(emitter.SpeedMin, emitter.SpeedMax)(rng)
+                                : emitter.SpeedMin;
         particle.Velocity = sf::Vector2f(std::cos(finalAngle) * speed, std::sin(finalAngle) * speed);
 
         // Visuals
         particle.Scale = emitter.ScaleStart;
         particle.Rotation = 0.0f;
         particle.RotationSpeed = (emitter.RotationSpeedMin < emitter.RotationSpeedMax)
-            ? std::uniform_real_distribution<float>(emitter.RotationSpeedMin, emitter.RotationSpeedMax)(rng)
-            : emitter.RotationSpeedMin;
+                                     ? std::uniform_real_distribution<float>(
+                                         emitter.RotationSpeedMin, emitter.RotationSpeedMax)(rng)
+                                     : emitter.RotationSpeedMin;
 
         // Animation
         particle.currentFrame = 0;
@@ -265,9 +300,9 @@ namespace LowEngine::ECS {
         particle.Lifetime += deltaTime;
 
         // Physics
-        particle.Velocity  += emitter.Gravity * deltaTime;
-        particle.Position  += particle.Velocity * deltaTime;
-        particle.Rotation  += particle.RotationSpeed * deltaTime;
+        particle.Velocity += emitter.Gravity * deltaTime;
+        particle.Position += particle.Velocity * deltaTime;
+        particle.Rotation += particle.RotationSpeed * deltaTime;
 
         // Normalized life progress [0, 1]
         const float t = std::clamp(particle.Lifetime / particle.MaxLifetime, 0.0f, 1.0f);

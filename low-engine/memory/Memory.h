@@ -354,12 +354,11 @@ namespace LowEngine::Memory {
 		bool DeserializeAllComponentsFromJSON(const nlohmann::ordered_json& jsonData);
 
 		/**
-		 * @brief Check all Components in search of Sprites to draw.
+		 * @brief Collect all drawables from active components into the provided collection.
 		 *
-		 * Sprites will be added to collection passed as parameter.
-		 * @param[out] sprites Reference to collection that will be filled with Sprites that needs to be drawn.
+		 * @param[out] drawables Reference to collection that will be filled with drawables to render.
 		 */
-		void CollectSprites(std::vector<Sprite>& sprites);
+		void CollectDrawables(std::vector<SceneDrawable>& drawables);
 
 		/**
 		 * @brief Call DrawDirect on all active components across all pools.

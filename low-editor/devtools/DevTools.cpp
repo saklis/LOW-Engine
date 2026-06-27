@@ -26,307 +26,371 @@
 #include "panels/AssetBrowserPanel.h"
 
 namespace LowEngine {
-    std::vector<ComponentEditorBinding> DevTools::ComponentEditorBindings;
+	std::vector<ComponentEditorBinding> DevTools::ComponentEditorBindings;
 
-    bool DevTools::Initialize(sf::RenderWindow& window) {
-        bool result = ImGui::SFML::Init(window);
-        if (!result) {
-            _log->error("Failed to initialize ImGui.");
-            return false;
-        }
+	bool DevTools::Initialize(sf::RenderWindow& window) {
+		bool result = ImGui::SFML::Init(window);
+		if (!result) {
+			_log->error("Failed to initialize ImGui.");
+			return false;
+		}
 
-        ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		ImGuiIO& io = ImGui::GetIO();
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-        result = EditorAssets::LoadEditorAssets();
-        if (!result) {
-            _log->error("Failed to load icons for DevTools.");
-            return false;
-        }
+		result = EditorAssets::LoadEditorAssets();
+		if (!result) {
+			_log->error("Failed to load icons for DevTools.");
+			return false;
+		}
 
-        ComponentEditorBindings.emplace_back("Transform", typeid(ECS::TransformComponent),
-                                             Editors::AddTransformComponent,
-                                             Editors::DrawTransformEditor);
-        ComponentEditorBindings.emplace_back("Camera", typeid(ECS::CameraComponent),
-                                             Editors::AddCameraComponent,
-                                             Editors::DrawCameraEditor);
-        ComponentEditorBindings.emplace_back("Sprite", typeid(ECS::SpriteComponent),
-                                             Editors::AddSpriteComponent,
-                                             Editors::DrawSpriteEditor);
-        ComponentEditorBindings.emplace_back("Animated Sprite", typeid(ECS::AnimatedSpriteComponent),
-                                             Editors::AddAnimatedSpriteComponent,
-                                             Editors::DrawAnimatedSpriteEditor);
-        ComponentEditorBindings.emplace_back("Sound", typeid(ECS::SoundComponent),
-                                             Editors::AddSoundComponent,
-                                             Editors::DrawSoundEditor);
-        ComponentEditorBindings.emplace_back("Sound Cue", typeid(ECS::SoundCueComponent),
-                                             Editors::AddSoundCueComponent,
-                                             Editors::DrawSoundCueEditor);
-        ComponentEditorBindings.emplace_back("Collider", typeid(ECS::ColliderComponent),
-                                             Editors::AddColliderComponent,
-                                             Editors::DrawColliderEditor);
+		ComponentEditorBindings.emplace_back("Transform", typeid(ECS::TransformComponent),
+		                                     Editors::AddTransformComponent,
+		                                     Editors::DrawTransformEditor);
+		ComponentEditorBindings.emplace_back("Camera", typeid(ECS::CameraComponent),
+		                                     Editors::AddCameraComponent,
+		                                     Editors::DrawCameraEditor);
+		ComponentEditorBindings.emplace_back("Sprite", typeid(ECS::SpriteComponent),
+		                                     Editors::AddSpriteComponent,
+		                                     Editors::DrawSpriteEditor);
+		ComponentEditorBindings.emplace_back("Animated Sprite", typeid(ECS::AnimatedSpriteComponent),
+		                                     Editors::AddAnimatedSpriteComponent,
+		                                     Editors::DrawAnimatedSpriteEditor);
+		ComponentEditorBindings.emplace_back("Sound", typeid(ECS::SoundComponent),
+		                                     Editors::AddSoundComponent,
+		                                     Editors::DrawSoundEditor);
+		ComponentEditorBindings.emplace_back("Sound Cue", typeid(ECS::SoundCueComponent),
+		                                     Editors::AddSoundCueComponent,
+		                                     Editors::DrawSoundCueEditor);
+		ComponentEditorBindings.emplace_back("Collider", typeid(ECS::ColliderComponent),
+		                                     Editors::AddColliderComponent,
+		                                     Editors::DrawColliderEditor);
 
-        return true;
-    }
+		return true;
+	}
 
-    void DevTools::Free() {
-        ImGui::SFML::Shutdown();
-        EditorAssets::UnloadEditorAssets();
-    }
+	void DevTools::Free() {
+		ImGui::SFML::Shutdown();
+		EditorAssets::UnloadEditorAssets();
+	}
 
-    void DevTools::ReadInput(const sf::RenderWindow& window, const std::optional<sf::Event>& event) {
-        ImGui::SFML::ProcessEvent(window, *event);
+	void DevTools::ReadInput(const sf::RenderWindow& window, const std::optional<sf::Event>& event) {
+		ImGui::SFML::ProcessEvent(window, *event);
 
-        if (ImGui::GetIO().WantCaptureMouse == false) {
-            // mouse is currently outside any ImGui panel - interact with game scene
-            if (const auto* e = event->getIf<sf::Event::MouseButtonPressed>()) {
-                if (e->button == sf::Mouse::Button::Left) {
-                    auto* actionPrimary = EditorAction::Action(MouseAction::Primary);
-                    actionPrimary->Started = true;
-                    actionPrimary->Pressed = true;
-                    actionPrimary->MouseScreenPosition = e->position;
-                }
+		if (ImGui::GetIO().WantCaptureMouse == false) {
+			// mouse is currently outside any ImGui panel - interact with game scene
+			if (const auto* e = event->getIf<sf::Event::MouseButtonPressed>()) {
+				if (e->button == sf::Mouse::Button::Left) {
+					auto* actionPrimary = EditorAction::Action(MouseAction::Primary);
+					actionPrimary->Started = true;
+					actionPrimary->Pressed = true;
+					actionPrimary->MouseScreenPosition = e->position;
+				}
 
-                if (e->button == sf::Mouse::Button::Right) {
-                    auto* actionSecondary = EditorAction::Action(MouseAction::Secondary);
-                    actionSecondary->Started = true;
-                    actionSecondary->Pressed = true;
-                    actionSecondary->MouseScreenPosition = e->position;
-                }
+				if (e->button == sf::Mouse::Button::Right) {
+					auto* actionSecondary = EditorAction::Action(MouseAction::Secondary);
+					actionSecondary->Started = true;
+					actionSecondary->Pressed = true;
+					actionSecondary->MouseScreenPosition = e->position;
+				}
 
-                if (e->button == sf::Mouse::Button::Middle) {
-                    auto* actionTertiary = EditorAction::Action(MouseAction::Tertiary);
-                    actionTertiary->Started = true;
-                    actionTertiary->Pressed = true;
-                    actionTertiary->MouseScreenPosition = e->position;
-                }
-            }
+				if (e->button == sf::Mouse::Button::Middle) {
+					auto* actionTertiary = EditorAction::Action(MouseAction::Tertiary);
+					actionTertiary->Started = true;
+					actionTertiary->Pressed = true;
+					actionTertiary->MouseScreenPosition = e->position;
+				}
+			}
 
-            if (const auto* e = event->getIf<sf::Event::MouseButtonReleased>()) {
-                if (e->button == sf::Mouse::Button::Left) {
-                    auto* actionPrimary = EditorAction::Action(MouseAction::Primary);
-                    actionPrimary->Stopped = true;
-                    actionPrimary->Pressed = false;
-                    actionPrimary->MouseScreenPosition = e->position;
-                }
+			if (const auto* e = event->getIf<sf::Event::MouseButtonReleased>()) {
+				if (e->button == sf::Mouse::Button::Left) {
+					auto* actionPrimary = EditorAction::Action(MouseAction::Primary);
+					actionPrimary->Stopped = true;
+					actionPrimary->Pressed = false;
+					actionPrimary->MouseScreenPosition = e->position;
+				}
 
-                if (e->button == sf::Mouse::Button::Right) {
-                    auto* actionSecondary = EditorAction::Action(MouseAction::Secondary);
-                    actionSecondary->Stopped = true;
-                    actionSecondary->Pressed = false;
-                    actionSecondary->MouseScreenPosition = e->position;
-                }
+				if (e->button == sf::Mouse::Button::Right) {
+					auto* actionSecondary = EditorAction::Action(MouseAction::Secondary);
+					actionSecondary->Stopped = true;
+					actionSecondary->Pressed = false;
+					actionSecondary->MouseScreenPosition = e->position;
+				}
 
-                if (e->button == sf::Mouse::Button::Middle) {
-                    auto* actionTertiary = EditorAction::Action(MouseAction::Tertiary);
-                    actionTertiary->Stopped = true;
-                    actionTertiary->Pressed = false;
-                    actionTertiary->MouseScreenPosition = e->position;
-                }
-            }
+				if (e->button == sf::Mouse::Button::Middle) {
+					auto* actionTertiary = EditorAction::Action(MouseAction::Tertiary);
+					actionTertiary->Stopped = true;
+					actionTertiary->Pressed = false;
+					actionTertiary->MouseScreenPosition = e->position;
+				}
+			}
 
-            if (const auto* e = event->getIf<sf::Event::MouseWheelScrolled>()) {
-                if (e->wheel == sf::Mouse::Wheel::Vertical) {
-                    if (e->delta > 0) {
-                        auto* scrollActionUp = EditorAction::Action(MouseScrollAction::Up);
-                        scrollActionUp->Started = true;
-                        scrollActionUp->MouseScreenPosition = e->position;
-                    }
-                    if (e->delta < 0) {
-                        auto* scrollActionDown = EditorAction::Action(MouseScrollAction::Down);
-                        scrollActionDown->Started = true;
-                        scrollActionDown->MouseScreenPosition = e->position;
-                    }
-                }
-            }
-        }
-    }
+			if (const auto* e = event->getIf<sf::Event::MouseWheelScrolled>()) {
+				if (e->wheel == sf::Mouse::Wheel::Vertical) {
+					if (e->delta > 0) {
+						auto* scrollActionUp = EditorAction::Action(MouseScrollAction::Up);
+						scrollActionUp->Started = true;
+						scrollActionUp->MouseScreenPosition = e->position;
+					}
+					if (e->delta < 0) {
+						auto* scrollActionDown = EditorAction::Action(MouseScrollAction::Down);
+						scrollActionDown->Started = true;
+						scrollActionDown->MouseScreenPosition = e->position;
+					}
+				}
+			}
+		}
+	}
 
-    void DevTools::Update(sf::RenderWindow& window, sf::Time deltaTime) {
-        DeltaTime = deltaTime;
-        ImGui::SFML::Update(window, deltaTime);
-    }
+	void DevTools::Update(sf::RenderWindow& window, sf::Time deltaTime) {
+		DeltaTime = deltaTime;
+		ImGui::SFML::Update(window, deltaTime);
+	}
 
-    void DevTools::BuildDockingHost() {
-        ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->Pos);
-        ImGui::SetNextWindowSize(viewport->Size);
-        ImGui::SetNextWindowViewport(viewport->ID);
+	void DevTools::BuildDockingHost() {
+		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(viewport->Pos);
+		ImGui::SetNextWindowSize(viewport->Size);
+		ImGui::SetNextWindowViewport(viewport->ID);
 
-        ImGuiWindowFlags hostFlags =
-                ImGuiWindowFlags_NoTitleBar |
-                ImGuiWindowFlags_NoCollapse |
-                ImGuiWindowFlags_NoResize |
-                ImGuiWindowFlags_NoMove |
-                ImGuiWindowFlags_NoBringToFrontOnFocus |
-                ImGuiWindowFlags_NoNavFocus |
-                ImGuiWindowFlags_NoBackground |
-                ImGuiWindowFlags_MenuBar;
+		ImGuiWindowFlags hostFlags =
+			ImGuiWindowFlags_NoTitleBar |
+			ImGuiWindowFlags_NoCollapse |
+			ImGuiWindowFlags_NoResize |
+			ImGuiWindowFlags_NoMove |
+			ImGuiWindowFlags_NoBringToFrontOnFocus |
+			ImGuiWindowFlags_NoNavFocus |
+			ImGuiWindowFlags_NoBackground |
+			ImGuiWindowFlags_MenuBar;
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-        ImGui::Begin("DockSpaceHost", nullptr, hostFlags);
-        ImGui::PopStyleVar(3);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		ImGui::Begin("DockSpaceHost", nullptr, hostFlags);
+		ImGui::PopStyleVar(3);
 
-        ImGuiID dockspaceID = ImGui::GetID("DockSpaceHostID");
-        ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
-        ImGui::End();
-    }
+		ImGuiID dockspaceID = ImGui::GetID("DockSpaceHostID");
+		ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+		ImGui::End();
+	}
 
-    void DevTools::ClearSpecialInputActions() {
-        EditorAction::ClearActions();
-    }
+	void DevTools::ClearSpecialInputActions() {
+		EditorAction::ClearActions();
+	}
 
-    void DevTools::Build(Game& game) {
-        BuildDockingHost();
+	void DevTools::Build(Game& game) {
+		BuildDockingHost();
 
-        if (_resetLayoutFrames > 0) {
-            // layout reset was requested - spend few frames on moving panels to default positions
-            _resetLayoutFrames--;
-            if (_resetLayoutFrames == 0 && _saveLayoutAfterReset) {
-                if (ImGui::GetIO().IniFilename != nullptr) {
-                    ImGui::SaveIniSettingsToDisk(ImGui::GetIO().IniFilename);
-                }
-                _saveLayoutAfterReset = false;
-            }
-        }
+		if (_resetLayoutFrames > 0) {
+			// layout reset was requested - spend few frames on moving panels to default positions
+			_resetLayoutFrames--;
+			if (_resetLayoutFrames == 0 && _saveLayoutAfterReset) {
+				if (ImGui::GetIO().IniFilename != nullptr) {
+					ImGui::SaveIniSettingsToDisk(ImGui::GetIO().IniFilename);
+				}
+				_saveLayoutAfterReset = false;
+			}
+		}
 
-        auto displaySize = game.Window.getSize();
+		auto displaySize = game.Window.getSize();
 
-        DisplayMainMenu(game);
+		DisplayMainMenu(game);
 
-        _currentScene = game.Scenes.GetCurrentScene();
+		_currentScene = game.Scenes.GetCurrentScene();
 
-        if (_isInTerrainEditMode) {
-            Panels::DrawTerrainToolbar(displaySize, _isInTerrainEditMode);
-            Panels::DrawTerrainLayersList(_currentScene, 10, 30, 250, 200, _selectedTerrainLayerIndex,
-                                          _resetLayoutFrames);
-            Panels::DrawTerrainLayerEditor(_currentScene, 10, 240, 250, displaySize.y - 250, _selectedTerrainLayerIndex,
-                                           _selectedTerrainLayerTile, _selectedTerrainLayerTileType,
-                                           _selectedAnimClipName, _resetLayoutFrames);
-            Panels::Terrain2GameSceneInteraction(game, _currentScene, _selectedTerrainLayerIndex,
-                                                 _selectedTerrainLayerTile,
-                                                 _selectedTerrainLayerTileType, _selectedAnimClipName);
-        } else {
-            Panels::DrawToolbar(game, displaySize, 25, _selectedEntityId);
+		if (_isInTerrainEditMode) {
+			const int terrainPanelWidth = 250;
+			const int terrainLeftX = 10;
+			const int terrainTopY = 30;
+			const int terrainRightX = static_cast<int>(displaySize.x) - terrainPanelWidth - 10;
 
-            // Toolbar can destroy (temporary) scene, which may invalidate previous scene pointer.
-            _currentScene = game.Scenes.GetCurrentScene();
+			Panels::DrawTerrainToolbar(displaySize, _isInTerrainEditMode);
+			Panels::DrawTerrainProperties(_currentScene, terrainLeftX, terrainTopY, terrainPanelWidth, 400,
+			                              _selectedTerrainLayerIndex, _resetLayoutFrames);
+			Panels::DrawTerrainLayerEditor(_currentScene, terrainLeftX, 440, terrainPanelWidth, displaySize.y - 450,
+			                               _selectedTerrainLayerIndex,
+			                               _selectedTerrainLayerTile, _selectedTerrainLayerTileType,
+			                               _selectedAnimClipName,
+			                               _brushTraversalMask, _brushEntryCost, _resetLayoutFrames);
+			Panels::DrawTerrainNavigationEditor(_currentScene, terrainRightX, terrainTopY, terrainPanelWidth, 400,
+			                                    _navOverlayVisible,
+			                                    _resetLayoutFrames);
+			Panels::DrawTerrainBrushManager(_currentScene, terrainRightX, 440, terrainPanelWidth, displaySize.y - 450,
+			                                _selectedTerrainLayerIndex, _terrainBrushManager,
+			                                _selectedTerrainLayerTile, _selectedTerrainLayerTileType,
+			                                _selectedAnimClipName,
+			                                _brushTraversalMask, _brushEntryCost, _brushHasCollision,
+			                                _selectedTerrainBrushIndex,
+			                                _resetLayoutFrames);
+			Panels::Terrain2GameSceneInteraction(game, _currentScene, _selectedTerrainLayerIndex,
+			                                     _selectedTerrainLayerTile,
+			                                     _selectedTerrainLayerTileType, _selectedAnimClipName,
+			                                     _brushTraversalMask, _brushEntryCost, _brushHasCollision);
+		} else {
+			Panels::DrawToolbar(game, displaySize, 25, _selectedEntityId);
 
-            Panels::DrawWorldOutliner(_currentScene, 10, 30, 250, displaySize.y - 40, _selectedEntityId,
-                                      _resetLayoutFrames);
-            Panels::DrawProperties(_currentScene, displaySize.x - 260, 30, 250, displaySize.y - 40, _selectedEntityId,
-                                   _resetLayoutFrames, ComponentEditorBindings);
-        }
+			// Toolbar can destroy (temporary) scene, which may invalidate previous scene pointer.
+			_currentScene = game.Scenes.GetCurrentScene();
 
-        Panels::DrawLog(270, displaySize.y - 260, displaySize.x - 540, 260, _resetLayoutFrames);
-        Panels::CurrentCameraControls(game, _currentScene);
+			Panels::DrawWorldOutliner(_currentScene, 10, 30, 250, displaySize.y - 40, _selectedEntityId,
+			                          _resetLayoutFrames);
+			Panels::DrawProperties(_currentScene, displaySize.x - 260, 30, 250, displaySize.y - 40, _selectedEntityId,
+			                       _resetLayoutFrames, ComponentEditorBindings);
+		}
 
-        if (_isInputEditorVisible) { Panels::DrawInputEditor(game, _isInputEditorVisible, _actionBeingBound); }
-        if (_isAssetBrowserVisible) { Panels::DrawAssetBrowser(game, _isAssetBrowserVisible); }
-        if (_isNewProjectWizardVisible) { Panels::DrawProjectWizard(game, _isNewProjectWizardVisible); }
+		Panels::DrawLog(270, displaySize.y - 260, displaySize.x - 540, 260, _resetLayoutFrames);
+		Panels::CurrentCameraControls(game, _currentScene);
 
-        ClearSpecialInputActions();
-    }
+		if (_isInputEditorVisible) { Panels::DrawInputEditor(game, _isInputEditorVisible, _actionBeingBound); }
+		if (_isAssetBrowserVisible) { Panels::DrawAssetBrowser(game, _isAssetBrowserVisible); }
+		if (_isNewProjectWizardVisible) { Panels::DrawProjectWizard(game, _isNewProjectWizardVisible); }
 
-    void DevTools::Render(sf::RenderWindow& window) {
-        if (_isInTerrainEditMode && _currentScene && _selectedTerrainLayerIndex != static_cast<size_t>(-1)) {
-            Panels::DrawTerrainWorldGrid(window, _currentScene, _selectedTerrainLayerIndex);
-        }
+		ClearSpecialInputActions();
+	}
 
-        ImGui::SFML::Render(window);
-    }
+	void DevTools::Render(sf::RenderWindow& window) {
+		if (_isInTerrainEditMode && _currentScene && _selectedTerrainLayerIndex != static_cast<size_t>(-1)) {
+			Panels::DrawTerrainWorldGrid(window, _currentScene, _selectedTerrainLayerIndex);
+		}
+		if (_isInTerrainEditMode && _currentScene && _navOverlayVisible) {
+			Panels::DrawNavOverlay(window, _currentScene, _selectedTerrainLayerIndex);
+		}
 
-    void DevTools::DisplayMainMenu(Game& game) {
-        if (ImGui::BeginMainMenuBar()) {
-            if (ImGui::BeginMenu("Project")) {
-                if (ImGui::MenuItem("New Project")) { _isNewProjectWizardVisible = true; }
+		ImGui::SFML::Render(window);
+	}
 
-                if (ImGui::MenuItem("Load project")) {
-                    IGFD::FileDialogConfig config;
-                    config.path = "projects";
-                    config.fileName = "";
-                    ImGuiFileDialog::Instance()->OpenDialog("LoadProject", "Load project",
-                                                            Config::PROJECT_FILE_EXTENSION.c_str(), config);
-                }
+	void DevTools::DisplayMainMenu(Game& game) {
+		if (ImGui::BeginMainMenuBar()) {
+			if (ImGui::BeginMenu("Project")) {
+				if (ImGui::MenuItem("New Project")) { _isNewProjectWizardVisible = true; }
 
-                if (ImGui::MenuItem("Save Project")) {
-                    std::filesystem::path projectDirectory = std::filesystem::path(LowEditor::Config::PROJECT_DIRECTORY)
-                                                             / game.Title;
+				if (ImGui::MenuItem("Load project")) {
+					IGFD::FileDialogConfig config;
+					config.path = LowEditor::Config::PROJECT_DIRECTORY;
+					config.fileName = "";
+					ImGuiFileDialog::Instance()->OpenDialog("LoadProject", "Load project",
+					                                        Config::PROJECT_FILE_EXTENSION.c_str(), config);
+				}
 
-                    try {
-                        std::filesystem::create_directories(projectDirectory);
+				if (ImGui::MenuItem("Save Project")) {
+					std::filesystem::path projectDirectory = std::filesystem::path(LowEditor::Config::PROJECT_DIRECTORY)
+						/ game.Title;
 
-                        std::filesystem::path projectFilePath = projectDirectory / std::filesystem::path(
-                                                                    game.Title + Config::PROJECT_FILE_EXTENSION);
+					try {
+						std::filesystem::create_directories(projectDirectory);
 
-                        bool success = game.SaveProject(projectFilePath.string());
-                        if (!success) { _log->error("Failed to save project to: {}", projectFilePath.string()); }
-                    } catch (const std::filesystem::filesystem_error& e) {
-                        _log->error("Failed to create project directory '{}': {} (Error code: {})",
-                                    projectDirectory.string(), e.what(), e.code().value());
-                    }
-                }
+						std::filesystem::path projectFilePath = projectDirectory / std::filesystem::path(
+							game.Title + Config::PROJECT_FILE_EXTENSION);
 
-                ImGui::Separator();
+						bool success = SaveProject(game, projectFilePath);
+						if (!success) { _log->error("Failed to save project to: {}", projectFilePath.string()); }
+					} catch (const std::filesystem::filesystem_error& e) {
+						_log->error("Failed to create project directory '{}': {} (Error code: {})",
+						            projectDirectory.string(), e.what(), e.code().value());
+					}
+				}
 
-                if (ImGui::MenuItem("Publish")) {
-                }
+				ImGui::Separator();
 
-                ImGui::Separator();
+				if (ImGui::MenuItem("Publish")) {
+				}
 
-                if (ImGui::MenuItem("Assets")) { _isAssetBrowserVisible = true; }
+				ImGui::Separator();
 
-                if (ImGui::MenuItem("Input")) { _isInputEditorVisible = true; }
+				if (ImGui::MenuItem("Assets")) { _isAssetBrowserVisible = true; }
 
-                if (ImGui::MenuItem("Properties")) {
-                }
+				if (ImGui::MenuItem("Input")) { _isInputEditorVisible = true; }
 
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Scene")) {
-                if (ImGui::MenuItem("New Scene")) {
-                }
-                if (ImGui::MenuItem("Load Scene")) { game.LoadScene("default"); }
-                if (ImGui::MenuItem("Save Scene")) { game.SaveCurrentScene(); }
+				if (ImGui::MenuItem("Properties")) {
+				}
 
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Editor")) {
-                if (ImGui::MenuItem("Terrain Editor")) { _isInTerrainEditMode = true; }
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Scene")) {
+				if (ImGui::MenuItem("New Scene")) {
+				}
+				if (ImGui::MenuItem("Load Scene")) { game.LoadScene("default"); }
+				if (ImGui::MenuItem("Save Scene")) { game.SaveCurrentScene(); }
 
-                ImGui::Separator();
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Editor")) {
+				if (ImGui::MenuItem("Terrain Editor")) { _isInTerrainEditMode = true; }
 
-                if (ImGui::MenuItem("Reset Layout")) {
-                    ImGui::LoadIniSettingsFromMemory("", 0);
-                    _resetLayoutFrames = 2;
-                    _saveLayoutAfterReset = true;
-                }
+				ImGui::Separator();
 
-                ImGui::EndMenu();
-            }
+				if (ImGui::MenuItem("Reset Layout")) {
+					ImGui::LoadIniSettingsFromMemory("", 0);
+					_resetLayoutFrames = 2;
+					_saveLayoutAfterReset = true;
+				}
 
-            ImGui::EndMainMenuBar();
-        }
+				ImGui::EndMenu();
+			}
 
-        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        auto size = ImVec2(800, 600);
-        ImGui::SetNextWindowPos(ImVec2(center.x - size.x / 2, center.y - size.y / 2), ImGuiCond_Appearing);
-        ImGui::SetNextWindowSize(size, ImGuiCond_Appearing);
-        if (ImGuiFileDialog::Instance()->Display("LoadProject")) {
-            if (ImGuiFileDialog::Instance()->IsOk()) {
-                std::filesystem::path projectDirectory = ImGuiFileDialog::Instance()->GetCurrentPath();
-                std::filesystem::path projectFileName = ImGuiFileDialog::Instance()->GetCurrentFileName();
-                std::filesystem::path fullPath = projectDirectory / projectFileName;
+			ImGui::EndMainMenuBar();
+		}
 
-                game.CloseProject();
-                game.LoadProject(fullPath.string());
+		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+		auto size = ImVec2(800, 600);
+		ImGui::SetNextWindowPos(ImVec2(center.x - size.x / 2, center.y - size.y / 2), ImGuiCond_Appearing);
+		ImGui::SetNextWindowSize(size, ImGuiCond_Appearing);
+		if (ImGuiFileDialog::Instance()->Display("LoadProject")) {
+			if (ImGuiFileDialog::Instance()->IsOk()) {
+				std::filesystem::path projectDirectory = ImGuiFileDialog::Instance()->GetCurrentPath();
+				std::filesystem::path projectFileName = ImGuiFileDialog::Instance()->GetCurrentFileName();
+				std::filesystem::path fullPath = projectDirectory / projectFileName;
 
-                game.Scenes.GetCurrentScene()->IsPaused = true;
-                game.Window.setTitle("LOWEditor: " + game.Title);
-            }
-            ImGuiFileDialog::Instance()->Close();
-        }
-    }
+				game.CloseProject();
+				LoadProject(game, fullPath.string());
+
+				game.Scenes.GetCurrentScene()->IsPaused = true;
+				game.Window.setTitle("LOWEditor: " + game.Title);
+			}
+			ImGuiFileDialog::Instance()->Close();
+		}
+	}
+
+	bool DevTools::LoadProject(Game& game, const std::filesystem::path& projectFilePath) {
+		CloseProject(game);
+
+		if (!game.LoadProject(projectFilePath.string())) {
+			_log->error("Failed to load project from: {}", projectFilePath.string());
+			return false;
+		}
+
+		if (!_terrainBrushManager.Load(game.ProjectDirectory)) {
+			_log->error("Failed to load terrain brushes for project: {}", game.ProjectDirectory.string());
+			return false;
+		}
+
+		_selectedTerrainLayerIndex = static_cast<size_t>(-1);
+		_selectedTerrainBrushIndex = static_cast<size_t>(-1);
+		return true;
+	}
+
+	bool DevTools::SaveProject(Game& game, const std::filesystem::path& projectFilePath) {
+		if (game.ProjectDirectory.empty()) {
+			game.ProjectDirectory = projectFilePath.parent_path();
+		}
+
+		if (!game.SaveProject(projectFilePath.string())) {
+			_log->error("Failed to save project to: {}", projectFilePath.string());
+			return false;
+		}
+
+		if (!_terrainBrushManager.Save(game.ProjectDirectory)) {
+			_log->error("Failed to save terrain brushes for project: {}", game.ProjectDirectory.string());
+			return false;
+		}
+
+		return true;
+	}
+
+	void DevTools::CloseProject(Game& game) {
+		_terrainBrushManager.Clear();
+		_selectedTerrainLayerIndex = static_cast<size_t>(-1);
+		_selectedTerrainBrushIndex = static_cast<size_t>(-1);
+		game.CloseProject();
+	}
 }

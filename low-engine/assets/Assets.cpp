@@ -417,7 +417,7 @@ namespace LowEngine {
         emitter.Path = path;
 
         const std::size_t index = GetInstance()->_emitters.size();
-        GetInstance()->_emitters.emplace_back(std::move(emitter));
+        GetInstance()->_emitters.emplace_back(std::make_unique<Particles::Emitter>(std::move(emitter)));
         GetInstance()->_emitterAliases[alias] = index;
 
         _log->debug("Emitter loaded from '{}' with alias '{}' and id {}", path, alias, index);
@@ -449,16 +449,43 @@ namespace LowEngine {
         return true;
     }
 
+    void Assets::UnloadEmitter(std::size_t emitterId) {
+        auto* inst = GetInstance();
+        // Remove alias mapping
+        for (auto it = inst->_emitterAliases.begin(); it != inst->_emitterAliases.end(); ++it) {
+            if (it->second == emitterId) {
+                inst->_emitterAliases.erase(it);
+                break;
+            }
+        }
+        // Release the slot
+        if (emitterId < inst->_emitters.size())
+            inst->_emitters[emitterId].reset();
+    }
+
+    void Assets::UnloadEmitter(const std::string& emitterAlias) {
+        auto* inst = GetInstance();
+        const auto it = inst->_emitterAliases.find(emitterAlias);
+        if (it == inst->_emitterAliases.end()) {
+            _log->warn("UnloadEmitter: alias '{}' not found.", emitterAlias);
+            return;
+        }
+        const std::size_t id = it->second;
+        inst->_emitterAliases.erase(it);
+        if (id < inst->_emitters.size())
+            inst->_emitters[id].reset();
+    }
+
     bool Assets::EmitterExists(const std::string& emitterAlias) {
         return GetInstance()->_emitterAliases.contains(emitterAlias);
     }
 
     Particles::Emitter& Assets::GetEmitter(std::size_t emitterId) {
-        return GetInstance()->_emitters[emitterId];
+        return *GetInstance()->_emitters[emitterId];
     }
 
     Particles::Emitter& Assets::GetEmitter(const std::string& emitterAlias) {
-        return GetInstance()->_emitters[GetInstance()->_emitterAliases[emitterAlias]];
+        return *GetInstance()->_emitters[GetInstance()->_emitterAliases[emitterAlias]];
     }
 
     std::string Assets::GetEmitterAlias(std::size_t emitterId) {
@@ -473,11 +500,20 @@ namespace LowEngine {
         return GetInstance()->_emitterAliases[emitterAlias];
     }
 
+    std::vector<std::string> Assets::GetEmitterAliases() {
+        std::vector<std::string> aliases;
+        aliases.reserve(GetInstance()->_emitterAliases.size());
+        for (const auto& [alias, id] : GetInstance()->_emitterAliases)
+            aliases.push_back(alias);
+        return aliases;
+    }
+
     nlohmann::ordered_json Assets::SerializeToJSON(const std::filesystem::path& rootDirectory) {
         nlohmann::ordered_json assetsJson;
         nlohmann::ordered_json texturesJson;
         nlohmann::ordered_json spriteSheetsJson;
         nlohmann::ordered_json animationClipsJson;
+        nlohmann::ordered_json emittersJson;
         nlohmann::ordered_json soundsJson;
         nlohmann::ordered_json musicsJson;
         nlohmann::ordered_json fontsJson;
@@ -529,6 +565,16 @@ namespace LowEngine {
                     animationClipsJson.emplace_back(std::move(animationClipJson));
                 }
             }
+        }
+
+        // emitters
+        auto emitterAliases = Assets::GetEmitterAliases();
+        for (const auto& alias : emitterAliases) {
+            auto& emitter = Assets::GetEmitter(alias);
+            nlohmann::ordered_json emitterJson;
+            emitterJson["alias"] = alias;
+            emitterJson["path"]  = emitter.Path.lexically_relative(rootDirectory).generic_string();
+            emittersJson.emplace_back(std::move(emitterJson));
         }
 
         // sounds
@@ -615,6 +661,7 @@ namespace LowEngine {
         assetsJson["textures"] = texturesJson;
         assetsJson["spriteSheets"] = spriteSheetsJson;
         assetsJson["animationClips"] = animationClipsJson;
+        assetsJson["emitters"] = emittersJson;
         assetsJson["sounds"] = soundsJson;
         assetsJson["music"] = musicsJson;
         assetsJson["fonts"] = fontsJson;
@@ -666,6 +713,20 @@ namespace LowEngine {
                                      animationClipJson["frameDuration"].get<float>());
                 } else {
                     _log->error("Invalid animation clip JSON format");
+                    return false;
+                }
+            }
+        }
+
+        // Load emitters
+        if (assetsJson.contains("emitters")) {
+            for (const auto& emitterJson : assetsJson["emitters"]) {
+                if (emitterJson.contains("alias") && emitterJson.contains("path")) {
+                    auto absolutePath = (assetDirectory / std::filesystem::path(
+                        emitterJson["path"].get<std::string>()).lexically_normal());
+                    LoadEmitter(emitterJson["alias"].get<std::string>(), absolutePath.string());
+                } else {
+                    _log->error("Invalid emitter JSON format");
                     return false;
                 }
             }
@@ -752,6 +813,9 @@ namespace LowEngine {
 
         GetInstance()->_music.clear();
         GetInstance()->_musicAliases.clear();
+
+        GetInstance()->_emitters.clear();
+        GetInstance()->_emitterAliases.clear();
 
         _log->info("All assets unloaded");
     }

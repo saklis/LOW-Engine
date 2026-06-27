@@ -1,5 +1,8 @@
 #include "Game.h"
 
+#include <windows.h>
+
+#include "EditorConfig.h"
 #include "devtools/DevTools.h"
 
 int main() {
@@ -14,8 +17,10 @@ int main() {
     game.Scenes.SelectScene(mainScene);
 
     // open window
-    if (bool success = game.OpenWindow(1664, 936); !success) return 1;
+    if (bool success = game.OpenWindow(1664, 936, LowEditor::Config::EDITOR_FRAMERATE_LIMIT); !success) return 1;
 
+
+    // init dev tools
     LowEngine::DevTools::Initialize(game.Window);
 
     // main loop

@@ -222,30 +222,32 @@ endif ()
 set(CMAKE_FOLDER "${_old_cmake_folder}")
 
 # export symbols for dynamic library API.
+set_target_properties(${LOW_ENGINE_NAME}
+    PROPERTIES
+    OUTPUT_NAME "LOWEngine"
+    PREFIX ""
+)
+
+target_compile_definitions(${LOW_ENGINE_NAME}
+    PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG
+)
+
 if (MSVC)
-    # While MinGW exports all by default, MSVC needs to be told to do so.
     set_target_properties(${LOW_ENGINE_NAME}
-            PROPERTIES
-            OUTPUT_NAME "LOWEngine"
-            PREFIX ""
-            WINDOWS_EXPORT_ALL_SYMBOLS ON # <- export all symbols ... except not all! Only functions
+        PROPERTIES
+        WINDOWS_EXPORT_ALL_SYMBOLS ON
     )
 
-    # define the export macro (LOWENGINE_EXPORTS) for the engine - required to export global variables
-    target_compile_definitions(${LOW_ENGINE_NAME}
-            PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG # <- High performance logging
-    )
-else ()
-    set_target_properties(${LOW_ENGINE_NAME}
-            PROPERTIES
-            OUTPUT_NAME "LOWEngine"
-            PREFIX ""
-    )
-
-    target_compile_definitions(${LOW_ENGINE_NAME}
-            PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG # <- High performance logging
-    )
-endif ()
+    if (BUILD_LOW_ENGINE_SHARED)
+        target_compile_definitions(${LOW_ENGINE_NAME}
+            PRIVATE LOWENGINE_EXPORTS
+        )
+    else()
+        target_compile_definitions(${LOW_ENGINE_NAME}
+           PUBLIC LOWENGINE_STATIC
+        )
+    endif()
+endif()
 
 # link libraries to engine
 target_include_directories(${LOW_ENGINE_NAME} PUBLIC
